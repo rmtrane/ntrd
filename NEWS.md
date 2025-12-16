@@ -4,6 +4,10 @@
 
 -   Include aSyn-SAA biomarker (WADRC specific)
 
+-   Deal with new biomarker labels (WADRC specific)
+
+-   Made a few changes to minimize meaningless error messages
+
 # NpsychAssessmentTool 0.3.2
 
 -   Longitudinal table now shows raw scores with color coding corresponding to standardized scores

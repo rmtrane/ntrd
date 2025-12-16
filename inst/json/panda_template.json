@@ -160,7 +160,7 @@
                         "constraints": []
                     },
                     {
-                        "name": "pTau",
+                        "name": "pTau181",
                         "id": 52809,
                         "class": "cg_tn_cn",
                         "show": true,
@@ -174,7 +174,7 @@
                         "constraints": []
                     },
                     {
-                        "name": "pTau_bin",
+                        "name": "pTau181_bin",
                         "id": 52811,
                         "class": "cg_tn_cn",
                         "show": true,

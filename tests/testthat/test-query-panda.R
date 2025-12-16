@@ -76,23 +76,25 @@ test_that("Querying Panda when accessible", {
     )
   )
 
-  expected_names <- c(
-    "Local Roche CSF - Sarstedt freeze 2, cleaned",
-    "Local Roche CSF - Sarstedt freeze 3",
-    "Local Roche CSF - Sarstedt freeze, cleaned",
-    "NTK MultiObs - CSF analytes",
-    "NTK2 MultiObs - CSF, 20230311",
-    "MK6240_NFT_Rating",
-    "NAV4694 Visual Ratings",
-    "PIB Visual Rating 20180126",
-    "HDX Plasma - pTau217",
-    "Amprion - CSF a-Synuclein"
-  )
+  # expected_names <- c(
+  #   "Local Roche CSF - Sarstedt freeze 2, cleaned",
+  #   "Local Roche CSF - Sarstedt freeze 3",
+  #   "Local Roche CSF - Sarstedt freeze, cleaned",
+  #   "NTK MultiObs - CSF analytes",
+  #   "NTK2 MultiObs - CSF, 20230311",
+  #   "MK6240_NFT_Rating",
+  #   "NAV4694 Visual Ratings",
+  #   "PIB Visual Rating 20180126",
+  #   "HDX Plasma - pTau217",
+  #   "Amprion - CSF a-Synuclein"
+  # )
 
-  expect_equal(
-    names(bio_dat),
-    expected_names
-  )
+  check_table_names(bio_dat)
+
+  # expect_equal(
+  #   names(bio_dat),
+  #   expected_names
+  # )
 
   ## Check that all returns are data.table's or NULL
   expect_true(
@@ -156,10 +158,11 @@ test_that("Querying Panda when accessible", {
     api_key = getOption("panda_api_key")
   )
 
-  expect_equal(
-    names(bio_dat),
-    expected_names
-  )
+  # expect_equal(
+  #   names(bio_dat),
+  #   expected_names
+  # )
+  check_table_names(bio_dat)
 
   # Check that all returns are data.table's or NULL
   expect_true(

@@ -42,9 +42,9 @@ check_table_colnames <- \(table, table_name) {
     "Local Roche CSF - Sarstedt freeze 3" = c(
       "age_lp",
       "sample_date",
-      "pTau_raw",
+      "pTau181_raw",
       "tTau_raw",
-      "pTau_bin",
+      "pTau181_bin",
       "tTau_bin",
       # "ABeta42_raw",
       # "ABeta42_bin",
@@ -52,12 +52,12 @@ check_table_colnames <- \(table, table_name) {
       # "pTau_ABeta42_bin",
       "ABeta42_gen1_raw",
       "ABeta42_gen1_bin",
-      "pTau_ABeta42_gen1_raw",
-      "pTau_ABeta42_gen1_bin",
+      "pTau181_ABeta42_gen1_raw",
+      "pTau181_ABeta42_gen1_bin",
       "ABeta42_gen2_raw",
       "ABeta42_gen2_bin",
-      "pTau_ABeta42_gen2_raw",
-      "pTau_ABeta42_gen2_bin"
+      "pTau181_ABeta42_gen2_raw",
+      "pTau181_ABeta42_gen2_bin"
     ),
     "Local Roche CSF - Sarstedt freeze, cleaned" = c(
       "age_lp",

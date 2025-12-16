@@ -197,7 +197,10 @@ wadrc_data_prep <- function(
   }
 
   ## Remove redcap_event_name
-  out$redcap_event_name <- NULL # out[, redcap_event_name := NULL]
+  if ("redcap_event_name" %in% colnames(out)) {
+    out$redcap_event_name <- NULL # out[, redcap_event_name := NULL]
+  }
+
   out <- unique(out)
 
   ## Create diagnosis variable udsd

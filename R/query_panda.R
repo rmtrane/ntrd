@@ -146,6 +146,12 @@ get_biomarker_data <- function(
     as_df <- data.table::data.table(jsonlite::fromJSON(x))
     as_df$view_participants_adrcnum <- NULL
 
+    if (idx == "Local Roche CSF - Sarstedt freeze 3") {
+      if (!any(grepl("pTau181", colnames(as_df)))) {
+        colnames(as_df) <- gsub("pTau", "pTau181", colnames(as_df))
+      }
+    }
+
     age_cols <- grep("age", colnames(as_df), value = TRUE)
 
     if (length(age_cols) > 1) {
@@ -875,7 +881,12 @@ get_all_values <- function(
     }
 
     as_df <- data.table::data.table(jsonlite::fromJSON(x))
-    # as_df$view_participants_adrcnum <- NULL
+
+    if (idx == "Local Roche CSF - Sarstedt freeze 3") {
+      if (!any(grepl("pTau181", colnames(as_df)))) {
+        colnames(as_df) <- gsub("pTau", "pTau181", colnames(as_df))
+      }
+    }
 
     age_cols <- grep("age", colnames(as_df), value = TRUE)
 
