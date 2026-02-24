@@ -192,8 +192,9 @@ clean_biomarker_data <- function(
   if (table_name == "Lumipulse Plasma - pTau217") {
     as_df <- data.table::dcast(
       as_df[!is.na(analyte)],
-      ... ~ analyte,
+      enumber + age_at_appointment + obtained_date ~ analyte,
       value.var = "concentration",
+      fun.aggregate = \(x) x[1], # If duplicates, pull first one.
       fill = NA
     )
 

@@ -685,8 +685,8 @@ get_all_values <- function(
     as_df <- data.table::data.table(jsonlite::fromJSON(x))
 
     as_df <- clean_biomarker_data(
-      as_df,
-      idx,
+      as_df = as_df,
+      table_name = idx,
       query = base_query
     )
 
