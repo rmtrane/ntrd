@@ -18,7 +18,7 @@ shinyAssessmentApp <- function(
   )
 
   ## Add resources
-  shinyAddResources()
+  shinyAddResources(development = testing)
 
   ## Stop daemons if they are running
   if (mirai::daemons_set()) {

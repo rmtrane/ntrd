@@ -16,7 +16,7 @@
 #' @export
 bio_tab_to_html_table <- function(
   tab_for_gt,
-  densities,
+  densities = dens,
   cuts,
   www_path = if (dir.exists("inst/www")) {
     "inst/www"
@@ -65,43 +65,88 @@ bio_tab_to_html_table <- function(
     purrr::imap(tab_for_gt, \(x, idx) {
       ## First, add extra row that is simply name of table. This will allow us
       ## to create row group names.
-      data.table::rbindlist(
+      tmp <- data.table::rbindlist(
         list(
           data.table::data.table(name = idx),
           x
         ),
         fill = TRUE
       )
+
+      tmp[,
+        name_i := as.numeric(factor(
+          name,
+          levels = unique(c(idx, "Age", tmp$name))
+        ))
+      ]
+
+      tmp
     }),
     fill = TRUE,
     idcol = "table"
   )
 
   ## Get all visit dates
-  visit_dates <- setdiff(names(tab_for_gt), c("name", "table"))
+  visit_dates <- # setdiff(names(tab_for_gt), c("name", "table", "name_i"))
+    grep("[0-9]{4}-[0-9]{2}-[0-9]{2}", names(tab_for_gt), value = TRUE)
 
   ## Arrange columns by visits
   tab_for_gt <- tab_for_gt[,
-    c("table", "name", sort(visit_dates)),
+    c("table", "name", "name_i", sort(visit_dates)),
     with = F
   ]
 
-  ## Create method column giving the visit type (LP or PET)
+  ## Create method column giving the visit type (Plasma, CSF, Visual) (old: LP or PET)
   tab_for_gt[,
     method := data.table::fcase(
-      table %in% c("Local Roche CSF - Sarstedt freeze 2, cleaned", "Local Roche CSF - Sarstedt freeze 3", "Local Roche CSF - Sarstedt freeze, cleaned", "NTK MultiObs - CSF analytes", "NTK2 MultiObs - CSF, 20230311", "HDX Plasma - pTau217", "Amprion - CSF a-Synuclein") ,
-      "LP Visits"                                                                                                                                                                                                                                                            ,
-      table %in% c("MK6240_NFT_Rating", "NAV4694 Visual Ratings", "PIB Visual Rating 20180126")                                                                                                                                                                              ,
-      "PET Visits"                                                                                                                                                                                                                                                           ,
+      table %in% c("HDX Plasma - pTau217", "Lumipulse Plasma - pTau217")                                                                                                                                                                                                      , "Plasma"         ,
+      table %in% c("Lumipulse CSF - ABeta", "Local Roche CSF - Sarstedt freeze 2, cleaned", "Local Roche CSF - Sarstedt freeze 3", "Local Roche CSF - Sarstedt freeze, cleaned", "NTK MultiObs - CSF analytes", "NTK2 MultiObs - CSF, 20230311", "Amprion - CSF a-Synuclein") , "CSF"            ,
+      table %in% c("MK6240_NFT_Rating", "NAV4694 Visual Ratings", "PIB Visual Rating 20180126")                                                                                                                                                                               , "Visual Ratings" ,
       default = "Other"
     )
   ]
+
+  ## Create info column giving source and thresholds when known
+  info_col <- data.table::rbindlist(
+    purrr::map(biomarker_thresholds, \(x) {
+      thress <- purrr::map(x, "thresholds") |>
+        purrr::map(create_thresholds_table)
+      data.table::rbindlist(
+        purrr::map(x, "source"),
+        idcol = "name"
+      )[
+        data.table::data.table(name = names(thress), thresholds = thress),
+        on = "name"
+      ]
+    }),
+    idcol = "table"
+  )[,
+    list(
+      table,
+      name,
+      info = purrr::pmap(list(description, link, thresholds), \(x, y, z) {
+        list(
+          description = x,
+          link = y,
+          thres = z
+        )
+      })
+    )
+  ]
+
+  tab_for_gt <- merge(
+    tab_for_gt,
+    info_col,
+    by = c("table", "name"),
+    all.x = TRUE,
+    all.y = FALSE
+  )
 
   ## Get row of ages.
   age_rows <- tab_for_gt[
     tab_for_gt$name == "Age"
   ][,
-    table := NULL
+    c("table") := NULL
   ][,
     setNames(
       nm = c("table", names(.SD)),
@@ -143,7 +188,25 @@ bio_tab_to_html_table <- function(
     c(
       "method",
       "table",
-      names(age_rows)[!names(age_rows) %in% c("method", "table")]
+      "name",
+      "info",
+      names(age_rows)[
+        !names(age_rows) %in% c("method", "table", "name", "info")
+      ]
+    )
+  )
+
+  data.table::setcolorder(
+    tab_for_gt,
+    c(
+      "method",
+      "table",
+      "name",
+      "name_i",
+      "info",
+      names(tab_for_gt)[
+        !names(tab_for_gt) %in% c("method", "table", "name", "name_i", "info")
+      ]
     )
   )
 
@@ -159,18 +222,20 @@ bio_tab_to_html_table <- function(
   ## Make method and table factors so we can get correct order
   tab_for_gt[,
     c("method", "table") := list(
-      factor(method, levels = c("LP Visits", "PET Visits")),
+      factor(method, levels = c("Plasma", "CSF", "Visual Ratings")),
       factor(
         table,
         levels = c(
           "age",
-          "Local Roche CSF - Sarstedt freeze 2, cleaned",
+          "HDX Plasma - pTau217",
+          "Lumipulse Plasma - pTau217",
+          "Lumipulse CSF - ABeta",
           "Local Roche CSF - Sarstedt freeze 3",
+          "Amprion - CSF a-Synuclein",
+          "Local Roche CSF - Sarstedt freeze 2, cleaned",
           "Local Roche CSF - Sarstedt freeze, cleaned",
           "NTK MultiObs - CSF analytes",
           "NTK2 MultiObs - CSF, 20230311",
-          "HDX Plasma - pTau217",
-          "Amprion - CSF a-Synuclein",
           "MK6240_NFT_Rating",
           "NAV4694 Visual Ratings",
           "PIB Visual Rating 20180126"
@@ -182,8 +247,11 @@ bio_tab_to_html_table <- function(
   data.table::setorder(
     tab_for_gt,
     method,
-    table
+    table,
+    name_i
   )
+
+  tab_for_gt[, name_i := NULL]
 
   ## After table has been ordered, convert back to character vectors to avoid weird factor behavior.
   tab_for_gt[,
@@ -207,20 +275,21 @@ bio_tab_to_html_table <- function(
         shiny::tags$th(
           ifelse(
             x_name %in%
-              c("method", "table", "name", "append") |
+              c("method", "table", "name", "info", "append") |
               length(true_visits) == 0,
             "",
             x_name
           ),
           class = if (
-            !x_name %in% c("method", "name", "table", "append", true_visits) &
+            !x_name %in%
+              c("method", "name", "table", "info", "append", true_visits) &
               length(true_visits) > 0
           ) {
             prev_visit <- colnames(tab_for_gt)[x - 1] %in%
-              c("method", "name", "table", "append", true_visits)
+              c("method", "name", "table", "info", "append", true_visits)
 
             next_visit <- colnames(tab_for_gt)[x + 1] %in%
-              c("method", "name", "table", "append", true_visits)
+              c("method", "name", "table", "info", "append", true_visits)
 
             if (!prev_visit & !next_visit) {
               "lowered-column center"
@@ -251,7 +320,7 @@ bio_tab_to_html_table <- function(
       ## Table
       shiny::tags$table(
         class = "biomarkerTable",
-        ## Table body
+        ## Table body. Created rowwise.
         shiny::tags$tbody(
           lapply(1:nrow(tab_for_gt), \(x) {
             if (print_x) {
@@ -347,8 +416,22 @@ bio_tab_to_html_table <- function(
                 unname(purrr::imap(
                   obs,
                   \(y, idy) {
-                    # if (x == 3) {
+                    # if (idy == "2023-05-03") {
                     #   browser()
+                    # }
+
+                    # if (idy == "name" & tab %in% names(biomarker_thresholds)) {
+                    #   if (y %in% names(biomarker_thresholds[[tab]])) {
+                    #     src <- biomarker_thresholds[[tab]][[y]]$source
+                    #     y <- shiny::tags$div(
+                    #       y,
+                    #       shiny::tags$span(
+                    #         class = "plot-icon",
+                    #         shiny::icon("info"),
+                    #         `data-tooltip` = shiny::HTML(src)
+                    #       )
+                    #     )
+                    #   }
                     # }
 
                     create_td(
@@ -425,14 +508,14 @@ create_td <- function(
 
   ## Check if this is an LP/PET visit by checking if age is NA
   true_visit <- idy %in%
-    c("method", "table", "name", "append", true_visits)
+    c("method", "table", "name", "info", "append", true_visits)
 
   if (!true_visit) {
     # fmt: skip
-    prev_visit <- isTRUE(prev_col %in% c("method", "table", "name", "append", true_visits))
+    prev_visit <- isTRUE(prev_col %in% c("method", "table", "name", "info", "append", true_visits))
 
     # fmt: skip
-    next_visit <- isTRUE(next_col %in% c("method", "table", "name", "append", true_visits))
+    next_visit <- isTRUE(next_col %in% c("method", "table", "name", "info", "append", true_visits))
 
     lowered_class <- if (!prev_visit & !next_visit) {
       "lowered-column center"
@@ -467,6 +550,56 @@ create_td <- function(
           "text-align: left;"
         )
       )
+    )
+  }
+
+  if (idy == "info") {
+    y1 <- y[[1]]
+
+    if (is.null(y1) | (length(y1) == 1 && is.na(y1))) {
+      return(shiny::tags$td())
+    }
+
+    return(
+      shiny::tags$td(
+        shiny::tags$span(
+          class = "info-icon",
+          style = "color: white; background-color: grey;",
+          shiny::icon("info-sign", lib = "glyphicon"),
+          # `data-toggle` = "tooltip",
+          # `data-html` = 'true',
+          `data-bs-toggle` = "tooltip",
+          `data-bs-container` = "body",
+          `data-bs-placement` = "right",
+          `data-bs-html` = 'true',
+          `data-bs-title` = shiny::HTML(paste(
+            y[[1]]$description,
+            "Click icon for reference.<br>",
+            "<u>Thresholds applied:</u>",
+            y[[1]]$thres,
+            sep = "<br>"
+          )),
+          onclick = paste0("window.open('", y[[1]]$link, "', '_blank')")
+        )
+        # shiny::tags$span(
+        #   class = "plot-icon",
+        #   shiny::icon("info-circle"),
+        #   `data-tooltip` = shiny::HTML(paste(
+        #     y[[1]]$description,
+        #     "Click for reference.",
+        #     sep = "<br>"
+        #   )),
+        #   `data-html` = 'true',
+        #   onclick = paste0("window.open('", y[[1]]$link, "', '_blank')")
+        # )
+      )
+      # shiny::HTML(
+      #   paste0(
+      #     "<td><span class='plot-icon' data-tooltip='",
+      #     y,
+      #     "'><i class='fas fa-circle-info' role='presentation' aria-label='circle-info icon'></i></span></td>'"
+      #   )
+      # )
     )
   }
 

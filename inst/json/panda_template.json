@@ -89,56 +89,56 @@
                     }
                 ]
             },
-            {
-                "name": "Local Roche CSF - Sarstedt freeze 2, cleaned",
-                "id": 1227,
-                "class": "cg_tn",
-                "join": "left",
-                "columns": [
-                    {
-                        "name": "age_lp",
-                        "id": 45322,
-                        "class": "cg_tn_cn",
-                        "show": true,
-                        "constraints": []
-                    },
-                    {
-                        "name": "sample_date",
-                        "id": 45323,
-                        "class": "cg_tn_cn",
-                        "show": true,
-                        "constraints": []
-                    },
-                    {
-                        "name": "pTau",
-                        "id": 45324,
-                        "class": "cg_tn_cn",
-                        "show": true,
-                        "constraints": []
-                    },
-                    {
-                        "name": "tTau",
-                        "id": 45325,
-                        "class": "cg_tn_cn",
-                        "show": true,
-                        "constraints": []
-                    },
-                    {
-                        "name": "pTau_bin",
-                        "id": 45326,
-                        "class": "cg_tn_cn",
-                        "show": true,
-                        "constraints": []
-                    },
-                    {
-                        "name": "tTau_bin",
-                        "id": 45327,
-                        "class": "cg_tn_cn",
-                        "show": true,
-                        "constraints": []
-                    }
-                ]
-            },
+            // {
+            //     "name": "Local Roche CSF - Sarstedt freeze 2, cleaned",
+            //     "id": 1227,
+            //     "class": "cg_tn",
+            //     "join": "left",
+            //     "columns": [
+            //         {
+            //             "name": "age_lp",
+            //             "id": 45322,
+            //             "class": "cg_tn_cn",
+            //             "show": true,
+            //             "constraints": []
+            //         },
+            //         {
+            //             "name": "sample_date",
+            //             "id": 45323,
+            //             "class": "cg_tn_cn",
+            //             "show": true,
+            //             "constraints": []
+            //         },
+            //         {
+            //             "name": "pTau",
+            //             "id": 45324,
+            //             "class": "cg_tn_cn",
+            //             "show": true,
+            //             "constraints": []
+            //         },
+            //         {
+            //             "name": "tTau",
+            //             "id": 45325,
+            //             "class": "cg_tn_cn",
+            //             "show": true,
+            //             "constraints": []
+            //         },
+            //         {
+            //             "name": "pTau_bin",
+            //             "id": 45326,
+            //             "class": "cg_tn_cn",
+            //             "show": true,
+            //             "constraints": []
+            //         },
+            //         {
+            //             "name": "tTau_bin",
+            //             "id": 45327,
+            //             "class": "cg_tn_cn",
+            //             "show": true,
+            //             "constraints": []
+            //         }
+            //     ]
+            // },
             {
                 "name": "Local Roche CSF - Sarstedt freeze 3",
                 "id": 1330,
@@ -159,170 +159,171 @@
                         "show": true,
                         "constraints": []
                     },
+                    // {
+                    //     "name": "pTau181",
+                    //     "id": 52809,
+                    //     "class": "cg_tn_cn",
+                    //     "show": true,
+                    //     "constraints": []
+                    // },
+                    // {
+                    //     "name": "tTau",
+                    //     "id": 52810,
+                    //     "class": "cg_tn_cn",
+                    //     "show": true,
+                    //     "constraints": []
+                    // },
+                    // {
+                    //     "name": "pTau181_bin",
+                    //     "id": 52811,
+                    //     "class": "cg_tn_cn",
+                    //     "show": true,
+                    //     "constraints": []
+                    // },
+                    // {
+                    //     "name": "tTau_bin",
+                    //     "id": 52812,
+                    //     "class": "cg_tn_cn",
+                    //     "show": true,
+                    //     "constraints": []
+                    // },
+                    // {
+                    //     "name": "ABeta_1_42_xw",
+                    //     "id": 52820,
+                    //     "class": "cg_tn_cn",
+                    //     "show": true,
+                    //     "constraints": []
+                    // },
+                    // {
+                    //     "name": "ABeta_1_42_xw_bin",
+                    //     "id": 52821,
+                    //     "class": "cg_tn_cn",
+                    //     "show": true,
+                    //     "constraints": []
+                    // },
                     {
-                        "name": "pTau181",
-                        "id": 52809,
+                        "name": "pTau181_ABeta_1_42_xw_derived",
+                        "id": 52822,
                         "class": "cg_tn_cn",
                         "show": true,
                         "constraints": []
                     },
                     {
-                        "name": "tTau",
-                        "id": 52810,
-                        "class": "cg_tn_cn",
-                        "show": true,
-                        "constraints": []
-                    },
-                    {
-                        "name": "pTau181_bin",
-                        "id": 52811,
-                        "class": "cg_tn_cn",
-                        "show": true,
-                        "constraints": []
-                    },
-                    {
-                        "name": "tTau_bin",
-                        "id": 52812,
-                        "class": "cg_tn_cn",
-                        "show": true,
-                        "constraints": []
-                    },
-                    {
-                        "name": "ABeta_1_42_gen1",
-                        "id": 52824,
-                        "class": "cg_tn_cn",
-                        "show": true,
-                        "constraints": []
-                    },
-                    {
-                        "name": "ABeta_1_42_gen1_bin",
-                        "id": 52825,
-                        "class": "cg_tn_cn",
-                        "show": true,
-                        "constraints": []
-                    },
-                    {
-                        "name": "pTau_ABeta_1_42_gen1_derived",
-                        "id": 52826,
-                        "class": "cg_tn_cn",
-                        "show": true,
-                        "constraints": []
-                    },
-                    {
-                        "name": "pTau_ABeta_1_42_gen1_derived_bin",
-                        "id": 52827,
-                        "class": "cg_tn_cn",
-                        "show": true,
-                        "constraints": []
-                    },
-                    {
-                        "name": "ABeta_1_42_gen2",
-                        "id": 52828,
-                        "class": "cg_tn_cn",
-                        "show": true,
-                        "constraints": []
-                    },
-                    {
-                        "name": "ABeta_1_42_gen2_bin",
-                        "id": 52829,
-                        "class": "cg_tn_cn",
-                        "show": true,
-                        "constraints": []
-                    },
-                    {
-                        "name": "pTau_ABeta_1_42_gen2_derived",
-                        "id": 52830,
-                        "class": "cg_tn_cn",
-                        "show": true,
-                        "constraints": []
-                    },
-                    {
-                        "name": "pTau_ABeta_1_42_gen2_derived_bin",
-                        "id": 52831,
+                        "name": "pTau181_ABeta_1_42_xw_derived_bin",
+                        "id": 52823,
                         "class": "cg_tn_cn",
                         "show": true,
                         "constraints": []
                     }
+                    // ,
+                    // {
+                    //     "name": "pTau181_ABeta_1_42_gen1_derived",
+                    //     "id": 52826,
+                    //     "class": "cg_tn_cn",
+                    //     "show": true,
+                    //     "constraints": []
+                    // },
+                    // {
+                    //     "name": "pTau181_ABeta_1_42_gen1_derived_bin",
+                    //     "id": 52827,
+                    //     "class": "cg_tn_cn",
+                    //     "show": true,
+                    //     "constraints": []
+                    // },
+                    // {
+                    //     "name": "pTau181_ABeta_1_42_gen2_derived",
+                    //     "id": 52830,
+                    //     "class": "cg_tn_cn",
+                    //     "show": true,
+                    //     "constraints": []
+                    // },
+                    // {
+                    //     "name": "pTau181_ABeta_1_42_gen2_derived_bin",
+                    //     "id": 52831,
+                    //     "class": "cg_tn_cn",
+                    //     "show": true,
+                    //     "constraints": []
+                    // }
                 ]
             },
-            {
-                "name": "Local Roche CSF - Sarstedt freeze, cleaned",
-                "id": 1152,
-                "class": "cg_tn",
-                "join": "left",
-                "columns": [
-                    {
-                        "name": "age_lp",
-                        "id": 39576,
-                        "class": "cg_tn_cn",
-                        "show": true,
-                        "constraints": []
-                    },
-                    {
-                        "name": "sample_date",
-                        "id": 39577,
-                        "class": "cg_tn_cn",
-                        "show": true,
-                        "constraints": []
-                    },
-                    {
-                        "name": "ABeta_1_42",
-                        "id": 39581,
-                        "class": "cg_tn_cn",
-                        "show": true,
-                        "constraints": []
-                    },
-                    {
-                        "name": "pTau",
-                        "id": 39582,
-                        "class": "cg_tn_cn",
-                        "show": true,
-                        "constraints": []
-                    },
-                    {
-                        "name": "tTau",
-                        "id": 39583,
-                        "class": "cg_tn_cn",
-                        "show": true,
-                        "constraints": []
-                    },
-                    {
-                        "name": "pTau_ABeta_1_42_derived",
-                        "id": 39584,
-                        "class": "cg_tn_cn",
-                        "show": true,
-                        "constraints": []
-                    },
-                    {
-                        "name": "ABeta_1_42_bin",
-                        "id": 39585,
-                        "class": "cg_tn_cn",
-                        "show": true,
-                        "constraints": []
-                    },
-                    {
-                        "name": "pTau_bin",
-                        "id": 39586,
-                        "class": "cg_tn_cn",
-                        "show": true,
-                        "constraints": []
-                    },
-                    {
-                        "name": "tTau_bin",
-                        "id": 39587,
-                        "class": "cg_tn_cn",
-                        "show": true,
-                        "constraints": []
-                    },
-                    {
-                        "name": "pTau_ABeta_1_42_derived_bin",
-                        "id": 39588,
-                        "class": "cg_tn_cn",
-                        "show": true,
-                        "constraints": []
-                    }
-                ]
-            },
+            // {
+            //     "name": "Local Roche CSF - Sarstedt freeze, cleaned",
+            //     "id": 1152,
+            //     "class": "cg_tn",
+            //     "join": "left",
+            //     "columns": [
+            //         {
+            //             "name": "age_lp",
+            //             "id": 39576,
+            //             "class": "cg_tn_cn",
+            //             "show": true,
+            //             "constraints": []
+            //         },
+            //         {
+            //             "name": "sample_date",
+            //             "id": 39577,
+            //             "class": "cg_tn_cn",
+            //             "show": true,
+            //             "constraints": []
+            //         },
+            //         {
+            //             "name": "ABeta_1_42",
+            //             "id": 39581,
+            //             "class": "cg_tn_cn",
+            //             "show": true,
+            //             "constraints": []
+            //         },
+            //         {
+            //             "name": "pTau",
+            //             "id": 39582,
+            //             "class": "cg_tn_cn",
+            //             "show": true,
+            //             "constraints": []
+            //         },
+            //         {
+            //             "name": "tTau",
+            //             "id": 39583,
+            //             "class": "cg_tn_cn",
+            //             "show": true,
+            //             "constraints": []
+            //         },
+            //         {
+            //             "name": "pTau_ABeta_1_42_derived",
+            //             "id": 39584,
+            //             "class": "cg_tn_cn",
+            //             "show": true,
+            //             "constraints": []
+            //         },
+            //         {
+            //             "name": "ABeta_1_42_bin",
+            //             "id": 39585,
+            //             "class": "cg_tn_cn",
+            //             "show": true,
+            //             "constraints": []
+            //         },
+            //         {
+            //             "name": "pTau_bin",
+            //             "id": 39586,
+            //             "class": "cg_tn_cn",
+            //             "show": true,
+            //             "constraints": []
+            //         },
+            //         {
+            //             "name": "tTau_bin",
+            //             "id": 39587,
+            //             "class": "cg_tn_cn",
+            //             "show": true,
+            //             "constraints": []
+            //         },
+            //         {
+            //             "name": "pTau_ABeta_1_42_derived_bin",
+            //             "id": 39588,
+            //             "class": "cg_tn_cn",
+            //             "show": true,
+            //             "constraints": []
+            //         }
+            //     ]
+            // },
             {
                 "name": "NTK MultiObs - CSF analytes",
                 "id": 1043,
@@ -336,13 +337,20 @@
                         "show": true,
                         "constraints": []
                     },
-                    {
-                        "name": "pTau",
-                        "id": 27130,
-                        "class": "cg_tn_cn",
-                        "show": true,
-                        "constraints": []
-                    },
+                    // {
+                    //     "name": "pTau",
+                    //     "id": 27130,
+                    //     "class": "cg_tn_cn",
+                    //     "show": true,
+                    //     "constraints": []
+                    // },
+                    // {
+                    //     "name": "pTau_bin",
+                    //     "id": 27141,
+                    //     "class": "cg_tn_cn",
+                    //     "show": true,
+                    //     "constraints": []
+                    // },
                     {
                         "name": "ABeta_1_42_40_derived",
                         "id": 27135,
@@ -370,13 +378,6 @@
                         "class": "cg_tn_cn",
                         "show": true,
                         "constraints": []
-                    },
-                    {
-                        "name": "pTau_bin",
-                        "id": 27141,
-                        "class": "cg_tn_cn",
-                        "show": true,
-                        "constraints": []
                     }
                 ]
             },
@@ -400,13 +401,20 @@
                         "show": true,
                         "constraints": []
                     },
-                    {
-                        "name": "pTau",
-                        "id": 45586,
-                        "class": "cg_tn_cn",
-                        "show": true,
-                        "constraints": []
-                    },
+                    // {
+                    //     "name": "pTau",
+                    //     "id": 45586,
+                    //     "class": "cg_tn_cn",
+                    //     "show": true,
+                    //     "constraints": []
+                    // },
+                    // {
+                    //     "name": "pTau_bin",
+                    //     "id": 45597,
+                    //     "class": "cg_tn_cn",
+                    //     "show": true,
+                    //     "constraints": []
+                    // },
                     {
                         "name": "ABeta_1_42_40_derived",
                         "id": 45592,
@@ -431,13 +439,6 @@
                     {
                         "name": "pTau_Abeta_42_bin",
                         "id": 45596,
-                        "class": "cg_tn_cn",
-                        "show": true,
-                        "constraints": []
-                    },
-                    {
-                        "name": "pTau_bin",
-                        "id": 45597,
                         "class": "cg_tn_cn",
                         "show": true,
                         "constraints": []
@@ -525,6 +526,92 @@
                     {
                         "name": "rating_0_1_2_3",
                         "id": 10364,
+                        "class": "cg_tn_cn",
+                        "show": true,
+                        "constraints": []
+                    }
+                ]
+            },
+            {
+                "name": "Lumipulse CSF - ABeta",
+                "id": 1348,
+                "class": "cg_tn",
+                "join": "left",
+                "columns": [
+                    {
+                        "name": "age_at_appointment",
+                        "id": 53640,
+                        "class": "cg_tn_cn",
+                        "show": true,
+                        "constraints": []
+                    },
+                    {
+                        "name": "obtained_date",
+                        "id": 53648,
+                        "class": "cg_tn_cn",
+                        "show": true,
+                        "constraints": []
+                    },
+                    {
+                        "name": "analyte",
+                        "id": 53652,
+                        "class": "cg_tn_cn",
+                        "show": true,
+                        "constraints": []
+                    },
+                    {
+                        "name": "concentration",
+                        "id": 53653,
+                        "class": "cg_tn_cn",
+                        "show": true,
+                        "constraints": []
+                    }
+                ]
+            },
+            {
+                "name": "Lumipulse Plasma - pTau217",
+                "id": 1349,
+                "class": "cg_tn",
+                "join": "left",
+                "columns": [
+                    {
+                        "name": "enumber",
+                        "id": 53661,
+                        "class": "cg_tn_cn",
+                        "show": true,
+                        "constraints": [
+                            {
+                                "operator": "=",
+                                "values": [
+                                    "adrc_ptid"
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "name": "age_at_appointment",
+                        "id": 53656,
+                        "class": "cg_tn_cn",
+                        "show": true,
+                        "constraints": []
+                    },
+                    {
+                        "name": "obtained_date",
+                        "id": 53664,
+                        "class": "cg_tn_cn",
+                        "show": true,
+                        "constraints": []
+                    },
+                    {
+                        "name": "analyte",
+                        "id": 53668,
+                        "class": "cg_tn_cn",
+                        "show": true,
+                        "constraints": []
+                    },
+                    {
+                        "name": "concentration",
+                        "id": 53669,
                         "class": "cg_tn_cn",
                         "show": true,
                         "constraints": []

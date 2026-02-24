@@ -267,5 +267,13 @@ $(document).ready(function() {
   observer.observe(document.body, {
     childList: true,
     subtree: true
-  });
+  });  
+});
+
+Shiny.addCustomMessageHandler('initiateTooltips', () => {
+  console.log("Initiating tooltips...")
+  const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+  const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl, {
+    sanitize: false
+  }));
 });

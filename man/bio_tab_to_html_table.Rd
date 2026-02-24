@@ -6,7 +6,7 @@
 \usage{
 bio_tab_to_html_table(
   tab_for_gt,
-  densities,
+  densities = dens,
   cuts,
   www_path = if (dir.exists("inst/www")) {
      "inst/www"

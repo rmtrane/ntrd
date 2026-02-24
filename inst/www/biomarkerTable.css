@@ -33,23 +33,41 @@ This box contains the density plots
   justify-self: start;
   cursor: pointer;
   display: inline-block;
-  width: 24px;
-  height: 24px;
   border-radius: 4px;
   text-align: center;
   align-content: center;
   /* line-height: 24px; */
+  width: 24px;
+  height: 24px;
   font-size: 14px;
   transition: background-color 0.2s;
   user-select: none;
   position: relative;
 }
 
+.info-icon {
+  justify-self: start;
+  cursor: pointer;
+  display: inline-block;
+  border-radius: 4px;
+  text-align: center;
+  align-content: center;
+  /* line-height: 24px; */
+  width: 16px;
+  height: 16px;
+  font-size: 12px;
+  transition: background-color 0.2s;
+  user-select: none;
+  position: relative;
+}
+
+.info-icon:hover,
 .plot-icon:hover {
   background-color: #0066cc;
 }
 
 /* tooltip */
+/* .info-icon::before, */
 .plot-icon::before {
   content: attr(data-tooltip);
   position: absolute;
@@ -69,21 +87,27 @@ This box contains the density plots
   z-index: 10000;
 }
 
+/* .info-icon:hover::before,
+.info-icon:hover::after, */
 .plot-icon:hover::before,
 .plot-icon:hover::after {
   opacity: 1;
 }
 
+/* .info-icon.no-tooltip, */
 .plot-icon.no-tooltip {
   background-color: #8cbbdbff;
   /* Light blue to show it's active */
 }
 
+/* .info-icon.no-tooltip:hover, */
 .plot-icon.no-tooltip:hover {
   background-color: #8cbbdbff !important;
   /* Keep the same color on hover */
 }
 
+/* .info-icon.no-tooltip::before,
+.info-icon.no-tooltip::after, */
 .plot-icon.no-tooltip::before,
 .plot-icon.no-tooltip::after {
   display: none !important;
@@ -334,3 +358,15 @@ Orgainze cells in three columns
 .left-icon {
   justify-self: end;
 } */
+
+.tooltip {
+  white-space: nowrap;
+  max-width: none;
+  text-align: left;
+  display: block;
+}
+
+.tooltip-inner {
+  max-width: 100% !important;
+  text-align: left;
+}

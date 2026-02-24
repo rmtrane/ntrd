@@ -187,3 +187,20 @@ document.addEventListener('keydown', function (event) {
     activeHoverBox = null;
   }
 });
+
+document.addEventListener("DOMContentLoaded", (event) => {
+  // const myDefaultAllowList = bootstrap.Tooltip.Default.allowList;
+
+  // // To allow table elements
+  // myDefaultAllowList.table = [];
+
+  // // To allow td elements and data-bs-option attributes on td elements
+  // myDefaultAllowList.td = [];
+  // myDefaultAllowList.tr = [];
+
+  // Initiate tooltips in info-col
+  const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+  const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl, {
+    sanitize: false
+  }));
+})

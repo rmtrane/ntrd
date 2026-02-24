@@ -4,7 +4,7 @@
 \alias{bio_tab_for_gt}
 \title{Format a table for gt}
 \usage{
-bio_tab_for_gt(tab, return = c("binary", "raw", "both"))
+bio_tab_for_gt(tab, table_name)
 }
 \arguments{
 \item{tab}{A \code{data.table}.}

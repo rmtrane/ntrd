@@ -40,15 +40,6 @@ get_biomarker_data <- function(
     )
   }
 
-  ## Patterns to replace in column names
-  replace_in_colnames <- c(
-    "_1_[^2]" = "_",
-    # "_xw" = "",
-    "_derived" = "",
-    "Abeta" = "ABeta",
-    "ABeta_42" = "ABeta42"
-  )
-
   ## Read the base query file and replace the participant id
   my_query <- gsub(
     x = readLines(base_query_file),
@@ -144,143 +135,8 @@ get_biomarker_data <- function(
     }
 
     as_df <- data.table::data.table(jsonlite::fromJSON(x))
-    as_df$view_participants_adrcnum <- NULL
 
-    if (idx == "Local Roche CSF - Sarstedt freeze 3") {
-      if (!any(grepl("pTau181", colnames(as_df)))) {
-        colnames(as_df) <- gsub("pTau", "pTau181", colnames(as_df))
-      }
-    }
-
-    age_cols <- grep("age", colnames(as_df), value = TRUE)
-
-    if (length(age_cols) > 1) {
-      as_df <- as_df[which(as_df[[age_cols[1]]] == as_df[[age_cols[2]]])]
-      as_df[[age_cols[1]]] <- NULL
-    }
-
-    ## Fix binary variables to 0/1
-    as_df[,
-      names(.SD) := lapply(.SD, \(y) {
-        y[y %in% c("TRUE", "true", "True", "Y")] <- 1
-        y[y %in% c("FALSE", "false", "False", "N")] <- 0
-
-        y[!y %in% c(0, 1)] <- NA
-
-        as.numeric(y)
-      }),
-      .SDcols = grep(pattern = "_bin$|braak", x = names(as_df), value = T)
-    ]
-
-    ## Fix character columns that should be numeric
-    as_df[,
-      names(.SD) := lapply(.SD, \(y) {
-        y[y %in% c("NA", "nan")] <- NA
-
-        if (all(grepl("^\\d*\\.?\\d*$", y) | is.na(y))) {
-          y <- as.numeric(y)
-        }
-
-        y
-      }),
-      .SDcols = is.character
-    ]
-
-    ## Fix column names. Get columns from query
-    table_cols <- subset(my_query$query$tables, name == idx)$columns[[1]]$name
-
-    ## Find prefix that we want to remove
-    col_prefix <- table(gsub(
-      pattern = paste0("_", table_cols, "$", collapse = "|"),
-      replacement = "",
-      x = names(as_df)
-    ))
-
-    col_prefix <- names(which.max(col_prefix))
-
-    data.table::setnames(
-      as_df,
-      names(as_df),
-      new = gsub(
-        pattern = paste0(col_prefix, "_"),
-        replacement = "",
-        x = names(as_df)
-      )
-    )
-
-    if (nrow(as_df) == 0) {
-      out <- "Error: visits could not be matched to dates."
-
-      class(out) <- "error-message"
-
-      return(out)
-    }
-
-    if (col_prefix == "cg_amprion_csf_alpha_synuclein") {
-      data.table::setnames(
-        as_df,
-        c("Result", "date_of_collection"),
-        c("AlphaSyn-SAA_cat", "obtained_date")
-      )
-    }
-
-    for (i in seq_along(replace_in_colnames)) {
-      # For i = 1, we want to match on expression, but replace different expression. Hence the extra gsub in new.
-      data.table::setnames(
-        as_df,
-        old = grep(
-          pattern = names(replace_in_colnames)[i],
-          x = names(as_df),
-          value = TRUE
-        ),
-        new = gsub(
-          gsub("[^2]", "", names(replace_in_colnames)[i], fixed = T),
-          replace_in_colnames[i],
-          grep(
-            pattern = names(replace_in_colnames)[i],
-            x = names(as_df),
-            value = TRUE
-          )
-        )
-      )
-    }
-
-    for (i in colnames(as_df)) {
-      if (paste0(i, "_bin") %in% colnames(as_df)) {
-        colnames(as_df)[colnames(as_df) == i] <- paste0(i, "_raw")
-      }
-    }
-
-    ## If we are dealing with the plasma biomarker, a few extra adjustments
-    if (grepl(pattern = "Plasma", x = idx)) {
-      data.table::setnames(
-        as_df,
-        old = "mean_conc",
-        new = "pTau217_plasma_raw"
-      )
-
-      as_df$pTau217_plasma_cat <- findInterval(
-        as_df$pTau217_plasma_raw,
-        vec = c(0.4, 0.63)
-      )
-    }
-
-    ## Check that there are at least some non-missing biomarker data. If not, return NULL
-    if (
-      all(
-        is.na(as_df[,
-          !grepl(pattern = "age_|_date", colnames(as_df)),
-          with = F
-        ])
-      )
-    ) {
-      out <- "Error: no non-missing biomarker data found."
-      class(out) <- "error-message"
-
-      return(out)
-    }
-
-    as_df
+    clean_biomarker_data(as_df, table_name = idx, query = my_query)
   })
 }
 
@@ -300,7 +156,7 @@ get_biomarker_data <- function(
 #' @keywords internal
 bio_tab_for_gt <- function(
   tab,
-  return = c("binary", "raw", "both")
+  table_name
 ) {
   if (inherits(tab, "try-error")) {
     return(tab)
@@ -334,6 +190,7 @@ bio_tab_for_gt <- function(
     tab$date <- paste("Visit", seq_along(tab$age_raw))
   }
 
+  ## If _bin is present, data was pulled directly from Panda.
   if (any(grepl("_bin$", x = names(tab)))) {
     ## In rare cases, entries might be present with no raw or bin values. We remove these
     rows_include <- rowSums(
@@ -356,57 +213,33 @@ bio_tab_for_gt <- function(
       )
     )
 
-    if (return == "binary") {
-      tab[,
-        c("name", "raw", "bin") := list(
-          factor(name, levels = unique(name)),
-          ifelse(
-            name == "Age",
-            raw,
-            ifelse(
-              bin,
-              list(
-                icon = '<i class="glyphicon glyphicon-plus-sign" style="color: red;"></i>',
-                text = 'Positive'
-              ),
-              list(
-                icon = '<i class="glyphicon glyphicon-minus-sign" style="color: green;"></i>',
-                text = 'Negative'
-              )
-            )
-          ),
-          NULL
-        )
-      ]
-    }
+    # tab <- tab[!is.na(raw)]
 
-    if (return == "both") {
-      tab[,
-        c("name", "raw", "bin") := list(
-          factor(name, levels = unique(name)),
-          lapply(
-            data.table::transpose(.SD),
-            \(x) {
-              c(
-                list(raw = x[1])[!is.na(x[1])],
+    tab[,
+      c("name", "raw", "bin") := list(
+        factor(name, levels = unique(name)),
+        lapply(
+          data.table::transpose(.SD),
+          \(x) {
+            c(
+              list(raw = x[1])[!is.na(x[1])],
+              list(
                 list(
-                  list(
-                    icon = '<i class="glyphicon glyphicon-minus-sign" style="color: green;"></i>',
-                    text = 'Negative'
-                  ),
-                  list(
-                    icon = '<i class="glyphicon glyphicon-plus-sign" style="color: red;"></i>',
-                    text = 'Positive'
-                  )
-                )[[x[2] + 1]]
-              )
-            }
-          ),
-          NULL
+                  icon = '<i class="glyphicon glyphicon-minus-sign" style="color: green;"></i>',
+                  text = 'Negative'
+                ),
+                list(
+                  icon = '<i class="glyphicon glyphicon-plus-sign" style="color: red;"></i>',
+                  text = 'Positive'
+                )
+              )[[x[2] + 1]]
+            )
+          }
         ),
-        .SDcols = c("raw", "bin")
-      ]
-    }
+        NULL
+      ),
+      .SDcols = c("raw", "bin")
+    ]
 
     tab <- data.table::dcast(
       tab,
@@ -541,50 +374,31 @@ bio_tab_for_gt <- function(
       )
     )
 
-    if (return == "both") {
-      tab[,
-        c("name", "raw", "cat") := list(
-          factor(name, levels = unique(name)),
-          lapply(
-            data.table::transpose(.SD),
-            \(x) {
-              icon <- data.table::fcase(
-                x[2] == "Not Detected"                  , '<i class="glyphicon glyphicon-minus-sign" style="color: green;"></i>' ,
-                x[2] %in% c("Detected-1", "Detected-2") , '<i class="glyphicon glyphicon-plus-sign" style="color: red;"></i>'    ,
-                default = NA
-              )
+    tab[,
+      c("name", "raw", "cat") := list(
+        factor(name, levels = unique(name)),
+        lapply(
+          data.table::transpose(.SD),
+          \(x) {
+            icon <- data.table::fcase(
+              x[2] == "Not Detected"                  , '<i class="glyphicon glyphicon-minus-sign" style="color: green;"></i>' ,
+              x[2] %in% c("Detected-1", "Detected-2") , '<i class="glyphicon glyphicon-plus-sign" style="color: red;"></i>'    ,
+              default = NA
+            )
 
-              c(
-                list(raw = as.numeric(x[1])),
-                # list(
-                list(
-                  icon = if (!is.na(icon)) icon,
-                  text = x[2]
-                  # )
-                  # list(
-                  #   icon = '<i class="glyphicon glyphicon-minus-sign" style="color: green;"></i>',
-                  #   text = 'Not Detected'
-                  # ),
-                  # list(
-                  #   icon = '<i class="glyphicon glyphicon-plus-sign" style="color: red;"></i>',
-                  #   text = 'Detected-1'
-                  # ),
-                  # list(
-                  #   icon = '<i class="glyphicon glyphicon-plus-sign" style="color: red;"></i>',
-                  #   text = 'Detected-2'
-                  # ),
-                  # list(
-                  #   text = "QND"
-                  # )
-                ) #[[match(x[2], c("Not Detected", "Detected-1", "Detected-2"))]]
+            c(
+              list(raw = as.numeric(x[1])),
+              list(
+                icon = if (!is.na(icon)) icon,
+                text = x[2]
               )
-            }
-          ),
-          NULL
+            )
+          }
         ),
-        .SDcols = c("raw", "cat")
-      ]
-    }
+        NULL
+      ),
+      .SDcols = c("raw", "cat")
+    ]
 
     tab <- data.table::dcast(
       tab,
@@ -617,54 +431,47 @@ bio_tab_for_gt <- function(
       )
     )
 
-    if (return == "binary") {
-      tab[,
-        c("name", "raw", "cat") := list(
-          factor(name, levels = unique(name)),
-          ifelse(
-            name == "Age",
-            raw,
-            c(
-              '<i class="glyphicon glyphicon-minus-sign" style="color: green;"></i> Low',
-              'Medium',
-              '<i class="glyphicon glyphicon-plus-sign" style="color: red;"></i> High'
-            )[cat + 1]
-          ),
-          NULL
-        )
-      ]
-    }
+    tab <- merge(
+      tab,
+      data.table::rbindlist(
+        lapply(biomarker_thresholds[[table_name]], `[[`, "thresholds"),
+        idcol = "name"
+      )[, c("name", "bin", "label"), with = F],
+      by.x = c("cat", "name"),
+      by.y = c("bin", "name"),
+      all.x = TRUE,
+      all.y = FALSE
+    )
 
-    if (return == "both") {
-      tab[,
-        c("name", "raw", "cat") := list(
-          factor(name, levels = unique(name)),
-          lapply(
-            data.table::transpose(.SD),
-            \(x) {
-              c(
-                list(raw = x[1]),
-                list(
-                  list(
-                    icon = '<i class="glyphicon glyphicon-minus-sign" style="color: green;"></i>',
-                    text = 'Low'
-                  ),
-                  list(
-                    text = 'Medium'
-                  ),
-                  list(
-                    icon = '<i class="glyphicon glyphicon-plus-sign" style="color: red;"></i>',
-                    text = 'High'
-                  )
-                )[[x[2] + 1]]
-              )
-            }
-          ),
-          NULL
-        ),
-        .SDcols = c("raw", "cat")
-      ]
-    }
+    tab$icon <- data.table::fcase(
+      tab$cat == 0 , '<i class="glyphicon glyphicon-minus-sign" style="color: green;"></i>' ,
+      tab$cat == 1 , '<i class="glyphicon glyphicon-plus-sign" style="color: red;"></i>'    ,
+      default = NA
+    )
+
+    tab$cat <- purrr::map2(tab$label, tab$icon, \(x, y) {
+      list(
+        text = if (!is.na(x)) x,
+        icon = if (!is.na(y)) y
+      )
+    })
+
+    tab <- tab[,
+      list(
+        name = factor(name, levels = unique(name)),
+        date = date,
+        raw = lapply(
+          data.table::transpose(.SD),
+          \(x) {
+            c(
+              list(raw = x[[1]]),
+              if (any(!unlist(lapply(x[[2]], is.na)))) x[[2]]
+            )
+          }
+        )
+      ),
+      .SDcols = c("raw", "cat")
+    ]
 
     tab <- data.table::dcast(
       tab,
@@ -818,27 +625,30 @@ get_all_values <- function(
     )
   ]
 
-  # For each table, get everything
-
+  # For each table, get everything.
   all_values <- lapply(
     setNames(all_tables_names, all_tables_names),
     \(cur_table_name) {
       cur_query <- base_query
 
       cur_query$query$tables <- subset(
-        all_tables,
+        cur_query$query$tables,
         name == cur_table_name
       )
 
+      ## Remove all constraints, which ensures we get all values
       cur_query$query$tables$columns[[1]]$constraints <- NULL
 
-      cur_query$query$tables$columns[[1]] <-
-        cur_query$query$tables$columns[[1]][
-          !grepl(
-            "enumber|date|age",
-            x = cur_query$query$tables$columns[[1]]$name
-          ),
-        ]
+      ## For Lumipulse, we still need
+      if (!grepl("Lumipulse", cur_table_name)) {
+        cur_query$query$tables$columns[[1]] <-
+          cur_query$query$tables$columns[[1]][
+            !grepl(
+              "age|date|enumber",
+              x = cur_query$query$tables$columns[[1]]$name
+            ),
+          ]
+      }
 
       cur_req <- base_request |>
         httr2::req_body_json(
@@ -863,14 +673,6 @@ get_all_values <- function(
     }
   )
 
-  replace_in_colnames <- c(
-    "_1_[^2]" = "_",
-    # "_xw" = "",
-    "_derived" = "",
-    "Abeta" = "ABeta",
-    "ABeta_42" = "ABeta42"
-  )
-
   purrr::imap(all_values, \(x, idx) {
     if (is.na(x) | inherits(x, "try-error")) {
       return(x)
@@ -882,108 +684,16 @@ get_all_values <- function(
 
     as_df <- data.table::data.table(jsonlite::fromJSON(x))
 
-    if (idx == "Local Roche CSF - Sarstedt freeze 3") {
-      if (!any(grepl("pTau181", colnames(as_df)))) {
-        colnames(as_df) <- gsub("pTau", "pTau181", colnames(as_df))
-      }
-    }
-
-    age_cols <- grep("age", colnames(as_df), value = TRUE)
-
-    if (length(age_cols) > 1) {
-      as_df <- as_df[which(as_df[[age_cols[1]]] == as_df[[age_cols[2]]])]
-      as_df[[age_cols[1]]] <- NULL
-    }
-
-    ## Fix binary variables to 0/1
-    as_df[,
-      names(.SD) := lapply(.SD, \(y) {
-        y[y %in% c("TRUE", "true", "True", "Y")] <- 1
-        y[y %in% c("FALSE", "false", "False", "N")] <- 0
-
-        y[!y %in% c(0, 1)] <- NA
-
-        as.numeric(y)
-      }),
-      .SDcols = grep(pattern = "_bin$|braak", x = names(as_df), value = T)
-    ]
-
-    ## Fix character columns that should be numeric
-    as_df[,
-      names(.SD) := lapply(.SD, \(y) {
-        y[y %in% c("NA", "nan")] <- NA
-
-        if (all(grepl("^\\d*\\.?\\d*$", y) | is.na(y))) {
-          y <- as.numeric(y)
-        }
-
-        y
-      }),
-      .SDcols = is.character
-    ]
-
-    ## Fix column names. Get columns from query
-    table_cols <- subset(base_query$query$tables, name == idx)$columns[[1]]$name
-    ## Find prefix that we want to remove
-    col_prefix <- table(gsub(
-      pattern = paste0("_", table_cols, "$", collapse = "|"),
-      replacement = "",
-      x = names(as_df)
-    ))
-
-    col_prefix <- names(which.max(col_prefix))
-
-    data.table::setnames(
+    as_df <- clean_biomarker_data(
       as_df,
-      names(as_df),
-      new = gsub(
-        pattern = paste0(col_prefix, "_"),
-        replacement = "",
-        x = names(as_df)
-      )
+      idx,
+      query = base_query
     )
 
-    for (i in seq_along(replace_in_colnames)) {
-      # For i = 1, we want to match on expression, but replace different expression. Hence the extra gsub in new.
-      data.table::setnames(
-        as_df,
-        old = grep(
-          pattern = names(replace_in_colnames)[i],
-          x = names(as_df),
-          value = TRUE
-        ),
-        new = gsub(
-          gsub("[^2]", "", names(replace_in_colnames)[i], fixed = T),
-          replace_in_colnames[i],
-          grep(
-            pattern = names(replace_in_colnames)[i],
-            x = names(as_df),
-            value = TRUE
-          )
-        )
-      )
-    }
-
-    for (i in colnames(as_df)) {
-      if (paste0(i, "_bin") %in% colnames(as_df)) {
-        colnames(as_df)[colnames(as_df) == i] <- paste0(i, "_raw")
-      }
-    }
-
-    ## If we are dealing with the plasma biomarker, a few extra adjustments
-    if (grepl(pattern = "Plasma", x = idx)) {
-      data.table::setnames(
-        as_df,
-        old = "mean_conc",
-        new = "pTau217_plasma_raw"
-      )
-
-      as_df$pTau217_plasma_cat <- findInterval(
-        as_df$pTau217_plasma_raw,
-        vec = c(0.4, 0.63)
-      )
-    }
-    as_df
+    as_df[,
+      grep(pattern = "_bin|_cat|_raw", names(as_df), value = TRUE),
+      with = FALSE
+    ]
   })
 }
 
@@ -996,8 +706,43 @@ get_all_cuts <- function(all_values) {
   min_obs <- NULL
   max_obs <- NULL
 
-  lapply(all_values, \(x) {
-    if (any(grep("_cat$", colnames(x)))) {
+  purrr::imap(all_values, \(x, idx) {
+    if (idx == "Amprion - CSF a-Synuclein") {
+      return()
+    }
+    ## If we know the thresholds, use these
+    if (idx %in% names(biomarker_thresholds)) {
+      out <- lapply(
+        biomarker_thresholds[[idx]],
+        \(y) {
+          y$thresholds
+        }
+      ) |>
+        data.table::rbindlist(
+          use.names = T,
+          idcol = "name"
+        )
+
+      out <- out[,
+        list(
+          name = name,
+          bin = bin,
+          # fmt: skip
+          color = data.table::fcase(
+          bin == 0, "rgba(0, 100, 0, alpha)",
+          bin == 1, "rgba(139, 0, 0, alpha)",
+          bin == 0.5, "rgba(216, 216, 216, 0.5)"
+        ),
+          min_obs = min,
+          max_obs = max
+        )
+      ]
+
+      return(out)
+    }
+
+    ## Otherwise, we infer from data.
+    if (any(grepl("_cat$", colnames(x)))) {
       colnames(x) <- gsub("_cat", "_bin", colnames(x))
     }
 
@@ -1006,7 +751,7 @@ get_all_cuts <- function(all_values) {
     }
 
     data.table::melt(
-      x[complete.cases(x)],
+      x,
       measure.vars = data.table::measure(
         name,
         value.name,

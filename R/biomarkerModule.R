@@ -168,14 +168,21 @@ biomarkerServer <- function(
       }
 
       if (adrc_ptid() %in% names(biomarker_dat_tables)) {
-        lapply(biomarker_dat_tables[[adrc_ptid()]], \(x) {
-          bio_tab_for_gt(x, return = "both")
+        # lapply(biomarker_dat_tables[[adrc_ptid()]], \(x) {
+        #   bio_tab_for_gt(x, )
+        # }) |>
+        tmp <- purrr::imap(biomarker_dat_tables[[adrc_ptid()]], \(x, idx) {
+          bio_tab_for_gt(x, idx)
         }) |>
           bio_tab_to_html_table(
             densities = all_densities(),
             cuts = all_cuts(),
             print_x = F
           )
+
+        session$sendCustomMessage("initiateTooltips", message = list())
+
+        tmp
       } else if (biomarker_dat$status() == "running") {
         loading_gt
       } else {
