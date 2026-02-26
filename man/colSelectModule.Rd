@@ -12,14 +12,12 @@ colSelectServer(
   id,
   col_names,
   default_methods,
-  data_type,
   col_selection = c("enable", "disable", "hide")
 )
 
 colSelectApp(
   col_names,
   default_methods,
-  data_type = c("nacc", "wls", "wadrc"),
   col_selection = "enable",
   testing = FALSE
 )
@@ -30,8 +28,6 @@ colSelectApp(
 \item{col_names}{Column names.}
 
 \item{default_methods}{Default methods.}
-
-\item{data_type}{One of \code{"nacc"}, \code{"wls"}, or \code{"wadrc"}.}
 
 \item{col_selection}{string; one of 'enable', 'disable', or 'hide'. If 'enable', allow user to select which columns should be used for each variable. If 'disable', show columns used, but without the option to select. If 'hide', hide the column.}
 

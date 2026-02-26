@@ -23,7 +23,6 @@ colSelectUI <- function(id) {
 #'
 #' @param id id to link shiny modules
 #' @param col_names reactive character vector with names to choose from
-#' @param data_type reactive value; one of 'wls', 'nacc', 'wadrc'
 #' @param default_methods named list. Each entry should be named after a variable. The entry should be a named character vector with to elements: one named 'method' to indicate the standardization method to use, and one name 'version' to indicate the version to use for standardization.
 #' @param col_selection string; one of 'enable', 'disable', or 'hide'. If 'enable', allow user to select which columns should be used for each variable. If 'disable', show columns used, but without the option to select. If 'hide', hide the column.
 #'
@@ -33,26 +32,12 @@ colSelectServer <- function(
   id,
   col_names,
   default_methods,
-  data_type,
   col_selection = c("enable", "disable", "hide")
 ) {
   if (!shiny::is.reactive(col_names)) {
     shiny::stopApp()
     cli::cli_abort("{.arg col_names} must be a reactive")
   }
-
-  if (!shiny::is.reactive(data_type)) {
-    shiny::stopApp()
-    cli::cli_abort("{.arg data_type} must be a reactive")
-  }
-
-  # if (shiny::is.reactive(default_methods)) {
-  #   cli::cli_abort("{.arg default_methods} should NOT be a reactive")
-  # }
-
-  # if (shiny::is.reactive(col_selection)) {
-  #   cli::cli_abort("{.arg col_selection} should NOT be a reactive")
-  # }
 
   shiny::moduleServer(id, function(input, output, session) {
     ## All variables
@@ -129,7 +114,7 @@ colSelectServer <- function(
     for_DT <- shiny::reactiveVal(value = NULL)
 
     shiny::observe({
-      shiny::req(data_type())
+      # shiny::req(data_type())
       shiny::req(col_names())
 
       tmp_table <- data.table::data.table(
@@ -160,15 +145,15 @@ colSelectServer <- function(
             y <- x %in% critical_vars
             out <- c("(blank)", "SELECT COLUMN")[as.numeric(y) + 1]
 
-            if (data_type() != "wls") {
-              if (x %in% col_names()) {
-                out <- x
-              } else {
-                if (x %in% c("REYTOTAL", "REYAREC", "FAS", "MOCACLOCK")) {
-                  out <- "(CALCULATED)"
-                }
+            # if (data_type() != "wls") {
+            if (x %in% col_names()) {
+              out <- x
+            } else {
+              if (x %in% c("REYTOTAL", "REYAREC", "FAS", "MOCACLOCK")) {
+                out <- "(CALCULATED)"
               }
             }
+            # }
 
             # if (data_type() == "wls") {
             #   if (nacc_to_wls[x] %in% col_names()) {
@@ -242,8 +227,8 @@ colSelectServer <- function(
       for_DT(tmp_table)
     }) |>
       shiny::bindEvent(
-        col_names(),
-        data_type()
+        col_names() #,
+        # data_type()
       )
 
     output$vars_table_output <- DT::renderDataTable({
@@ -588,7 +573,6 @@ colSelectServer <- function(
 #'
 #' @param col_names Column names.
 #' @param default_methods Default methods.
-#' @param data_type One of `"nacc"`, `"wls"`, or `"wadrc"`.
 #' @param col_selection string; one of 'enable', 'disable', or 'hide'. If 'enable', allow user to select which columns should be used for each variable. If 'disable', show columns used, but without the option to select. If 'hide', hide the column.
 #' @param testing logical; passed to `shiny::shinyApp(..., options = list(test.mode))`
 #'
@@ -602,7 +586,6 @@ colSelectServer <- function(
 colSelectApp <- function(
   col_names,
   default_methods,
-  data_type = c("nacc", "wls", "wadrc"),
   col_selection = "enable",
   testing = FALSE
 ) {
@@ -640,7 +623,6 @@ colSelectApp <- function(
       id = "colselect",
       col_names,
       default_methods = default_methods,
-      data_type = data_type,
       col_selection = col_selection
     )
 

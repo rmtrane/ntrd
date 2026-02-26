@@ -3,61 +3,34 @@
 #' @keywords internal
 #'
 #' @export
-appServer <- function(input, output, session) {
+appServer_v2 <- function(input, output, session) {
   ## Hide 'Participant Data' on startup
   bslib::nav_hide(id = "main_navbar", target = "colSelect")
   bslib::nav_hide(id = "main_navbar", target = "tables-and-figures")
   bslib::nav_hide(id = "long-trends", target = "biomarkers")
 
   ## Setup data select module
-  dat_sel <- dataSelectServer("dataSelect")
+  dat_sel <- dataSelectServer_v2("dataSelect")
 
   ## Reactive values to store data object, selected data source, and data type,
   ## all assigned from dataSelect module. Also, reactive value to indicate if
   ## user should be allowed to select columns for variables. We only allow this
   ## for csv upload.
-  dat_obj <- shiny::reactiveVal()
-  data_source <- shiny::reactiveVal()
-  data_type <- shiny::reactiveVal()
-  biomarker_api <- shiny::reactiveVal()
-  allow_col_selections <- shiny::reactiveVal()
 
   devmode <- shiny::reactiveVal(value = FALSE)
 
   selected_date <- shiny::reactiveVal()
 
   shiny::observe({
-    # shiny::req(
-    #   dat_sel$dat_obj(),
-    #   dat_sel$data_source(),
-    #   dat_sel$data_type()
-    # )
-
-    dat_obj(dat_sel$dat_obj())
-    data_source(dat_sel$data_source())
-    data_type(dat_sel$data_type())
-    biomarker_api(dat_sel$biomarker_api())
-
-    if (!is.null(dat_sel$biomarker_api())) {
+    if (!is.null(dat_sel$data_source_extras()$panda_api_token)) {
       bslib::nav_show(id = "long-trends", target = "biomarkers")
     }
-
-    allow_col_selections("disable")
-
-    if (!is.null(data_source()) && data_source() == "csv_upload") {
-      allow_col_selections("enable")
-    }
-
-    if (!is.null(data_source()) && data_source() == "redcap") {
-      allow_col_selections("hide")
-    }
-
-    # allow_col_selections(data_source() == "csv_upload")
-  })
+  }) |>
+    shiny::bindEvent(dat_sel$data_source_extras()$panda_api_token)
 
   ## Reactive object with available columns to use to select from
   cols_avail <- shiny::reactive({
-    colnames(dat_obj())
+    colnames(dat_sel$dat_obj())
   })
 
   ## Reactive values to hold selected columns, and methods
@@ -70,14 +43,13 @@ appServer <- function(input, output, session) {
     std_methods(NA)
   }) |>
     shiny::bindEvent(
-      dat_obj()
+      dat_sel$dat_obj()
     )
 
   ## Select columns
   colSelectOutput <- colSelectServer(
     "colSelect",
     col_names = cols_avail,
-    data_type = data_type,
     default_methods = list(
       MOCATOTS = c(method = "regression", version = "nacc"),
       OTRAILA = c(method = "regression", version = "updated_2025.06"),
@@ -122,7 +94,7 @@ appServer <- function(input, output, session) {
       DIGIB = c(method = "regression", version = "nacc"),
       DIGIBLEN = c(method = "regression", version = "nacc")
     ),
-    col_selection = allow_col_selections()
+    col_selection = "disable" # allow_col_selections()
   )
 
   shiny::observe({
@@ -154,7 +126,7 @@ appServer <- function(input, output, session) {
     if (!all(is.na(std_methods())) & !all(is.na(col_sel()))) {
       fin_dat(
         prepare_data(
-          dat_obj(),
+          dat_sel$dat_obj(),
           selected_cols = col_sel(),
           methods = std_methods(),
           print_messages = F
@@ -483,29 +455,20 @@ appServer <- function(input, output, session) {
   #   }
   # )
 
-  shiny::observe({
-    shiny::req(biomarker_api())
-    all_values_et$invoke(
-      api = biomarker_api()
-    )
-  })
-
-  all_values <- shiny::reactiveVal()
-
-  shiny::observe({
-    # If ExtendedTask successfully ran...
-    if (all_values_et$status() == "success") {
-      # shiny::showNotification("Getting all_values")
-      all_values(all_values_et$result())
-    }
-  }) |>
-    shiny::bindEvent(all_values_et$status())
+  # shiny::observe({
+  #   shiny::req(biomarker_api())
+  #   all_values_et$invoke(
+  #     api = biomarker_api()
+  #   )
+  # })
 
   biomarkerServer(
     "biomarker-tables",
     adrc_ptid = shiny::reactive(input$current_studyid),
-    biomarker_api = biomarker_api,
-    all_values = all_values
+    biomarker_api = shiny::reactive(
+      data_sel$data_source_extras()$biomarker_api
+    ),
+    all_values = shiny::reactive(dat_sel$data_source_extras()$all_values)
   )
 
   # } else {
