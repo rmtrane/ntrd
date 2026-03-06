@@ -299,7 +299,7 @@ appServer <- function(input, output, session) {
   })
 
   ## Get default descriptions if saved as option, otherwise set defaults
-  default_descriptions <- getOption("NpsychAssessmentTool.default_descriptions")
+  default_descriptions <- getOption("ntrd.default_descriptions")
   if (is.null(default_descriptions)) {
     default_descriptions <- c(
       "Impaired" = 0.03,
@@ -313,7 +313,7 @@ appServer <- function(input, output, session) {
   }
 
   ## Get default colors if saved as option, otherwise set defaults
-  default_fill_values <- getOption("NpsychAssessmentTool.default_fill_values")
+  default_fill_values <- getOption("ntrd.default_fill_values")
   if (is.null(default_fill_values)) {
     default_fill_values <- setNames(
       calc_fill_colors(n = length(default_descriptions)),
@@ -460,7 +460,7 @@ appServer <- function(input, output, session) {
 
   # base_query_file <- system.file(
   #   "json/panda_template.json",
-  #   package = "NpsychAssessmentTool"
+  #   package = "ntrd"
   # )
 
   # all_values_et <- shiny::ExtendedTask$new(

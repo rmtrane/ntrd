@@ -4,7 +4,7 @@
 #' A `shiny::tagList` used to add `www/scripts.js` and `www/styles.css` to the head
 #' of the app, and adding the spinner layers.
 #'
-#' @keywords internal
+#' @export
 shinyApp_header <- function() {
   shiny::tagList(
     # shiny::useBusyIndicators(),

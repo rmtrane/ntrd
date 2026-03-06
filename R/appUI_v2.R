@@ -154,7 +154,8 @@ appUI_v2 <- function() {
               bslib::nav_panel(
                 title = "Biomarkers",
                 value = "biomarkers",
-                biomarkerUI("biomarker-tables")
+                # biomarkerUI("biomarker-tables")
+                shiny::uiOutput("extension_ui")
               )
             )
           )

@@ -9,7 +9,6 @@
 #' @importFrom NpsychBatteryNorms rdd
 #' @importFrom rlang .data
 #' @importFrom stats complete.cases
-#' @importFrom stats density
 #' @importFrom stats na.omit
 #' @importFrom stats qnorm
 #' @importFrom stats setNames

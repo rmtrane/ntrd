@@ -22,11 +22,14 @@ appServer_v2 <- function(input, output, session) {
   selected_date <- shiny::reactiveVal()
 
   shiny::observe({
-    if (!is.null(dat_sel$data_source_extras()$panda_api_token)) {
+    if (!is.null(dat_sel$extras()$extension_ui)) {
+      output$extension_ui <- shiny::renderUI({
+        dat_sel$extras()$extension_ui()
+      })
       bslib::nav_show(id = "long-trends", target = "biomarkers")
     }
   }) |>
-    shiny::bindEvent(dat_sel$data_source_extras()$panda_api_token)
+    shiny::bindEvent(dat_sel$extras()$panda_api_token)
 
   ## Reactive object with available columns to use to select from
   cols_avail <- shiny::reactive({
@@ -271,7 +274,7 @@ appServer_v2 <- function(input, output, session) {
   })
 
   ## Get default descriptions if saved as option, otherwise set defaults
-  default_descriptions <- getOption("NpsychAssessmentTool.default_descriptions")
+  default_descriptions <- getOption("ntrd.default_descriptions")
   if (is.null(default_descriptions)) {
     default_descriptions <- c(
       "Impaired" = 0.03,
@@ -285,7 +288,7 @@ appServer_v2 <- function(input, output, session) {
   }
 
   ## Get default colors if saved as option, otherwise set defaults
-  default_fill_values <- getOption("NpsychAssessmentTool.default_fill_values")
+  default_fill_values <- getOption("ntrd.default_fill_values")
   if (is.null(default_fill_values)) {
     default_fill_values <- setNames(
       calc_fill_colors(n = length(default_descriptions)),
@@ -432,7 +435,7 @@ appServer_v2 <- function(input, output, session) {
 
   # base_query_file <- system.file(
   #   "json/panda_template.json",
-  #   package = "NpsychAssessmentTool"
+  #   package = "ntrd"
   # )
 
   # all_values_et <- shiny::ExtendedTask$new(
@@ -462,14 +465,26 @@ appServer_v2 <- function(input, output, session) {
   #   )
   # })
 
-  biomarkerServer(
-    "biomarker-tables",
-    adrc_ptid = shiny::reactive(input$current_studyid),
-    biomarker_api = shiny::reactive(
-      data_sel$data_source_extras()$biomarker_api
-    ),
-    all_values = shiny::reactive(dat_sel$data_source_extras()$all_values)
-  )
+  # biomarkerServer(
+  #   "biomarker-tables",
+  #   adrc_ptid = shiny::reactive(input$current_studyid),
+  #   biomarker_api = shiny::reactive(
+  #     dat_sel$extras()$biomarker_api
+  #   ),
+  #   all_values = shiny::reactive(dat_sel$extras()$all_values)
+  # )
+
+  shiny::observe({
+    shiny::req(dat_sel$extras())
+    shiny::req(input$current_studyid)
+
+    if (!is.null(dat_sel$extras()$extension_server)) {
+      dat_sel$extras()$extension_server(
+        ptid = shiny::reactive(input$current_studyid),
+        extras = dat_sel$extras
+      )
+    }
+  })
 
   # } else {
   #   # If mirai is not installed, use simple reactiveValues

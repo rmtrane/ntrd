@@ -1,13 +1,14 @@
-Package: NpsychAssessmentTool
+Package: ntrd
 Type: Package
-Title: UDS Battery Scores in Interactive Tables and Figures
+Title: Neuropsychological Test Results Dashboard
 Version: 0.3.2.9000
-Description: Building on the NpsychBatteryNorms package,
+Description: Building on the ntrs package,
     this package includes a Shiny application that makes 
-    it easy to present UDS battery scores in a way useful
-    to consensus diagnosis. Data can be imported as an
-    .csv file or pulled directly from a REDCap database
-    (`REDCapR` needed).
+    it easy to present test scores in a way useful
+    to consensus diagnosis. Data can be imported as a
+    .csv file, or extensions can be created to import
+    directly from REDCap/any other database system accessible
+    via API.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -50,32 +51,23 @@ Roxygen: list(markdown = TRUE)
 Authors@R: c(
     person("Ralph", "Møller Trane", email = "rtrane@wisc.edu", role = c("aut", "cre"), comment = c(ORCID = "0000-0001-7824-1785"))
   )
-URL: https://rmtrane.github.io/NpsychAssessmentTool
-BugReports: https://github.com/rmtrane/NpsychAssessmentTool/issues
+URL: https://rmtrane.github.io/ntrd
+BugReports: https://github.com/rmtrane/ntrd/issues
 Config/Needs/website:
     htmltools,
     here,
     yaml
 Collate: 
-    'NpsychAssessmentTool-package.R'
-    '_disable_autoload.R'
     'appServer.R'
     'appServer_v2.R'
     'appUI.R'
     'appUI_v2.R'
     'assessment_longitudinal_table.R'
     'assessment_summary_table.R'
-    'bio_tab_to_html_table.R'
-    'biomarkerModule.R'
-    'biomarker_density_plot.R'
-    'biomarker_ratios.R'
-    'biomarker_thresholds.R'
     'birth_vars.R'
     'calc_fill_colors.R'
     'check_colors.R'
-    'clean_biomarker_data.R'
     'colSelectModule.R'
-    'create_threshold_table.R'
     'critical_vars.R'
     'crosswalk_translations.R'
     'data_source.R'
@@ -95,12 +87,10 @@ Collate:
     'longTableModule.R'
     'mainTableModule.R'
     'my_gt_plt_bar_pct.R'
-    'nacc_to_wadrc_uds2.R'
-    'nacc_to_wadrc_uds3.R'
-    'nacc_to_wadrc_uds4.R'
     'nacc_to_wls.R'
     'nacc_var_groups.R'
     'nacc_var_labels.R'
+    'ntrd-package.R'
     'onRender.R'
     'optional_vars.R'
     'plotModule.R'
@@ -109,7 +99,6 @@ Collate:
     'prepare_data.R'
     'prevDiagnosesModule.R'
     'prev_diagnoses_table.R'
-    'query_panda.R'
     'rdd.R'
     'read_data.R'
     'shinyAddResources.R'
@@ -119,13 +108,5 @@ Collate:
     'var_labels.R'
     'visibility_defaults.R'
     'visit_vars.R'
-    'wadrc_data_prep.R'
-    'wadrc_source.R'
-    'wadrc_uds2_redcap_fields.R'
-    'wadrc_uds2_to_nacc.R'
-    'wadrc_uds3_redcap_fields.R'
-    'wadrc_uds3_to_nacc.R'
-    'wadrc_uds4_redcap_fields.R'
-    'wadrc_uds4_to_nacc.R'
     'wls_to_nacc.R'
     'zzz.R'

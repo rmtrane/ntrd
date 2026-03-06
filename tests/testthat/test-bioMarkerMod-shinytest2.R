@@ -9,7 +9,7 @@ test_that("biomarkerMod works", {
     api_key = getOption("panda_api_key"),
     base_query_file = system.file(
       "json/panda_template.json",
-      package = "NpsychAssessmentTool"
+      package = "ntrd"
     )
   )
 

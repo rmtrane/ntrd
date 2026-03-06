@@ -1,33 +1,69 @@
+#' Data selection UI module
+#'
+#' @description
+#' A short description...
+#'
+#' @param id A single string.
+#'
+#' @returns
+#' A `bslib::card` containing UI elements for selecting a data source and related options.
+#'
+#' @export
 dataSelectUI_v2 <- function(id) {
   ns <- shiny::NS(id)
-
-  sources <- discover_data_sources()
-  choices <- setNames(
-    vapply(sources, \(s) s@id, character(1)),
-    vapply(sources, \(s) s@name, character(1))
-  )
 
   bslib::card(
     style = "width: 600px;",
     class = "mx-auto",
-    shiny::selectizeInput(
-      inputId = ns("data_source"),
-      label = "Data Source",
-      choices = choices
-    ),
+    shiny::uiOutput(ns("data_source_selector")),
     shiny::uiOutput(ns("data_source_ui")),
     height = "95vh"
   )
 }
 
 
+#' Data Selection Server Module
+#'
+#' @description
+#' A short description...
+#'
+#' @param id A single string representing the module's identifier.
+#'
+#' @returns
+#' A `shiny::moduleServer` function that returns a list containing:
+#' \itemize{
+#'   \item `dat_obj`: A reactive value holding the loaded data, which is expected
+#'   to be a `data_nacc` object.
+#'   \item `data_source_extras`: A reactive value holding a list of additional
+#'   data source parameters or values.
+#' }
+#' Errors will be raised if the loaded data is not a `data_nacc` object.
+#'
+#' @export
 dataSelectServer_v2 <- function(id) {
   shiny::moduleServer(id, function(input, output, session) {
     # Find all available data_sources
     sources <- discover_data_sources()
 
+    choices <- setNames(
+      vapply(sources, \(s) s@id, character(1)),
+      vapply(sources, \(s) s@name, character(1))
+    )
+
+    print(choices)
+
+    output$data_source_selector <- shiny::renderUI({
+      if (length(choices) > 0) {
+        shiny::selectizeInput(
+          inputId = shiny::NS(id, "data_source"),
+          label = "Data Source",
+          choices = choices
+        )
+      }
+    })
+
     # Config storage path
-    config_dir <- tools::R_user_dir("NpsychAssessmentTool", "config")
+    config_dir <- tools::R_user_dir("ntrd", "config")
     if (!dir.exists(config_dir)) {
       dir.create(config_dir, recursive = TRUE, showWarnings = FALSE)
     }
@@ -36,6 +72,7 @@ dataSelectServer_v2 <- function(id) {
     config_file <- reactiveVal()
 
     observe({
+      shiny::req(input$data_source)
       source <- sources[[input$data_source]]
 
       config_file(file.path(config_dir, paste0(source@id, ".bin")))
@@ -242,13 +279,6 @@ dataSelectServer_v2 <- function(id) {
         return()
       }
 
-      # Validate: must be a list with data_nacc in $data
-      # if (!is.list(result) || !"data" %in% names(result)) {
-      #   cli::cli_abort(
-      #     "Extension {.val {input$data_source}} must return a list with a {.field data} entry."
-      #   )
-      # }
-
       if (!S7::S7_inherits(result, data_nacc)) {
         cli::cli_abort(
           "{.val {input$data_source}}: {.fn data_source_server} must return a
@@ -266,14 +296,13 @@ dataSelectServer_v2 <- function(id) {
       srv <- data_source_servers[[input$data_source]]
 
       if ("extras" %in% names(srv) && !is.null(srv$extras)) {
-        # shiny::reactiveValuesToList(srv$extras)
         data_source_extras(shiny::reactiveValuesToList(srv$extras))
       }
     })
 
     return(list(
       dat_obj = dat_obj,
-      data_source_extras = data_source_extras
+      extras = data_source_extras
     ))
   })
 }
@@ -299,19 +328,17 @@ dataSelectApp_v2 <- function(testing = FALSE) {
     }) |>
       shiny::bindEvent(data_input$dat_obj())
 
-    shiny::observe({
-      print(dat_obj())
-    }) |>
-      shiny::bindEvent(dat_obj())
-
     # shiny::observe({
-    #   print(data_input$data_source_extras())
+    #   shiny::req(data_input$data_source_extras)
+    #   # cat("data_source_extras:")
+    #   # print(data_input$data_source_extras)
+    #   browser()
     # })
 
     # shiny::observe({
     #   # print(names(data_input$dat_obj))
     #   # print(class(data_input$dat_obj))
-    #   print(data_input$data_obj)
+    #   print(data_input$extras())
     # })
   }
 

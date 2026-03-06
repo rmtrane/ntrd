@@ -1,7 +1,7 @@
 #' Load extension packages
 #'
 #' Scans installed packages for those declaring themselves as
-#' NpsychAssessmentTool extensions and loads their namespaces.
+#' ntrd extensions and loads their namespaces.
 #' Loading registers their S7 methods (via S7::methods_register()
 #' in .onLoad), making them visible to discover_data_sources().
 #'
@@ -10,7 +10,7 @@
 load_extensions <- function() {
   fields <- c(
     "Package",
-    "Config/NpsychAssessmentTool/extension"
+    "Config/ntrd/extension"
   )
 
   seen_pkgs <- character(0)
@@ -20,9 +20,11 @@ load_extensions <- function() {
 
     for (pkg_dir in pkg_dirs) {
       pkg_name <- basename(pkg_dir)
+
       if (pkg_name %in% seen_pkgs) {
         next
       }
+
       seen_pkgs <- c(seen_pkgs, pkg_name)
 
       desc_file <- file.path(pkg_dir, "DESCRIPTION")
@@ -43,7 +45,7 @@ load_extensions <- function() {
       }
 
       is_extension <- identical(
-        info[["Config/NpsychAssessmentTool/extension"]],
+        info[[fields[2]]],
         "true"
       )
 

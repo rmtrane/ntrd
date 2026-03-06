@@ -1,4 +1,5 @@
 #' @include data_source.R
+#' @keywords internal
 csv_source <- S7::new_class(
   "csv_source",
   parent = data_source,
@@ -12,6 +13,7 @@ csv_source <- S7::new_class(
   }
 )
 
+#' @keywords internal
 S7::method(data_source_ui, csv_source) <- function(source, ns) {
   shiny::tagList(
     shiny::p(
@@ -25,6 +27,7 @@ S7::method(data_source_ui, csv_source) <- function(source, ns) {
   )
 }
 
+#' @keywords internal
 S7::method(data_source_server, csv_source) <- function(source, id) {
   shiny::moduleServer(id, function(input, output, session) {
     shiny::reactive({

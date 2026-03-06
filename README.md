@@ -1,13 +1,13 @@
-# NpsychAssessmentTool
+# Neuropsychological Test Results Dashboard (ntrd)
 
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 <!-- badges: start -->
 
-[![R-CMD-check](https://github.com/rmtrane/NpsychAssessmentTool/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/rmtrane/NpsychAssessmentTool/actions/workflows/R-CMD-check.yaml)
-[![pkgdown](https://github.com/rmtrane/NpsychAssessmentTool/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/rmtrane/NpsychAssessmentTool/actions/workflows/pkgdown.yaml)
-[![codecov](https://codecov.io/gh/rmtrane/NpsychAssessmentTool/graph/badge.svg?token=FRFC07GNEW)](https://codecov.io/gh/rmtrane/NpsychAssessmentTool)
+[![R-CMD-check](https://github.com/rmtrane/ntrd/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/rmtrane/ntrd/actions/workflows/R-CMD-check.yaml)
+[![pkgdown](https://github.com/rmtrane/ntrd/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/rmtrane/ntrd/actions/workflows/pkgdown.yaml)
+[![codecov](https://codecov.io/gh/rmtrane/ntrd/graph/badge.svg?token=FRFC07GNEW)](https://codecov.io/gh/rmtrane/ntrd)
 <!-- badges: end -->
 
 This package provides an [R Shiny](https://shiny.posit.co) application
@@ -16,19 +16,19 @@ scores.
 
 ## Installation
 
-You can install the development version of NpsychAssessmentTool from
+You can install the development version of ntrd from
 [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("pak")
-pak::pak("rmtrane/NpsychAssessmentTool")
+pak::pak("rmtrane/ntrd")
 ```
 
 or
 
 ``` r
 # install.packages("remotes")
-remotes::install_github("rmtrane/NpsychAssessmentTool")
+remotes::install_github("rmtrane/ntrd")
 ```
 
 Note that some features of the application mean additional resources.
@@ -38,13 +38,13 @@ able to pull data straight from REDCap. To install the packages needed
 to enable all features, use
 
 ``` r
-pak::pak("rmtrane/NpsychAssessmentTool", dependencies = TRUE)
+pak::pak("rmtrane/ntrd", dependencies = TRUE)
 ```
 
 or
 
 ``` r
-remotes::install_github("rmtrane/NpsychAssessmentTool", dependencies = TRUE)
+remotes::install_github("rmtrane/ntrd", dependencies = TRUE)
 ```
 
 ## Example
@@ -52,7 +52,7 @@ remotes::install_github("rmtrane/NpsychAssessmentTool", dependencies = TRUE)
 You can start the application as follows:
 
 ``` r
-library(NpsychAssessmentTool)
+library(ntrd)
 shinyAssessmentApp()
 ```
 

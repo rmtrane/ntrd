@@ -213,7 +213,7 @@ mainTableApp <- function(
     ifelse(
       development,
       "inst/shiny/www",
-      system.file("www", package = "NpsychAssessmentTool")
+      system.file("www", package = "ntrd")
     )
   )
 

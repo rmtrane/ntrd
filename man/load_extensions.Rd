@@ -11,7 +11,7 @@ NULL (called for side effects)
 }
 \description{
 Scans installed packages for those declaring themselves as
-NpsychAssessmentTool extensions and loads their namespaces.
+ntrd extensions and loads their namespaces.
 Loading registers their S7 methods (via S7::methods_register()
 in .onLoad), making them visible to discover_data_sources().
 }

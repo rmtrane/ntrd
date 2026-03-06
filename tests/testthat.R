@@ -8,6 +8,6 @@
 
 library(testthat)
 library(shinytest2)
-library(NpsychAssessmentTool)
+library(ntrd)
 
-test_check("NpsychAssessmentTool")
+test_check("ntrd")

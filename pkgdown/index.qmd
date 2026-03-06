@@ -1,6 +1,6 @@
 ---
 format: md
-title: NpsychAssessmentTool
+title: ntrd
 ---
 
 {{< include ../README.qmd >}}

@@ -30,7 +30,7 @@ jobs:
           extra-packages: any::rcmdcheck
           needs: check
       
-      - name: Install NpsychAssessmentTools
+      - name: Install ntrds
         run: |
           install.packages("devtools")
           devtools::install(reload=FALSE,quick=TRUE,build=TRUE,dependencies=FALSE,build_vignettes=FALSE)

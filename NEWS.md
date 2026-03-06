@@ -1,4 +1,4 @@
-# NpsychAssessmentTool (development version)
+# Neuropsychological Test Results Dashboard (ntrd) (development version)
 
 -   Fixed bug that meant the colors on the longitudinal table were wrong
 
@@ -8,7 +8,7 @@
 
 -   Made a few changes to minimize meaningless error messages
 
-# NpsychAssessmentTool 0.3.2
+# ntrd 0.3.2
 
 -   Longitudinal table now shows raw scores with color coding corresponding to standardized scores
 
@@ -16,13 +16,13 @@
 
 -   CES-D total score included in assessment summary table in the Mood section
 
-# NpsychAssessmentTool 0.3.1
+# ntrd 0.3.1
 
 Bug fixes:
 
 -   Fixed issues with wrong api key for biomarker table (WADRC specific)
 
-# NpsychAssessmentTool 0.3.0
+# ntrd 0.3.0
 
 -   Data sources can now be saved to an encrypted file with user specified password. Note: password is NOT saved anywhere, and if forgotten, file is not accessible. 
 
@@ -30,7 +30,7 @@ Bug fixes:
 
 -   Biomarker Table updated with the inclusion of density curves (WADRC specific)
 
-# NpsychAssessmentTool 0.2.0
+# ntrd 0.2.0
 
 -   Multiple data sources can be added and combined.
 
@@ -44,6 +44,6 @@ Bug fixes:
 
 -   Lots of bug fixes and improvements to the UI.
 
-# NpsychAssessmentTool 0.1.0
+# ntrd 0.1.0
 
 -   Initial version shared with WADRC

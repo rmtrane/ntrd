@@ -1,4 +1,4 @@
 Name: Neuropsychological Assessment Tool
-Description: Opens the application from the NpsychAssessmentTool package
+Description: Opens the application from the ntrd package
 Binding: shinyAssessmentApp
 Interactive: true

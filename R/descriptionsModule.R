@@ -354,17 +354,17 @@ descriptionsApp <- function(
   testing = FALSE
 ) {
   development <- dir.exists("inst/www") &&
-    basename(getwd()) == "NpsychAssessmentTool"
+    basename(getwd()) == "ntrd"
 
   if (development) {
     print("Development...")
     www_path <- "inst/www"
     qmd_path <- "inst/qmd"
   } else {
-    require("NpsychAssessmentTool")
+    require("ntrd")
 
-    www_path <- system.file("www", package = "NpsychAssessmentTool")
-    qmd_path <- system.file("qmd", package = "NpsychAssessmentTool")
+    www_path <- system.file("www", package = "ntrd")
+    qmd_path <- system.file("qmd", package = "ntrd")
   }
 
   shiny::addResourcePath("www", www_path)

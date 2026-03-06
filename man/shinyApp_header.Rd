@@ -13,4 +13,3 @@ of the app, and adding the spinner layers.
 \description{
 Shiny app header
 }
-\keyword{internal}
