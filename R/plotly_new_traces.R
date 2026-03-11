@@ -38,7 +38,7 @@ plotly_new_traces <- function(
   ## Adjust T-scores
   t_score_cols <- names(which(unlist(lapply(
     new_dat,
-    \(x) attributes(x)$method == "T-score"
+    \(x) attributes(x)$method == "tscores"
   ))))
 
   for (col in t_score_cols) {

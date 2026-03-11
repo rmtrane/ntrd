@@ -347,9 +347,9 @@ assessment_summary_data <- function(
 
   t_scores <- NULL
 
-  if (length(methods) == 1 && methods == "infer") {
-    methods <- NpsychBatteryNorms::methods_from_std_data(std_data = dat)
-  }
+  # if (length(methods) == 1 && methods == "infer") {
+  #   methods <- NpsychBatteryNorms::methods_from_std_data(std_data = dat)
+  # }
 
   base::stopifnot(
     "'methods' must either be given or included as attributes from 'dat'" = exists(
@@ -357,7 +357,7 @@ assessment_summary_data <- function(
     )
   )
 
-  t_scores <- names(methods)[sapply(methods, `[[`, "method") == "T-score"]
+  t_scores <- names(methods)[sapply(methods, `[[`, "method") == "tscores"]
 
   base::stopifnot("Data provided must have exactly one row" = nrow(dat) == 1)
 
@@ -365,16 +365,30 @@ assessment_summary_data <- function(
   colnames(dat)[colnames(dat) == id] <- "id"
 
   ## Create labels to be used.
+  # First, get subclass names
+  subclasses <- unlist(dat[,
+    lapply(.SD, \(x) S7::S7_class(x)@name),
+    .SDcols = is_npsych_scores
+  ])
+
   # Create named list with arguments for var_labels()
   for_labels <- lapply(
     setNames(formalArgs(var_labels), formalArgs(var_labels)),
     \(x) {
-      if (x %in% colnames(dat)) {
-        return(dat[[x]])
-      }
+      # if (x %in% colnames(dat)) {
+      #   return(dat[[x]])
+      # }
 
-      if (paste("raw", x, sep = "_") %in% colnames(dat)) {
-        return(dat[[paste("raw", x, sep = "_")]])
+      # if (paste("raw", x, sep = "_") %in% colnames(dat)) {
+      #   return(dat[[paste("raw", x, sep = "_")]])
+      # }
+
+      if (x %in% subclasses) {
+        return(
+          #  ntrs::remove_error_codes(
+          dat[[names(which(subclasses == x))]]
+          # )
+        )
       }
 
       NA
@@ -384,135 +398,260 @@ assessment_summary_data <- function(
   ## Don't want a data.frame, but named vector. Hence, unlist
   cur_labels <- unlist(do.call(var_labels, for_labels))
 
+  ## Some raw_ columns might not have special labels, so make sure we do not
+  ## miss any npsych_scores.
+  std_cols <- grep(pattern = "^std_", x = colnames(dat), value = TRUE)
+
   ## Get rid of columns not needed
   for_main_table <- dat[,
     grep(
-      pattern = paste(c("id", names(cur_labels)), collapse = "|"),
+      pattern = paste(
+        unique(c("id", names(cur_labels), gsub("^std_", "", std_cols))),
+        collapse = "|"
+      ),
       x = colnames(dat)
     ),
     with = F
   ]
-  ## Rename columns that we do not standardize to still include prefix raw_
-  colnames(for_main_table)[
-    colnames(for_main_table) %in% names(cur_labels)
-  ] <- paste0(
-    "raw_",
-    colnames(for_main_table)[colnames(for_main_table) %in% names(cur_labels)]
-  )
-  for_main_table <- for_main_table[,
-    names(.SD) := lapply(.SD, as.numeric),
-    .SDcols = data.table::patterns("std_|raw_")
-  ]
-  ## Replace error codes with NA
-  raw_cols <- grep(pattern = "^raw_", x = colnames(for_main_table), value = T)
 
-  for (x in raw_cols) {
-    for_main_table[[x]] <- NpsychBatteryNorms::valid_values_only(
-      raw_score = for_main_table[[x]],
-      var_name = gsub(pattern = "^raw_", replacement = "", x = x),
-      remove_errorcodes = -4
-    )
-  }
+  ## Rename columns that we do not standardize to still include prefix raw_
+  data.table::setnames(
+    for_main_table,
+    old = names(cur_labels),
+    new = paste("raw", names(cur_labels), sep = "_"),
+    skip_absent = TRUE
+  )
+
+  # colnames(for_main_table)[
+  #   colnames(for_main_table) %in% names(cur_labels)
+  # ] <- paste0(
+  #   "raw_",
+  #   colnames(for_main_table)[colnames(for_main_table) %in% names(cur_labels)]
+  # )
+
+  ## Replace negative error codes with NA. Get raw cols, then replace
+  raw_cols <- grep(
+    pattern = "^raw_",
+    x = colnames(for_main_table[, .SD, .SDcols = ntrs::is_npsych_scores]),
+    value = T
+  )
+
+  for_main_table[,
+    names(.SD) := lapply(.SD, \(x) {
+      neg_err_codes <- x@codes[x@codes < 0]
+      if (as.numeric(x) %in% neg_err_codes) {
+        return(NA_real_)
+      }
+
+      as.double(x)
+    }),
+    .SDcols = raw_cols
+  ]
+
+  for_main_table[,
+    names(.SD) := lapply(.SD, as.double),
+    .SDcols = data.table::patterns("^std_")
+  ]
 
   ## Create long data with one row per variable. To do so, we go through a data set with two rows per variable, one for raw and one for std.
   for_main_table <- data.table::melt(
     for_main_table,
-    measure.vars = data.table::patterns("std_|raw_"),
-    variable.name = "name"
-  )
+    measure.vars = data.table::measure(
+      value.name,
+      name,
+      sep = "_"
+    ),
+    variable.factor = FALSE,
+    value.factor = FALSE
+  )[!is.na(raw)]
 
-  for_main_table$type <- with(
-    for_main_table,
-    substr(name, 1, 3)
-  )
+  # Get all npsych_scores labels
+  all_labels <- unlist(dat[,
+    setNames(lapply(.SD, \(x) x@label), gsub("^raw_", "", names(.SD))),
+    .SDcols = is_npsych_scores
+  ])
 
-  for_main_table$name <- with(
-    for_main_table,
-    gsub(pattern = "raw_|std_", replacement = "", x = name)
-  )
-
-  for_main_table <- data.table::dcast(
-    for_main_table,
-    id + name ~ type,
-    value.var = "value"
-  )
+  # Overwrite if special label necessary
+  all_labels[names(cur_labels)] <- cur_labels
 
   ## Add additional columns. Avoid tidyverse verbs for devtools::check (? not sure why this throws a warning here... EDIT: fixed by importing .data from rlang. Could rewrite back to use tidyverse syntax...)
-  for_main_table$group <- with(
-    for_main_table,
-    nacc_var_groups[name]
-  )
+  for_main_table[,
+    c(
+      "group",
+      "labels",
+      "for_percentile",
+      "raw_suffix",
+      "units",
+      "is_error"
+    ) := list(
+      unlist(sapply(name, \(x) {
+        if (x %in% ntrs::list_npsych_scores()) {
+          return(match.fun(x)()@domain)
+        }
 
-  for_main_table$labels <- with(
-    for_main_table,
-    factor(
-      cur_labels[name],
-      levels = unname(cur_labels)
+        unname(nacc_var_groups[x])
+      })),
+      factor(
+        all_labels[name],
+        levels = all_labels[order(match(
+          names(all_labels),
+          names(cur_labels),
+          nomatch = 99
+        ))]
+      ),
+      ifelse(name %in% t_scores, (std - 50) / 10, std),
+      purrr::map2_chr(name, raw, \(x, y) {
+        if (is.na(y)) {
+          return("")
+        }
+
+        if (x %in% list_npsych_scores()) {
+          x <- match.fun(x)()
+        } else {
+          return("")
+        }
+
+        if (is.null(x@range)) {
+          return("")
+        }
+
+        if (y %in% x@codes) {
+          return("")
+        }
+
+        paste0("/", x@range[2])
+      }),
+      purrr::map2_chr(name, raw, \(x, y) {
+        if (is.na(y)) {
+          return("")
+        }
+
+        if (x %in% list_npsych_scores()) {
+          x <- match.fun(x)()
+        } else {
+          return("")
+        }
+
+        if (y %in% x@codes) {
+          return("")
+        }
+
+        base::ifelse(
+          S7::S7_class(x)@name %in% c("TRAILA", "TRAILB", "OTRAILA", "OTRAILB"),
+          "&nbspsec",
+          ""
+        )
+      }),
+      purrr::map2_lgl(name, raw, \(x, y) {
+        if (is.na(y)) {
+          return(FALSE)
+        }
+
+        if (x %in% list_npsych_scores()) {
+          x <- match.fun(x)()
+        } else {
+          return(FALSE)
+        }
+
+        if (y %in% x@codes & y > x@range[2]) {
+          return(TRUE)
+        }
+
+        FALSE
+      })
     )
-  )
-
-  for_main_table <- subset(for_main_table, !is.na(raw))
-
-  for_main_table$for_percentile <- with(
-    for_main_table,
-    ifelse(name %in% t_scores, (std - 50) / 10, std)
-  )
-
-  for_main_table$Percentile <- with(
-    for_main_table,
-    pnorm(for_percentile) * 100
-  )
-
-  for_main_table$Description <- names(descriptions)[
-    findInterval(
-      for_main_table$Percentile / 100,
-      vec = descriptions,
-      rightmost.closed = T
-    ) +
-      1
+  ][,
+    c("Percentile", "Description") := list(
+      pnorm(for_percentile) * 100,
+      names(descriptions)[
+        findInterval(
+          pnorm(for_percentile),
+          vec = descriptions,
+          rightmost.closed = T
+        ) +
+          1
+      ]
+    )
   ]
 
-  for_main_table$raw_suffix <- with(
-    for_main_table,
-    purrr::map2_chr(name, raw, \(x, y) {
-      if (is.na(y)) {
-        return("")
-      }
+  # for_main_table$group <- with(
+  #   for_main_table,
+  #   nacc_var_groups[name]
+  # )
 
-      cur_range <- purrr::pluck(rdd, x)$range
+  # for_main_table$labels <- with(
+  #   for_main_table,
+  #   factor(
+  #     cur_labels[name],
+  #     levels = unname(cur_labels)
+  #   )
+  # )
 
-      if (is.null(cur_range)) {
-        return("")
-      }
+  # for_main_table <- subset(for_main_table, !is.na(raw))
 
-      if (y %in% purrr::pluck(rdd, x)$codes) {
-        return("")
-      }
+  # for_main_table$for_percentile <- with(
+  #   for_main_table,
+  #   ifelse(name %in% t_scores, (std - 50) / 10, std)
+  # )
 
-      paste0("/", cur_range[2])
-    })
-  )
+  # for_main_table$Percentile <- with(
+  #   for_main_table,
+  #   pnorm(for_percentile) * 100
+  # )
 
-  for_main_table$units <- with(
-    for_main_table,
-    purrr::map2_chr(name, raw, \(x, y) {
-      if (is.na(y)) {
-        return("")
-      }
+  # for_main_table$Description <- names(descriptions)[
+  #   findInterval(
+  #     for_main_table$Percentile / 100,
+  #     vec = descriptions,
+  #     rightmost.closed = T
+  #   ) +
+  #     1
+  # ]
 
-      if (y %in% purrr::pluck(rdd, x)$codes) {
-        return("")
-      }
+  # for_main_table$raw_suffix <- with(
+  #   for_main_table,
+  #   purrr::map2_chr(name, raw, \(x, y) {
+  #     x_fun <- match.fun(x)
 
-      base::ifelse(
-        x %in% c("TRAILA", "TRAILB", "OTRAILA", "OTRAILB"),
-        "&nbspsec",
-        ""
-      )
-    })
-  )
+  #     if (is.na(y)) {
+  #       return("")
+  #     }
 
-  for_main_table <- for_main_table[,
+  #     cur_range <- purrr::pluck(rdd, x)$range
+
+  #     if (is.null(cur_range)) {
+  #       return("")
+  #     }
+
+  #     if (y %in% purrr::pluck(rdd, x)$codes) {
+  #       return("")
+  #     }
+
+  #     paste0("/", cur_range[2])
+  #   })
+  # )
+
+  # for_main_table$units <- with(
+  #   for_main_table,
+  #   purrr::map2_chr(name, raw, \(x, y) {
+  #     if (is.na(y)) {
+  #       return("")
+  #     }
+
+  #     if (y %in% purrr::pluck(rdd, x)$codes) {
+  #       return("")
+  #     }
+
+  #     base::ifelse(
+  #       x %in% c("TRAILA", "TRAILB", "OTRAILA", "OTRAILB"),
+  #       "&nbspsec",
+  #       ""
+  #     )
+  #   })
+  # )
+
+  for_main_table <- for_main_table[
+    order(labels),
     c(
       "group",
       "labels",
@@ -522,35 +661,25 @@ assessment_summary_data <- function(
       "units",
       "std",
       "Percentile",
-      "Description"
+      "Description",
+      "is_error"
     ),
     with = F
   ]
 
-  for_main_table <- for_main_table[order(labels)]
-
-  for_main_table$is_error <- with(
-    for_main_table,
-    purrr::map2_lgl(name, raw, \(x, y) {
-      codes <- rdd[[x]]$codes
-
-      if (y %in% codes & y > 10) {
-        return(TRUE)
-      }
-
-      FALSE
-    })
-  )
-
-  for_main_table$raw <- with(
-    for_main_table,
-    purrr::map2_chr(name, raw, \(x, y) {
-      # purrr::map2(name, raw, \(x, y) {
+  for_main_table[,
+    raw := purrr::map2_chr(name, raw, \(x, y) {
       if (x == "CDRGLOB") {
         return(sprintf("%.1f", y))
       }
 
-      codes <- rdd[[x]]$codes
+      if (x %in% list_npsych_scores()) {
+        x <- match.fun(x)()
+      } else {
+        return("")
+      }
+
+      codes <- x@codes
 
       if (y %in% codes) {
         return(as.character(bslib::tooltip(y, names(codes)[which(codes == y)])))
@@ -558,7 +687,38 @@ assessment_summary_data <- function(
 
       sprintf("%.0f", y)
     })
-  )
+  ]
+
+  # for_main_table$is_error <- with(
+  #   for_main_table,
+  #   purrr::map2_lgl(name, raw, \(x, y) {
+  #     codes <- rdd[[x]]$codes
+
+  #     if (y %in% codes & y > 10) {
+  #       return(TRUE)
+  #     }
+
+  #     FALSE
+  #   })
+  # )
+
+  # for_main_table$raw <- with(
+  #   for_main_table,
+  #   purrr::map2_chr(name, raw, \(x, y) {
+  #     # purrr::map2(name, raw, \(x, y) {
+  #     if (x == "CDRGLOB") {
+  #       return(sprintf("%.1f", y))
+  #     }
+
+  #     codes <- rdd[[x]]$codes
+
+  #     if (y %in% codes) {
+  #       return(as.character(bslib::tooltip(y, names(codes)[which(codes == y)])))
+  #     }
+
+  #     sprintf("%.0f", y)
+  #   })
+  # )
 
   out <- list(
     for_main_table = for_main_table,
@@ -586,7 +746,7 @@ assessment_summary_data <- function(
       for_main_table$name == "MEMUNITS"
 
     t_score_rows <- for_main_table$name %in%
-      names(methods)[lapply(methods, `[[`, "method") == "T-score"] &
+      names(methods)[lapply(methods, `[[`, "method") == "tscores"] &
       !for_main_table$is_error
 
     norm_rows <- for_main_table$name %in%

@@ -421,7 +421,7 @@ appServer <- function(input, output, session) {
     )
 
   ## Create all plots
-  lapply(unique(nacc_var_groups), \(x) {
+  lapply(nacc_groups, \(x) {
     plotServer(
       x,
       dat = current_studyid_dat,

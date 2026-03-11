@@ -32,7 +32,7 @@ assessment_longitudinal_table <- function(
     "Very Superior" = 1
   ),
   fill_values,
-  methods = "infer",
+  methods = list(), # "infer",
   table_font_size = 100,
   table_id = NULL,
   show_all_visits = TRUE,
@@ -84,6 +84,9 @@ assessment_longitudinal_table <- function(
       1
   )
 
+  npsych_scores_cols <- colnames(dat[0, .SD, .SDcols = is_npsych_scores])
+  npsych_scores_cols <- gsub("^raw_", "", npsych_scores_cols)
+
   for_table_std <- dat[
     ## Remove rows without dates
     !is.na(date),
@@ -94,35 +97,34 @@ assessment_longitudinal_table <- function(
       ## New columns
       object = lapply(.SD, \(x) if (any(!is.na(x))) x)
     ),
-    ## ... among the columns "date" and standardized cols that match nacc_var_labels
+    ## ... among the columns "date" and standardized cols that match npsych_scores cols
     .SDcols = c(
       "date",
-      intersect(colnames(dat), paste("std", names(nacc_var_labels), sep = "_"))
+      intersect(colnames(dat), paste("std", npsych_scores_cols, sep = "_"))
     )
   ][
     ## Order by date
     order(date)
   ]
 
+  if (ncol(for_table_std) == 1) {
+    return(shiny::h3("No scores found."))
+  }
+
   for_table <- dat[
     ## Remove rows without dates
     !is.na(date),
     ## Only return columns that are non-empty...
     setNames(
-      ## New names
+      ## Remove prefix raw_ when present
       nm = gsub("^raw_", "", names(.SD)),
       ## New columns
       object = purrr::imap(.SD, \(x, idx) {
-        # lapply(.SD, \(x) if (any(!is.na(x))) x)
         if (idx == "date") {
           return(x)
         }
 
-        x <- NpsychBatteryNorms::valid_values_only(
-          as.numeric(x),
-          gsub("^raw_", "", idx),
-          T
-        )
+        x <- ntrs::remove_error_codes(x)
 
         if (any(!is.na(x))) x
       })
@@ -137,33 +139,32 @@ assessment_longitudinal_table <- function(
     order(date)
   ]
 
-  if (ncol(for_table_std) == 1) {
-    return(shiny::h3("No scores found."))
-  }
+  ## Get methods for variables left
+  # if (length(methods) == 1 && methods == "infer") {
+  #   methods <- NpsychBatteryNorms::methods_from_std_data(
+  #     std_data = for_table_std
+  #   )
+  # } else {
 
   ## Get methods for variables left
-  if (length(methods) == 1 && methods == "infer") {
-    methods <- NpsychBatteryNorms::methods_from_std_data(
-      std_data = for_table_std
-    )
-  } else {
-    ## Get methods for variables left
-    vars_present <- colnames(for_table_std)[grepl(
-      pattern = paste0("^", names(nacc_var_labels), "$", collapse = "|"),
-      x = colnames(for_table_std)
-    )]
-    methods <- methods[vars_present]
-  }
+  vars_present <- colnames(for_table_std)[grepl(
+    pattern = paste0("^", names(methods), "$", collapse = "|"), # nacc_var_labels
+    x = colnames(for_table_std)
+  )]
 
-  base::stopifnot(
-    "'methods' must either be given or included as attributes from 'dat'" = is.list(
-      methods
+  methods <- methods[vars_present]
+
+  # }
+
+  if (!is.list(methods)) {
+    cli::cli_abort(
+      "{.arg methods} must either be given or included as attributes from {.arg dat}."
     )
-  )
+  }
 
   ## Get names of scores standardized using t-scores. Needed for adjusting before
   ## adding color codes to table
-  t_scores <- names(methods)[sapply(methods, `[[`, "method") == "T-score"]
+  t_scores <- names(methods)[sapply(methods, `[[`, "method") == "tscores"]
 
   ## Combine crosswalk pairs into one column
   crosswalk_pairs <- list(
@@ -201,15 +202,9 @@ assessment_longitudinal_table <- function(
 
       for_table_std[[paste(x, collapse = "--")]] <- ifelse(
         !is.na(for_table_std[[x[1]]]),
-        # sprintf(fmt = "%.2f", for_table_std[[x[1]]]),
         for_table_std[[x[1]]],
         ifelse(
           !is.na(for_table_std[[x[2]]]),
-          # paste0(
-          #   "<u><i>",
-          #   sprintf(fmt = "%.2f", for_table_std[[x[2]]]),
-          #   "</i></u>"
-          # ),
           for_table_std[[x[2]]],
           NA
         )
@@ -221,17 +216,6 @@ assessment_longitudinal_table <- function(
       ]
     }
   }
-
-  ## Format scores not in crosswalks
-  # for_table[,
-  #   names(.SD) := lapply(
-  #     .SD,
-  #     \(x) ifelse(is.na(x), NA, sprintf(fmt = "%.2f", x))
-  #   ),
-  #   .SDcols = colnames(for_table)[
-  #     !grepl(pattern = "--|^date$", x = colnames(for_table))
-  #   ]
-  # ]
 
   ## Transpose
   for_table <- data.table::transpose(
@@ -270,11 +254,19 @@ assessment_longitudinal_table <- function(
   for_table$labels <- unlist(lapply(
     for_table$name,
     \(x) {
-      if (x %in% names(nacc_var_labels)) {
-        return(nacc_var_labels[x])
+      # if (x %in% names(nacc_var_labels)) {
+      #   return(nacc_var_labels[x])
+      # }
+      if (!grepl("--", x)) {
+        return(S7::prop(match.fun(x)(), "label"))
       }
 
-      to_combine <- nacc_var_labels[unlist(strsplit(x, split = "--"))]
+      # to_combine <- nacc_var_labels[unlist(strsplit(x, split = "--"))]
+
+      to_combine <- unlist(lapply(unlist(strsplit(x, split = "--")), \(x) {
+        S7::prop(match.fun(x)(), "label")
+      }))
+
       to_combine[2] <- gsub(
         pattern = " Span (Forward|Backward) - (Span Length|Total)",
         replacement = "",
@@ -320,15 +312,24 @@ assessment_longitudinal_table <- function(
   # )
 
   ## Add column indicating groups
-  for_table$group <- unname(nacc_var_groups[for_table$name])
+  for_table$group <- # unname(nacc_var_groups[for_table$name])
+    purrr::map_chr(for_table$name, \(x) S7::prop(match.fun(x)(), "domain"))
+
   # for_table_std$group <- unname(nacc_var_groups[for_table_std$name])
+
+  all_grp_names <- unique(c(nacc_groups), unique(for_table$group))
+  all_var_names <- unique(c(names(nacc_var_labels), for_table$name))
+
   ## Make sure both tables are in right order. Remove "--(legacy)" from names involving
   ## two scores
-  for_table <- for_table[order(match(for_table$name, names(nacc_var_labels)))]
-  # for_table_std <- for_table_std[order(match(
-  #   for_table_std$name,
-  #   names(nacc_var_labels)
-  # ))]
+  for_table <- for_table[
+    order(
+      # match(for_table$name, names(nacc_var_labels)),
+      match(group, all_grp_names),
+      # match(for_table$name, names(nacc_var_labels))
+      match(name, all_var_names)
+    )
+  ]
 
   ## Create gt
   out <- gt::gt(
@@ -337,11 +338,12 @@ assessment_longitudinal_table <- function(
     rowname_col = "labels",
     groupname_col = "group"
   ) |>
-    gt::row_group_order(
-      groups = unique(nacc_var_groups)[
-        unique(nacc_var_groups) %in% for_table$group
-      ]
-    ) |>
+    # gt::row_group_order(
+    #   groups = c(
+    #     nacc_groups[nacc_groups %in% for_table$group],
+    #     setdiff(for_table$group, nacc_groups)
+    #   )
+    # ) |>
     gt::cols_hide(
       columns = c(
         "name",
@@ -423,7 +425,12 @@ assessment_longitudinal_table <- function(
     methods_used <- lapply(methods, \(x) data.table::setDT(as.list(x))) |>
       data.table::rbindlist(fill = TRUE, idcol = "variable")
 
-    methods_used$var_labels <- nacc_var_labels[methods_used$variable]
+    methods_used$var_labels <- with(
+      out[["_data"]],
+      unname(setNames(labels, name)[methods_used$variable])
+    )
+
+    # methods_used$var_labels <- nacc_var_labels[methods_used$variable]
 
     method <- NULL # due to NSE notes in R CMD check
     methods_used <- methods_used[,

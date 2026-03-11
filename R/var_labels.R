@@ -68,202 +68,227 @@ var_labels <- function(
   CRAFTDVR = NA,
   CRAFTDRE = NA
 ) {
-  all_scores <- list(
-    "CDRSUM" = ifelse(
-      is.na(CDRSUM),
-      "&mdash;",
-      NpsychBatteryNorms::valid_values_only(
-        CDRSUM,
-        var_name = "CDRSUM",
-        remove_errorcodes = T
-      )
-    ),
-    "TRAILARR" = ifelse(
-      is.na(TRAILARR),
-      "&mdash;",
-      NpsychBatteryNorms::valid_values_only(
-        TRAILARR,
-        var_name = "TRAILARR",
-        remove_errorcodes = T
-      )
-    ),
-    "TRAILALI" = ifelse(
-      is.na(TRAILALI),
-      "&mdash;",
-      NpsychBatteryNorms::valid_values_only(
-        TRAILALI,
-        var_name = "TRAILALI",
-        remove_errorcodes = T
-      )
-    ),
-    "TRAILBRR" = ifelse(
-      is.na(TRAILBRR),
-      "&mdash;",
-      NpsychBatteryNorms::valid_values_only(
-        TRAILBRR,
-        var_name = "TRAILBRR",
-        remove_errorcodes = T
-      )
-    ),
-    "TRAILBLI" = ifelse(
-      is.na(TRAILBLI),
-      "&mdash;",
-      NpsychBatteryNorms::valid_values_only(
-        TRAILBLI,
-        var_name = "TRAILBLI",
-        remove_errorcodes = T
-      )
-    ),
-    "UDSBENRS" = ifelse(
-      is.na(UDSBENRS),
-      "&mdash;",
-      NpsychBatteryNorms::valid_values_only(
-        UDSBENRS,
-        var_name = "UDSBENRS",
-        remove_errorcodes = T
-      )
-    ),
-    "UDSBENTD" = ifelse(
-      is.na(UDSBENTD),
-      "&mdash;",
-      NpsychBatteryNorms::valid_values_only(
-        UDSBENTD,
-        var_name = "UDSBENTD",
-        remove_errorcodes = T
-      )
-    ),
-    "UDSBENTC" = ifelse(
-      is.na(UDSBENTC),
-      "&mdash;",
-      NpsychBatteryNorms::valid_values_only(
-        UDSBENTC,
-        var_name = "UDSBENTC",
-        remove_errorcodes = T
-      )
-    ),
-    "REY1REC" = ifelse(
-      is.na(REY1REC),
-      "&mdash;",
-      NpsychBatteryNorms::valid_values_only(
-        REY1REC,
-        var_name = "REY1REC",
-        remove_errorcodes = T
-      )
-    ),
-    "REY2REC" = ifelse(
-      is.na(REY2REC),
-      "&mdash;",
-      NpsychBatteryNorms::valid_values_only(
-        REY2REC,
-        var_name = "REY2REC",
-        remove_errorcodes = T
-      )
-    ),
-    "REY3REC" = ifelse(
-      is.na(REY3REC),
-      "&mdash;",
-      NpsychBatteryNorms::valid_values_only(
-        REY3REC,
-        var_name = "REY3REC",
-        remove_errorcodes = T
-      )
-    ),
-    "REY4REC" = ifelse(
-      is.na(REY4REC),
-      "&mdash;",
-      NpsychBatteryNorms::valid_values_only(
-        REY4REC,
-        var_name = "REY4REC",
-        remove_errorcodes = T
-      )
-    ),
-    "REY5REC" = ifelse(
-      is.na(REY5REC),
-      "&mdash;",
-      NpsychBatteryNorms::valid_values_only(
-        REY5REC,
-        var_name = "REY5REC",
-        remove_errorcodes = T
-      )
-    ),
-    "REYTCOR" = ifelse(
-      is.na(REYTCOR),
-      "&mdash;",
-      NpsychBatteryNorms::valid_values_only(
-        REYTCOR,
-        var_name = "REYTCOR",
-        remove_errorcodes = T
-      )
-    ),
-    "REYFPOS" = ifelse(
-      is.na(REYFPOS),
-      "&mdash;",
-      NpsychBatteryNorms::valid_values_only(
-        REYFPOS,
-        var_name = "REYFPOS",
-        remove_errorcodes = T
-      )
-    ),
-    "CRAFTURS" = ifelse(
-      is.na(CRAFTURS),
-      "&mdash;",
-      NpsychBatteryNorms::valid_values_only(
-        CRAFTURS,
-        var_name = "CRAFTURS",
-        remove_errorcodes = T
-      )
-    ),
-    "CRAFTVRS" = ifelse(
-      is.na(CRAFTVRS),
-      "&mdash;",
-      NpsychBatteryNorms::valid_values_only(
-        CRAFTVRS,
-        var_name = "CRAFTVRS",
-        remove_errorcodes = T
-      )
-    ),
-    "CRAFTDVR" = ifelse(
-      is.na(CRAFTDVR),
-      "&mdash;",
-      NpsychBatteryNorms::valid_values_only(
-        CRAFTDVR,
-        var_name = "CRAFTDVR",
-        remove_errorcodes = T
-      )
-    ),
-    "CRAFTDRE" = ifelse(
-      is.na(CRAFTDRE),
-      "&mdash;",
-      NpsychBatteryNorms::valid_values_only(
-        CRAFTDRE,
-        var_name = "CRAFTDRE",
-        remove_errorcodes = T
-      )
-    ),
-    "craft_delay_ver_retain" = ifelse(
-      CRAFTDVR %in% rdd$CRAFTDVR$codes,
-      "&mdash;",
-      floor(CRAFTDVR / CRAFTVRS * 100)
-    ),
-    "craft_delay_par_retain" = ifelse(
-      CRAFTDRE %in% rdd$CRAFTDRE$codes,
-      "&mdash;",
-      floor(CRAFTDRE / CRAFTURS * 100)
-    ),
-    "benson_retained" = ifelse(
-      UDSBENTD %in% rdd$UDSBENTD$codes,
-      "&mdash;",
-      floor(UDSBENTD / UDSBENTC * 100)
-    ),
-    "benson_recog" = ifelse(
-      is.na(UDSBENRS) | UDSBENRS == -4,
-      "&mdash;",
-      NpsychBatteryNorms::values_to_labels(UDSBENRS, 'UDSBENRS')
+  # all_scores <- list(
+  #   "CDRSUM" = ifelse(is.na(CDRSUM), "&mdash;", CDRSUM),
+  #   "TRAILARR" = ifelse(is.na(TRAILARR), "&mdash;", TRAILARR),
+  #   "TRAILALI" = ifelse(is.na(TRAILALI), "&mdash;", TRAILALI),
+  #   "TRAILBRR" = ifelse(is.na(TRAILBRR), "&mdash;", TRAILBRR),
+  #   "TRAILBLI" = ifelse(
+  #     is.na(TRAILBLI),
+  #     "&mdash;",
+  #     NpsychBatteryNorms::valid_values_only(
+  #       TRAILBLI,
+  #       var_name = "TRAILBLI",
+  #       remove_errorcodes = T
+  #     )
+  #   ),
+  #   "UDSBENRS" = ifelse(
+  #     is.na(UDSBENRS),
+  #     "&mdash;",
+  #     NpsychBatteryNorms::valid_values_only(
+  #       UDSBENRS,
+  #       var_name = "UDSBENRS",
+  #       remove_errorcodes = T
+  #     )
+  #   ),
+  #   "UDSBENTD" = ifelse(
+  #     is.na(UDSBENTD),
+  #     "&mdash;",
+  #     NpsychBatteryNorms::valid_values_only(
+  #       UDSBENTD,
+  #       var_name = "UDSBENTD",
+  #       remove_errorcodes = T
+  #     )
+  #   ),
+  #   "UDSBENTC" = ifelse(
+  #     is.na(UDSBENTC),
+  #     "&mdash;",
+  #     NpsychBatteryNorms::valid_values_only(
+  #       UDSBENTC,
+  #       var_name = "UDSBENTC",
+  #       remove_errorcodes = T
+  #     )
+  #   ),
+  #   "REY1REC" = ifelse(
+  #     is.na(REY1REC),
+  #     "&mdash;",
+  #     NpsychBatteryNorms::valid_values_only(
+  #       REY1REC,
+  #       var_name = "REY1REC",
+  #       remove_errorcodes = T
+  #     )
+  #   ),
+  #   "REY2REC" = ifelse(
+  #     is.na(REY2REC),
+  #     "&mdash;",
+  #     NpsychBatteryNorms::valid_values_only(
+  #       REY2REC,
+  #       var_name = "REY2REC",
+  #       remove_errorcodes = T
+  #     )
+  #   ),
+  #   "REY3REC" = ifelse(
+  #     is.na(REY3REC),
+  #     "&mdash;",
+  #     NpsychBatteryNorms::valid_values_only(
+  #       REY3REC,
+  #       var_name = "REY3REC",
+  #       remove_errorcodes = T
+  #     )
+  #   ),
+  #   "REY4REC" = ifelse(
+  #     is.na(REY4REC),
+  #     "&mdash;",
+  #     NpsychBatteryNorms::valid_values_only(
+  #       REY4REC,
+  #       var_name = "REY4REC",
+  #       remove_errorcodes = T
+  #     )
+  #   ),
+  #   "REY5REC" = ifelse(
+  #     is.na(REY5REC),
+  #     "&mdash;",
+  #     NpsychBatteryNorms::valid_values_only(
+  #       REY5REC,
+  #       var_name = "REY5REC",
+  #       remove_errorcodes = T
+  #     )
+  #   ),
+  #   "REYTCOR" = ifelse(
+  #     is.na(REYTCOR),
+  #     "&mdash;",
+  #     NpsychBatteryNorms::valid_values_only(
+  #       REYTCOR,
+  #       var_name = "REYTCOR",
+  #       remove_errorcodes = T
+  #     )
+  #   ),
+  #   "REYFPOS" = ifelse(
+  #     is.na(REYFPOS),
+  #     "&mdash;",
+  #     NpsychBatteryNorms::valid_values_only(
+  #       REYFPOS,
+  #       var_name = "REYFPOS",
+  #       remove_errorcodes = T
+  #     )
+  #   ),
+  #   "CRAFTURS" = ifelse(
+  #     is.na(CRAFTURS),
+  #     "&mdash;",
+  #     NpsychBatteryNorms::valid_values_only(
+  #       CRAFTURS,
+  #       var_name = "CRAFTURS",
+  #       remove_errorcodes = T
+  #     )
+  #   ),
+  #   "CRAFTVRS" = ifelse(
+  #     is.na(CRAFTVRS),
+  #     "&mdash;",
+  #     NpsychBatteryNorms::valid_values_only(
+  #       CRAFTVRS,
+  #       var_name = "CRAFTVRS",
+  #       remove_errorcodes = T
+  #     )
+  #   ),
+  #   "CRAFTDVR" = ifelse(
+  #     is.na(CRAFTDVR),
+  #     "&mdash;",
+  #     NpsychBatteryNorms::valid_values_only(
+  #       CRAFTDVR,
+  #       var_name = "CRAFTDVR",
+  #       remove_errorcodes = T
+  #     )
+  #   ),
+  #   "CRAFTDRE" = ifelse(
+  #     is.na(CRAFTDRE),
+  #     "&mdash;",
+  #     NpsychBatteryNorms::valid_values_only(
+  #       CRAFTDRE,
+  #       var_name = "CRAFTDRE",
+  #       remove_errorcodes = T
+  #     )
+  #   ),
+  #   "craft_delay_ver_retain" = ifelse(
+  #     CRAFTDVR %in% rdd$CRAFTDVR$codes,
+  #     "&mdash;",
+  #     floor(CRAFTDVR / CRAFTVRS * 100)
+  #   ),
+  #   "craft_delay_par_retain" = ifelse(
+  #     CRAFTDRE %in% rdd$CRAFTDRE$codes,
+  #     "&mdash;",
+  #     floor(CRAFTDRE / CRAFTURS * 100)
+  #   ),
+  #   "benson_retained" = ifelse(
+  #     UDSBENTD %in% rdd$UDSBENTD$codes,
+  #     "&mdash;",
+  #     floor(UDSBENTD / UDSBENTC * 100)
+  #   ),
+  #   "benson_recog" = ifelse(
+  #     is.na(UDSBENRS) | UDSBENRS == -4,
+  #     "&mdash;",
+  #     NpsychBatteryNorms::values_to_labels(UDSBENRS, 'UDSBENRS')
+  #   )
+  # )
+
+  inputs <- list(
+    CDRSUM = CDRSUM,
+    TRAILARR = TRAILARR,
+    TRAILALI = TRAILALI,
+    TRAILBRR = TRAILBRR,
+    TRAILBLI = TRAILBLI,
+    UDSBENRS = UDSBENRS,
+    UDSBENTD = UDSBENTD,
+    UDSBENTC = UDSBENTC,
+    REY1REC = REY1REC,
+    REY2REC = REY2REC,
+    REY3REC = REY3REC,
+    REY4REC = REY4REC,
+    REY5REC = REY5REC,
+    REYTCOR = REYTCOR,
+    REYFPOS = REYFPOS,
+    CRAFTURS = CRAFTURS,
+    CRAFTVRS = CRAFTVRS,
+    CRAFTDVR = CRAFTDVR,
+    CRAFTDRE = CRAFTDRE
+  )
+
+  inputs <- sapply(
+    inputs,
+    \(x) {
+      if (ntrs::is_npsych_scores(x)) {
+        if (S7::S7_class(x)@name == "UDSBENRS") {
+          x_num <- as.numeric(x)
+          if (x_num %in% x@range) {
+            return(names(which(x@codes == x_num)))
+          } else {
+            return(NA)
+          }
+        }
+
+        return(ntrs::remove_error_codes(x))
+      } else {
+        return(x)
+      }
+    },
+    simplify = FALSE
+  )
+
+  calc_inputs <- with(
+    inputs,
+    list(
+      "craft_delay_ver_retain" = floor(CRAFTDVR / CRAFTVRS * 100),
+      "craft_delay_par_retain" = floor(CRAFTDRE / CRAFTURS * 100),
+      "benson_retained" = floor(UDSBENTD / UDSBENTC * 100)
     )
   )
 
+  inputs <- c(
+    inputs,
+    calc_inputs
+  )
+
   with(
-    all_scores,
+    inputs,
     data.frame(
       ## General Cognition
       "CDRGLOB" = paste0("CDR Global (", CDRSUM, " SOB)"),
@@ -306,7 +331,7 @@ var_labels <- function(
         "Benson Delay (",
         benson_retained,
         "% retained; Recog = ",
-        benson_recog,
+        UDSBENRS,
         ")"
       ),
       "CRAFTVRS" = "Craft Immediate - Verbatim",

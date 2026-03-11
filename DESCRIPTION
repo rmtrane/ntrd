@@ -26,15 +26,12 @@ Suggests:
 Config/testthat/edition: 3
 Config/testthat/load-all: list(export_all = TRUE, helpers = TRUE)
 RoxygenNote: 7.3.3
-Depends: 
-    R (>= 4.2.0)
 Imports: 
     bslib,
     data.table (>= 1.9.8),
     DT,
     gt,
     lubridate,
-    NpsychBatteryNorms,
     plotly,
     purrr,
     shiny,
@@ -45,8 +42,11 @@ Imports:
     safer,
     stats,
     mirai
+Depends: 
+    R (>= 4.2.0),
+    ntrs
 Remotes: 
-    rmtrane/NpsychBatteryNorms
+    rmtrane/ntrs
 Roxygen: list(markdown = TRUE)
 Authors@R: c(
     person("Ralph", "Møller Trane", email = "rtrane@wisc.edu", role = c("aut", "cre"), comment = c(ORCID = "0000-0001-7824-1785"))
@@ -86,6 +86,7 @@ Collate:
     'load_extensions.R'
     'longTableModule.R'
     'mainTableModule.R'
+    'methodSelectModule.R'
     'my_gt_plt_bar_pct.R'
     'nacc_to_wls.R'
     'nacc_var_groups.R'

@@ -9,7 +9,7 @@ data_nacc(data = NULL)
 \value{
 An S7 object of class \code{data_nacc}. Object construction will fail if the
 provided data is missing required columns, has incorrect column types
-(\code{NACCID} must be character; \code{VISITYR}, \code{VISITMO}, \code{VISITDAY}, \code{SEX}, \code{EDUC}, \code{BIRTHYR} must be numeric),
+(\code{NACCID} must be character; \code{VISITYR}, \code{VISITMO}, \code{VISITDAY}, \code{SEX}, \code{EDUC}, \code{BIRTHYR}/\code{BIRTHMO} must be numeric or \code{NACCAGE} must be present),
 or contains invalid values (e.g., \code{SEX} not 1/2/NA, \code{VISITYR} < 2005, \code{VISITMO} not 1-12, \code{VISITDAY} not 1-31,
 or an invalid date combination from year/month/day).
 }
@@ -20,6 +20,7 @@ A short description...
 
 \describe{
 \item{\code{data}}{A \code{data.table} containing NACC data. If the provided value
-is not a \code{data.table}, it will be coerced to one by the setter.}
+is not a \code{data.table}, it will be coerced to one by the setter, which
+also adds \code{VISITDATE} and \code{NACCAGE} if these are not already present.}
 }}
 

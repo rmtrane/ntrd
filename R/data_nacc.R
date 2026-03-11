@@ -4,12 +4,14 @@
 #' A short description...
 #'
 #' @slot data A `data.table` containing NACC data. If the provided value
-#'   is not a `data.table`, it will be coerced to one by the setter.
+#'   is not a `data.table`, it will be coerced to one by the setter, which
+#'   also adds `VISITDATE` and `NACCAGE` if these are not already present.
 #'
 #' @returns
 #' An S7 object of class `data_nacc`. Object construction will fail if the
 #'   provided data is missing required columns, has incorrect column types
-#'   (`NACCID` must be character; `VISITYR`, `VISITMO`, `VISITDAY`, `SEX`, `EDUC`, `BIRTHYR` must be numeric),
+#'   (`NACCID` must be character; either `VISITYR`, `VISITMO`, and `VISITDAY` as numerics, or `VISITDATE` as
+#'   `"YYYY-MM-DD"`; `SEX` and `EDUC` must be numeric; `BIRTHYR`and `BIRTHMO` or `NACCAGE` must be present as numerics),
 #'   or contains invalid values (e.g., `SEX` not 1/2/NA, `VISITYR` < 2005, `VISITMO` not 1-12, `VISITDAY` not 1-31,
 #'   or an invalid date combination from year/month/day).
 #'
@@ -23,6 +25,45 @@ data_nacc <- S7::new_class(
         if (!data.table::is.data.table(value)) {
           value <- data.table::as.data.table(value)
         }
+
+        if (!"VISITDATE" %in% colnames(value)) {
+          value$VISITDATE <- as.Date(ifelse(
+            test = is.na(value$VISITYR) |
+              is.na(value$VISITMO) |
+              is.na(value$VISITDAY),
+            yes = NA,
+            no = paste(value$VISITYR, value$VISITMO, value$VISITDAY, sep = "-")
+          ))
+        }
+
+        visitdate_cols <- intersect(
+          colnames(value),
+          c("VISITYR", "VISITMO", "VISITDAY")
+        )
+
+        if (length(visitdate_cols) > 0) {
+          data.table::set(value, j = visitdate_cols, value = NULL)
+        }
+
+        # value$VISITYR <- value$VISITMO <- value$VISITDAY <- NULL
+
+        if (!"NACCAGE" %in% colnames(value)) {
+          value$NACCAGE <- lubridate::time_length(
+            value$VISITDATE -
+              as.Date(ifelse(
+                test = is.na(value$BIRTHYR) | is.na(value$BIRTHMO),
+                yes = NA,
+                no = paste(value$BIRTHYR, value$BIRTHMO, 15, sep = "-")
+              )),
+            unit = "years"
+          )
+        }
+
+        value[,
+          names(.SD) := lapply(.SD, as.numeric),
+          .SDcols = is.logical
+        ]
+
         self@data <- value
         self
       }
@@ -35,9 +76,9 @@ data_nacc <- S7::new_class(
 
     required_cols <- c(
       "NACCID",
-      "VISITYR",
-      "VISITMO",
-      "VISITDAY",
+      # "VISITYR",
+      # "VISITMO",
+      # "VISITDAY",
       "SEX",
       "EDUC",
       "BIRTHYR"

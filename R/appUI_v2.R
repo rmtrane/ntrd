@@ -134,14 +134,7 @@ appUI_v2 <- function() {
               id = "long-trends",
               bslib::nav_panel(
                 title = "Cognitive Scores (Plots)",
-                # plotVarUI("plot_var")
-                #do.call(
-                #htmltools::tagList,
-                bslib::accordion(
-                  !!!lapply(unique(nacc_var_groups), \(x) plotUI(id = x)),
-                  id = "plots-accordion",
-                  open = TRUE
-                ) #
+                shiny::uiOutput("plots_accordion"),
               ),
               bslib::nav_panel(
                 title = "Cognitive Scores (Table)",
@@ -154,9 +147,9 @@ appUI_v2 <- function() {
               bslib::nav_panel(
                 title = "Biomarkers",
                 value = "biomarkers",
-                # biomarkerUI("biomarker-tables")
                 shiny::uiOutput("extension_ui")
               )
+              # shiny::uiOutput("extension_ui")
             )
           )
         )
@@ -165,7 +158,7 @@ appUI_v2 <- function() {
     bslib::nav_panel(
       title = "Setup",
       value = "colSelect",
-      colSelectUI("colSelect")
+      methodSelectUI("colSelect")
     )
   )
 }

@@ -4,29 +4,11 @@
 \alias{prepare_data}
 \title{Wrapper to prepare raw data}
 \usage{
-prepare_data(
-  dat,
-  selected_cols = c("RACE", "CDRGLOB", "MOCATOTS", "MOCBTOTS", "TRAILA", "TRAILARR",
-    "TRAILALI", "OTRAILA", "OTRLARR", "DIGFORCT", "DIGFORSL", "DIGBACCT", "DIGBACLS",
-    "WAIS", "MINTTOTS", "ANIMALS", "VEG", "UDSVERTN", "UDSVERFC", "UDSVERLC", "UDSBENTC",
-    "UDSBENTD", "CRAFTVRS", "CRAFTURS", "CRAFTDVR", "CRAFTDRE", "REY1REC", "REY2REC",
-    "REY3REC", "REY4REC", "REY5REC", "REY6REC", "REYDREC", "REYTCOR", "TRAILB",
-    "TRAILBLI", "TRAILBRR", "MOCACLOC", "MOCACLOH", "MOCACLON", "OTRAILB", "OTRLBRR",
-    "OTRLBLI", "NACCGDS", "CDRSUM", 
-     "UDSBENRS", "NACCID", "SEX", "EDUC", "HANDED",
-    "NACCAGE", "BIRTHYR", "VISITYR", "VISITMO", "VISITDAY", "NACCUDSD", "NACCMMSE",
-    "BOSTON", "LOGIMEM", "MEMUNITS", "MEMTIME", "DIGIF", "DIGIFLEN", "DIGIB", "DIGIBLEN"),
-  methods = NULL,
-  print_messages = F,
-  with_diags = T
-)
+prepare_data(dat, methods = NULL, print_messages = F, with_diags = T)
 }
 \arguments{
 \item{dat}{data set similar to the NACC data. For an example, see
 \code{?demo_data}.}
-
-\item{selected_cols}{vector with columns to keep. If named, the names must
-correspond to NACC variable names and entries columns in the data set \code{dat}.}
 
 \item{methods}{NULL (default) or list of named entries specifying which model to use
 for standardizing cognitive scores. If NULL, defaults are applied for all
@@ -36,6 +18,9 @@ variables in the dataset for which methods have been implemented (see \code{Npsy
 be print with the methods used if methods is omitted (or NULL)}
 
 \item{with_diags}{logical (default \code{TRUE}); should diagnoses be included?}
+
+\item{selected_cols}{vector with columns to keep. If named, the names must
+correspond to NACC variable names and entries columns in the data set \code{dat}.}
 }
 \description{
 This is a wrapper function that returns only the desired columns, adds

@@ -7,7 +7,7 @@ appServer_v2 <- function(input, output, session) {
   ## Hide 'Participant Data' on startup
   bslib::nav_hide(id = "main_navbar", target = "colSelect")
   bslib::nav_hide(id = "main_navbar", target = "tables-and-figures")
-  bslib::nav_hide(id = "long-trends", target = "biomarkers")
+  # bslib::nav_hide(id = "long-trends", target = "biomarkers")
 
   ## Setup data select module
   dat_sel <- dataSelectServer_v2("dataSelect")
@@ -24,16 +24,21 @@ appServer_v2 <- function(input, output, session) {
   shiny::observe({
     if (!is.null(dat_sel$extras()$extension_ui)) {
       output$extension_ui <- shiny::renderUI({
+        #   bslib::nav_panel(
+        #     title = "Biomarkers",
+        #     value = "biomarkers",
         dat_sel$extras()$extension_ui()
+        # )
       })
-      bslib::nav_show(id = "long-trends", target = "biomarkers")
+      # bslib::nav_show(id = "long-trends", target = "biomarkers")
     }
-  }) |>
-    shiny::bindEvent(dat_sel$extras()$panda_api_token)
+  }) #()$panda_api_token)
 
   ## Reactive object with available columns to use to select from
   cols_avail <- shiny::reactive({
-    colnames(dat_sel$dat_obj())
+    if (S7::S7_inherits(dat_sel$dat_obj(), data_nacc)) {
+      colnames(dat_sel$dat_obj()@data)
+    }
   })
 
   ## Reactive values to hold selected columns, and methods
@@ -50,59 +55,62 @@ appServer_v2 <- function(input, output, session) {
     )
 
   ## Select columns
-  colSelectOutput <- colSelectServer(
+  # colSelectOutput <- colSelectServer(
+  methodSelectOutput <- methodSelectServer(
     "colSelect",
-    col_names = cols_avail,
-    default_methods = list(
-      MOCATOTS = c(method = "regression", version = "nacc"),
-      OTRAILA = c(method = "regression", version = "updated_2025.06"),
-      OTRAILB = c(method = "regression", version = "updated_2025.06"),
-      # OTRLARR = c(method = "regression", version = "updated"),
-      # OTRLBRR = c(method = "regression", version = "updated"),
-      DIGFORCT = c(method = "regression", version = "nacc"),
-      DIGFORSL = c(method = "regression", version = "nacc"),
-      DIGBACCT = c(method = "regression", version = "nacc"),
-      DIGBACLS = c(method = "regression", version = "nacc"),
-      TRAILA = c(method = "regression", version = "nacc"),
-      TRAILB = c(method = "regression", version = "nacc"),
-      WAIS = c(method = "T-score", version = NA),
-      MINTTOTS = c(method = "regression", version = "nacc"),
-      ANIMALS = c(method = "regression", version = "nacc"),
-      VEG = c(method = "regression", version = "nacc"),
-      UDSVERFC = c(method = "regression", version = "nacc"),
-      UDSVERLC = c(method = "regression", version = "nacc"),
-      UDSVERTN = c(method = "regression", version = "nacc"),
-      UDSBENTC = c(method = "regression", version = "nacc"),
-      UDSBENTD = c(method = "regression", version = "nacc"),
-      CRAFTVRS = c(method = "regression", version = "nacc"),
-      CRAFTURS = c(method = "regression", version = "nacc"),
-      CRAFTDVR = c(method = "regression", version = "nacc"),
-      CRAFTDRE = c(method = "regression", version = "nacc"),
-      # REY1REC = c(method = "T-score", version = NA),
-      # REY2REC = c(method = "T-score", version = NA),
-      # REY3REC = c(method = "T-score", version = NA),
-      # REY4REC = c(method = "T-score", version = NA),
-      # REY5REC = c(method = "T-score", version = NA),
-      REY6REC = c(method = "T-score", version = NA),
-      REYDREC = c(method = "T-score", version = NA),
-      REYTOTAL = c(method = "T-score", version = NA),
-      REYAREC = c(method = "T-score", version = NA),
-      REYDLIST = c(method = "T-score", version = NA),
-      NACCMMSE = c(method = "regression", version = "nacc"),
-      BOSTON = c(method = "regression", version = "nacc"),
-      LOGIMEM = c(method = "regression", version = "nacc"),
-      MEMUNITS = c(method = "regression", version = "nacc"),
-      DIGIF = c(method = "regression", version = "nacc"),
-      DIGIFLEN = c(method = "regression", version = "nacc"),
-      DIGIB = c(method = "regression", version = "nacc"),
-      DIGIBLEN = c(method = "regression", version = "nacc")
-    ),
+    # col_names = cols_avail,
+    dat_obj = dat_sel$dat_obj,
+    default_methods = dat_sel$default_methods,
+    # default_methods = list(
+    #   MOCATOTS = c(method = "regression", version = "nacc"),
+    #   OTRAILA = c(method = "regression", version = "updated_2025.06"),
+    #   OTRAILB = c(method = "regression", version = "updated_2025.06"),
+    #   # OTRLARR = c(method = "regression", version = "updated"),
+    #   # OTRLBRR = c(method = "regression", version = "updated"),
+    #   DIGFORCT = c(method = "regression", version = "nacc"),
+    #   DIGFORSL = c(method = "regression", version = "nacc"),
+    #   DIGBACCT = c(method = "regression", version = "nacc"),
+    #   DIGBACLS = c(method = "regression", version = "nacc"),
+    #   TRAILA = c(method = "regression", version = "nacc"),
+    #   TRAILB = c(method = "regression", version = "nacc"),
+    #   WAIS = c(method = "T-score", version = NA),
+    #   MINTTOTS = c(method = "regression", version = "nacc"),
+    #   ANIMALS = c(method = "regression", version = "nacc"),
+    #   VEG = c(method = "regression", version = "nacc"),
+    #   UDSVERFC = c(method = "regression", version = "nacc"),
+    #   UDSVERLC = c(method = "regression", version = "nacc"),
+    #   UDSVERTN = c(method = "regression", version = "nacc"),
+    #   UDSBENTC = c(method = "regression", version = "nacc"),
+    #   UDSBENTD = c(method = "regression", version = "nacc"),
+    #   CRAFTVRS = c(method = "regression", version = "nacc"),
+    #   CRAFTURS = c(method = "regression", version = "nacc"),
+    #   CRAFTDVR = c(method = "regression", version = "nacc"),
+    #   CRAFTDRE = c(method = "regression", version = "nacc"),
+    #   # REY1REC = c(method = "T-score", version = NA),
+    #   # REY2REC = c(method = "T-score", version = NA),
+    #   # REY3REC = c(method = "T-score", version = NA),
+    #   # REY4REC = c(method = "T-score", version = NA),
+    #   # REY5REC = c(method = "T-score", version = NA),
+    #   REY6REC = c(method = "T-score", version = NA),
+    #   REYDREC = c(method = "T-score", version = NA),
+    #   REYTOTAL = c(method = "T-score", version = NA),
+    #   REYAREC = c(method = "T-score", version = NA),
+    #   REYDLIST = c(method = "T-score", version = NA),
+    #   NACCMMSE = c(method = "regression", version = "nacc"),
+    #   BOSTON = c(method = "regression", version = "nacc"),
+    #   LOGIMEM = c(method = "regression", version = "nacc"),
+    #   MEMUNITS = c(method = "regression", version = "nacc"),
+    #   DIGIF = c(method = "regression", version = "nacc"),
+    #   DIGIFLEN = c(method = "regression", version = "nacc"),
+    #   DIGIB = c(method = "regression", version = "nacc"),
+    #   DIGIBLEN = c(method = "regression", version = "nacc")
+    # ),
     col_selection = "disable" # allow_col_selections()
   )
 
   shiny::observe({
-    col_sel(colSelectOutput$var_cols())
-    std_methods(colSelectOutput$std_methods())
+    col_sel(methodSelectOutput$var_cols())
+    std_methods(methodSelectOutput$std_methods())
   })
 
   shiny::observe({
@@ -122,17 +130,30 @@ appServer_v2 <- function(input, output, session) {
       ignoreNULL = T
     )
 
-  ## Prepare data
+  ## Prepare data and get nacc_var_groups
   fin_dat <- shiny::reactiveVal()
+  nacc_var_groups <- shiny::reactiveVal()
 
   shiny::observe({
     if (!all(is.na(std_methods())) & !all(is.na(col_sel()))) {
       fin_dat(
         prepare_data(
           dat_sel$dat_obj(),
-          selected_cols = col_sel(),
+          # selected_cols = col_sel(),
           methods = std_methods(),
           print_messages = F
+        )
+      )
+
+      ## Extract "domain" from all npsych_scores
+      nacc_var_groups(
+        unlist(
+          lapply(
+            setNames(list_npsych_scores(), list_npsych_scores()),
+            \(x) {
+              match.fun(x)()@domain
+            }
+          )
         )
       )
     }
@@ -375,11 +396,11 @@ appServer_v2 <- function(input, output, session) {
   y_ranges <- shiny::reactiveValues()
 
   shiny::observe({
-    lapply(unique(nacc_var_groups), \(cur_group) {
+    lapply(unique(nacc_groups), \(cur_group) {
       ## Get variables in group corresponding
       cur_vars <- paste(
         "std",
-        names(nacc_var_groups[nacc_var_groups == cur_group]),
+        names(nacc_var_groups()[nacc_var_groups() == cur_group]),
         sep = "_"
       ) |>
         intersect(
@@ -395,19 +416,30 @@ appServer_v2 <- function(input, output, session) {
       fin_dat()
     )
 
-  ## Create all plots
-  lapply(unique(nacc_var_groups), \(x) {
-    plotServer(
-      x,
-      dat = current_studyid_dat,
-      x_range = x_range,
-      y_range = shiny::reactive(y_ranges[[x]]),
-      descriptions = descriptions,
-      fill_values = fill_values,
-      print_updating = T,
-      shade_descriptions = shade_descriptions,
-      new_id = x
+  ## Plots UI
+  output$plots_accordion <- shiny::renderUI({
+    bslib::accordion(
+      !!!lapply(unique(nacc_var_groups()), \(x) plotUI(id = x)),
+      id = "plots-accordion",
+      open = TRUE
     )
+  })
+
+  ## Create all plots
+  shiny::observe({
+    lapply(unique(nacc_var_groups()), \(x) {
+      plotServer(
+        x,
+        dat = current_studyid_dat,
+        x_range = x_range,
+        y_range = shiny::reactive(y_ranges[[x]]),
+        descriptions = descriptions,
+        fill_values = fill_values,
+        print_updating = T,
+        shade_descriptions = shade_descriptions,
+        new_id = x
+      )
+    })
   })
 
   ### Cognitive scores (Table)

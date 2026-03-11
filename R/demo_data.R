@@ -1,2 +1,2 @@
-#' @inherit NpsychBatteryNorms::demo_data title description format
+#' @inherit ntrs::demo_data title description format
 "demo_data"

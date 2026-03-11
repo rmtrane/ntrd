@@ -16,9 +16,9 @@
 #'
 #' @export
 plotUI <- function(id) {
-  if (!id %in% nacc_var_groups) {
+  if (!id %in% nacc_groups) {
     cli::cli_abort(
-      "{.arg id} should be one of {.var {unique(nacc_var_groups)}}, but is {.var {id}}"
+      "{.arg id} should be one of {.var {nacc_groups}}, but is {.var {id}}"
     )
   }
 
@@ -140,9 +140,9 @@ plotServer <- function(
   shade_descriptions = TRUE,
   new_id = NULL
 ) {
-  if (!id %in% nacc_var_groups) {
+  if (!id %in% nacc_groups) {
     cli::cli_abort(
-      "{.arg id} should be one of {.var {unique(nacc_var_groups)}}, but is {.var {id}}"
+      "{.arg id} should be one of {.var {nacc_groups}}, but is {.var {id}}"
     )
   }
 
@@ -553,7 +553,7 @@ plotApp <- function(
         full_screen = T,
         bslib::card_header("Longitudinal Trends"),
         bslib::accordion(
-          !!!lapply(unique(nacc_var_groups), \(x) plotUI(id = x)),
+          !!!lapply(unique(nacc_groups), \(x) plotUI(id = x)),
           open = TRUE,
           id = "plots-accordion"
         )
@@ -625,7 +625,7 @@ plotApp <- function(
     y_ranges <- shiny::reactiveValues()
 
     shiny::observe({
-      lapply(unique(nacc_var_groups), \(cur_group) {
+      lapply(nacc_groups, \(cur_group) {
         ## Get variables in group corresponding
         cur_vars <- paste(
           "std",
@@ -673,7 +673,7 @@ plotApp <- function(
 
     shade_descriptions <- shiny::reactiveVal(TRUE)
 
-    lapply(unique(nacc_var_groups), \(x) {
+    lapply(nacc_groups, \(x) {
       plotServer(
         x,
         dat = current_studyid_dat,

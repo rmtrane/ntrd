@@ -28,6 +28,7 @@ load_extensions <- function() {
       seen_pkgs <- c(seen_pkgs, pkg_name)
 
       desc_file <- file.path(pkg_dir, "DESCRIPTION")
+
       if (!file.exists(desc_file)) {
         next
       }
@@ -54,9 +55,9 @@ load_extensions <- function() {
       }
 
       # Skip if already loaded
-      if (isNamespaceLoaded(pkg_name)) {
-        next
-      }
+      # if (isNamespaceLoaded(pkg_name)) {
+      #   next
+      # }
 
       tryCatch(
         {

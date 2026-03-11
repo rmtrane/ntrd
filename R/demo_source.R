@@ -22,7 +22,46 @@ S7::method(data_source_server, demo_source) <- function(source, id) {
 }
 
 S7::method(data_load, demo_source) <- function(source, params) {
-  list(
-    data = data_nacc(data = demo_data)
-  )
+  tmp <- data.table::copy(demo_data)
+
+  tmp[,
+    names(.SD) := purrr::imap(.SD, \(x, idx) {
+      do.call(idx, args = list(x = x))
+    }),
+    .SDcols = intersect(colnames(tmp), ntrs::list_npsych_scores())
+  ]
+
+  ## Add derived variables
+  tmp[,
+    c(
+      "REYTOTAL",
+      "REYAREC",
+      "FAS",
+      "MOCACLOCK"
+    ) := list(
+      calc_REYTOTAL(
+        REY1REC,
+        REY2REC,
+        REY3REC,
+        REY4REC,
+        REY5REC
+      ),
+      calc_REYAREC(REYTCOR, REYFPOS),
+      calc_FAS(
+        BILLS,
+        TAXES,
+        SHOPPING,
+        GAMES,
+        STOVE,
+        MEALPREP,
+        EVENTS,
+        PAYATTN,
+        REMDATES,
+        TRAVEL
+      ),
+      calc_MOCACLOCK(MOCACLOC, MOCACLON, MOCACLOH)
+    )
+  ]
+
+  data_nacc(data = tmp)
 }

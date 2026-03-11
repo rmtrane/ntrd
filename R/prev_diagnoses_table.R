@@ -101,10 +101,11 @@ prev_diagnoses_table <- function(dat, table_font_size = 100) {
 
   # fmt: skip
   for (x in intersect(c("raw_MOCATOTS", "raw_NACCMMSE"), colnames(diagnosis_table))) {
-    diagnosis_table[[x]] <- NpsychBatteryNorms::valid_values_only(
-      raw_score = diagnosis_table[[x]],
-      var_name = gsub("^raw_", "", x)
-    )
+    # diagnosis_table[[x]] <- NpsychBatteryNorms::valid_values_only(
+    #   raw_score = diagnosis_table[[x]],
+    #   var_name = gsub("^raw_", "", x)
+    # )
+    diagnosis_table[[x]] <- ntrs::remove_error_codes(diagnosis_table[[x]])
   }
 
   colnames(diagnosis_table) <- gsub(
@@ -207,10 +208,10 @@ prev_diagnoses_table <- function(dat, table_font_size = 100) {
             unique(.SD$MOCATOTS),
             unique(.SD$cdr),
             unique(.SD$FAS),
-            as.character(NpsychBatteryNorms::values_to_labels(
-              raw_score = as.numeric(unique(.SD$NACCUDSD)),
-              var_name = "NACCUDSD"
-            )),
+            names(ntrs::rdd$NACCUDSD$codes)[match(
+              as.numeric(unique(.SD$NACCUDSD)),
+              ntrs::rdd$NACCUDSD$codes
+            )],
             unname(.SD$etiologies)
           )
         ))[

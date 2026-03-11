@@ -18,7 +18,7 @@ get_y_range <- function(dat) {
 
   ## If at least some obs, first check if any T-scores
   t_score_cols <- names(which(
-    lapply(dat, \(x) attributes(x)$method) == "T-score"
+    lapply(dat, \(x) attributes(x)$method) == "tscores"
   ))
 
   ## Change T-scores to z-values

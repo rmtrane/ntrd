@@ -50,7 +50,7 @@ dataSelectServer_v2 <- function(id) {
       vapply(sources, \(s) s@name, character(1))
     )
 
-    print(choices)
+    # print(choices)
 
     output$data_source_selector <- shiny::renderUI({
       if (length(choices) > 0) {
@@ -261,6 +261,25 @@ dataSelectServer_v2 <- function(id) {
 
       ## Get current source, and server results
       source <- sources[[input$data_source]]
+
+      ## Attach namespace for chosen extension, and remove other extensions
+      ext_pkg <- S7::S7_class(source)@package
+      all_ext_pkg <- unlist(lapply(sources, \(x) S7::S7_class(x)@package))
+
+      # First, remove
+      for (pkg in setdiff(all_ext_pkg, "ntrd")) {
+        unloadNamespace(ns = pkg)
+      }
+
+      # Attach for desired namespace
+      if (ext_pkg != "ntrd") {
+        # if (ext_pkg %in% names(sessionInfo()$otherPkgs)) {
+        #   unloadNamespace(ext_pkg)
+        # }
+
+        library(ext_pkg, character.only = TRUE)
+      }
+
       dat_src_server <- data_source_servers[[input$data_source]]
 
       if (is.null(dat_src_server)) {
@@ -286,7 +305,7 @@ dataSelectServer_v2 <- function(id) {
         )
       }
 
-      dat_obj(result@data)
+      dat_obj(result)
     }) |>
       shiny::bindEvent(input$go)
 
@@ -300,9 +319,21 @@ dataSelectServer_v2 <- function(id) {
       }
     })
 
+    have_defaults <- ls(ntrs:::.std_defaults)
+    default_methods <- lapply(
+      setNames(have_defaults, have_defaults),
+      \(x) {
+        with(
+          ntrs:::.std_defaults[[x]],
+          c("method" = method, "version" = version)
+        )
+      }
+    )
+
     return(list(
       dat_obj = dat_obj,
-      extras = data_source_extras
+      extras = data_source_extras,
+      default_methods = default_methods
     ))
   })
 }
