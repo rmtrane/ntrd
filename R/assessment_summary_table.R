@@ -485,11 +485,12 @@ assessment_summary_data <- function(
       "is_error"
     ) := list(
       unlist(sapply(name, \(x) {
-        if (x %in% ntrs::list_npsych_scores()) {
-          return(ntrs::get_npsych_scores(x)()@domain)
+        tmp <- ntrs::get_npsych_scores(x)()@domain
+        if (length(tmp) != 0) {
+          return(tmp)
         }
 
-        unname(nacc_var_groups[x])
+        NA
       })),
       factor(
         all_labels[name],
@@ -665,6 +666,8 @@ assessment_summary_data <- function(
       "is_error"
     ),
     with = F
+  ][
+    !is.na(group)
   ]
 
   for_main_table[,

@@ -4,6 +4,9 @@
 \alias{colSelectUI}
 \alias{colSelectServer}
 \alias{colSelectApp}
+\alias{methodSelectUI}
+\alias{methodSelectServer}
+\alias{methodSelectApp}
 \title{Shiny Module for Selecting Columns}
 \usage{
 colSelectUI(id)
@@ -22,21 +25,16 @@ colSelectApp(
   testing = FALSE
 )
 
-colSelectUI(id)
+methodSelectUI(id)
 
-colSelectServer(
+methodSelectServer(
   id,
-  col_names,
+  dat_obj,
   default_methods,
   col_selection = c("enable", "disable", "hide")
 )
 
-colSelectApp(
-  col_names,
-  default_methods,
-  col_selection = "enable",
-  testing = FALSE
-)
+methodSelectApp(col_selection = "enable", testing = FALSE)
 }
 \arguments{
 \item{id}{id to link shiny modules}

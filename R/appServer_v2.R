@@ -109,6 +109,8 @@ appServer_v2 <- function(input, output, session) {
   )
 
   shiny::observe({
+    shiny::req(methodSelectOutput$std_methods())
+
     col_sel(methodSelectOutput$var_cols())
     std_methods(methodSelectOutput$std_methods())
   })

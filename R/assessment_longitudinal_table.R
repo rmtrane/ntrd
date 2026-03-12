@@ -316,10 +316,12 @@ assessment_longitudinal_table <- function(
   ## Add column indicating groups
   for_table$group <- # unname(nacc_var_groups[for_table$name])
     purrr::map_chr(for_table$name, \(x) {
-      S7::prop(ntrs::get_npsych_scores(x)(), "domain")
+      S7::prop(ntrs::get_npsych_scores(x)(), "domain") %||% NA
     })
 
   # for_table_std$group <- unname(nacc_var_groups[for_table_std$name])
+
+  for_table <- for_table[!is.na(group)]
 
   all_grp_names <- unique(c(nacc_groups), unique(for_table$group))
   all_var_names <- unique(c(names(nacc_var_labels), for_table$name))

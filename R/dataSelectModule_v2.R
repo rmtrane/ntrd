@@ -255,6 +255,7 @@ dataSelectServer_v2 <- function(id) {
     # --- Reactive values for data object and extras
     dat_obj <- shiny::reactiveVal(NULL)
     data_source_extras <- shiny::reactiveVal(NULL)
+    default_methods <- shiny::reactiveVal(NULL)
 
     # --- Click "Go!" to load data ---
     shiny::observe({
@@ -275,6 +276,18 @@ dataSelectServer_v2 <- function(id) {
           set_defaults()
         }
       }
+
+      # have_defaults <- ls(ntrs:::.std_defaults)
+
+      default_methods(purrr::discard(
+        lapply(
+          setNames(ntrs::list_npsych_scores(), ntrs::list_npsych_scores()),
+          \(x) {
+            get_std_defaults(get_npsych_scores(x)())
+          }
+        ),
+        is.null
+      ))
 
       dat_src_server <- data_source_servers[[input$data_source]]
 
@@ -314,17 +327,6 @@ dataSelectServer_v2 <- function(id) {
         data_source_extras(shiny::reactiveValuesToList(srv$extras))
       }
     })
-
-    have_defaults <- ls(ntrs:::.std_defaults)
-    default_methods <- lapply(
-      setNames(have_defaults, have_defaults),
-      \(x) {
-        with(
-          ntrs:::.std_defaults[[x]],
-          c("method" = method, "version" = version)
-        )
-      }
-    )
 
     return(list(
       dat_obj = dat_obj,

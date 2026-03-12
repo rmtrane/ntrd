@@ -9,7 +9,8 @@ data_nacc(data = NULL)
 \value{
 An S7 object of class \code{data_nacc}. Object construction will fail if the
 provided data is missing required columns, has incorrect column types
-(\code{NACCID} must be character; \code{VISITYR}, \code{VISITMO}, \code{VISITDAY}, \code{SEX}, \code{EDUC}, \code{BIRTHYR}/\code{BIRTHMO} must be numeric or \code{NACCAGE} must be present),
+(\code{NACCID} must be character; either \code{VISITYR}, \code{VISITMO}, and \code{VISITDAY} as numerics, or \code{VISITDATE} as
+\code{"YYYY-MM-DD"}; \code{SEX} and \code{EDUC} must be numeric; \code{BIRTHYR}and \code{BIRTHMO} or \code{NACCAGE} must be present as numerics),
 or contains invalid values (e.g., \code{SEX} not 1/2/NA, \code{VISITYR} < 2005, \code{VISITMO} not 1-12, \code{VISITDAY} not 1-31,
 or an invalid date combination from year/month/day).
 }

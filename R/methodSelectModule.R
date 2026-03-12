@@ -144,10 +144,9 @@ methodSelectServer <- function(
 
     shiny::observe({
       # shiny::req(data_type())
+      shiny::req(default_methods())
       shiny::req(col_names())
       # shiny::req(dat_obj())
-
-      # browser()
 
       tmp_table <- data.table::data.table(
         " " = "",
@@ -193,19 +192,22 @@ methodSelectServer <- function(
           \(x) {
             ## If no method given in default_methods, then we do not give the
             ## option to choose a method.
-            if (x %in% names(default_methods)) {
-              def_method <- paste0(
-                default_methods[[x]]["method"],
-                " (",
-                default_methods[[x]]["version"],
-                ")"
+            if (x %in% names(default_methods())) {
+              def_method <- do.call(
+                paste0,
+                c(
+                  list(
+                    default_methods()[[x]]["method"]
+                  ),
+                  if (!is.na(default_methods()[[x]]["version"])) {
+                    list(
+                      " (",
+                      default_methods()[[x]]["version"],
+                      ")"
+                    )
+                  }
+                )
               )
-
-              # methods_available <- NpsychBatteryNorms::std_methods(
-              #   var_name = x
-              # )[
-              #   NpsychBatteryNorms::std_methods(var_name = x)$available == 1,
-              # ]
 
               x_fun <- ntrs::get_npsych_scores(x)
 
@@ -214,11 +216,18 @@ methodSelectServer <- function(
               all_meth_vers <- unlist(lapply(
                 methods_available,
                 \(mth) {
-                  paste0(
-                    mth,
-                    " (",
-                    ntrs::list_method_versions(x_fun(), mth),
-                    ")"
+                  mth_versions <- ntrs::list_method_versions(x_fun(), mth)
+
+                  do.call(
+                    paste0,
+                    c(
+                      list(
+                        mth
+                      ),
+                      if (length(mth_versions) > 0) {
+                        list(" (", mth_versions, ")")
+                      }
+                    )
                   )
                 }
               ))
@@ -231,10 +240,6 @@ methodSelectServer <- function(
                 inputId = shiny::NS(id, paste0(x, "method")),
                 label = NULL,
                 choices = all_meth_vers,
-                # with(
-                #   methods_available,
-                #   paste0(method, " (", version, ")")
-                # ),
                 selected = def_method
               )
             )
@@ -561,10 +566,10 @@ methodSelectServer <- function(
           )
 
           if (length(meth_vers) > 0) {
-            std_methods_tmp[[i]] <- setNames(
+            std_methods_tmp[[i]] <- as.list(setNames(
               meth_vers,
               c("method", "version")[1:length(meth_vers)]
-            )
+            ))
           }
         }
       }
@@ -611,7 +616,7 @@ methodSelectServer <- function(
 #' A short description...
 #'
 #' @param col_names Column names.
-#' @param default_methods Default methods.
+#' @param default_methods Default methods. Must be a reactive
 #' @param col_selection string; one of 'enable', 'disable', or 'hide'. If 'enable', allow user to select which columns should be used for each variable. If 'disable', show columns used, but without the option to select. If 'hide', hide the column.
 #' @param testing logical; passed to `shiny::shinyApp(..., options = list(test.mode))`
 #'
@@ -673,7 +678,7 @@ methodSelectApp <- function(
     var_cols <- methodSelectServer(
       id = "methodselect",
       dat_obj = shiny::reactive(data_load(demo_source())),
-      default_methods = default_methods,
+      default_methods = shiny::reactive(default_methods),
       col_selection = col_selection
     )
 

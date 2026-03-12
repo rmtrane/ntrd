@@ -54,22 +54,33 @@ load_extensions <- function() {
         next
       }
 
-      # Skip if already loaded
-      # if (isNamespaceLoaded(pkg_name)) {
-      #   next
-      # }
-
-      tryCatch(
-        {
-          loadNamespace(pkg_name)
-          cli::cli_inform("Loaded extension: {.pkg {pkg_name}}")
-        },
-        error = \(e) {
-          cli::cli_warn(
-            "Failed to load extension {.pkg {pkg_name}}: {e$message}"
-          )
-        }
-      )
+      if (isNamespaceLoaded(pkg_name)) {
+        tryCatch(
+          {
+            eval(quote(S7::methods_register()), envir = asNamespace(pkg_name))
+            cli::cli_inform(
+              "Re-registered methods for already-loaded extension: {.pkg {pkg_name}}."
+            )
+          },
+          error = \(e) {
+            cli::cli_warn(
+              "Failed to re-register methods for {.pkg {pkg_name}}: {e$message}"
+            )
+          }
+        )
+      } else {
+        tryCatch(
+          {
+            loadNamespace(pkg_name)
+            cli::cli_inform("Loaded extension: {.pkg {pkg_name}}")
+          },
+          error = \(e) {
+            cli::cli_warn(
+              "Failed to load extension {.pkg {pkg_name}}: {e$message}"
+            )
+          }
+        )
+      }
     }
   }
 
