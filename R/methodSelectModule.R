@@ -144,7 +144,7 @@ methodSelectServer <- function(
 
     shiny::observe({
       # shiny::req(data_type())
-      shiny::req(default_methods())
+      # shiny::req(default_methods())
       shiny::req(col_names())
       # shiny::req(dat_obj())
 
@@ -187,64 +187,72 @@ methodSelectServer <- function(
             out
           }
         )),
-        Method = unlist(lapply(
-          all_vars,
-          \(x) {
-            ## If no method given in default_methods, then we do not give the
-            ## option to choose a method.
-            if (x %in% names(default_methods())) {
-              def_method <- do.call(
-                paste0,
-                c(
-                  list(
-                    default_methods()[[x]]["method"]
-                  ),
-                  if (!is.na(default_methods()[[x]]["version"])) {
-                    list(
-                      " (",
-                      default_methods()[[x]]["version"],
-                      ")"
-                    )
-                  }
-                )
-              )
+        Method = unlist(lapply(all_vars, \(x) {
+          # if (x == "TRAILA") {
+          #   browser()
+          # }
+          ## If no method given in default_methods, then we do not give the
+          ## option to choose a method.
 
-              x_fun <- ntrs::get_npsych_scores(x)
+          # if (x %in% names(default_methods())) {
+          #   def_method <- do.call(
+          #     paste0,
+          #     c(
+          #       list(
+          #         default_methods()[[x]]["method"]
+          #       ),
+          #       if (!is.na(default_methods()[[x]]["version"])) {
+          #         list(
+          #           " (",
+          #           default_methods()[[x]]["version"],
+          #           ")"
+          #         )
+          #       }
+          #     )
+          #   )
 
-              methods_available <- ntrs::list_std_methods(x_fun())
+          #   X <- ntrs::get_npsych_scores(x)()
 
-              all_meth_vers <- unlist(lapply(
-                methods_available,
-                \(mth) {
-                  mth_versions <- ntrs::list_method_versions(x_fun(), mth)
+          #   methods_available <- ntrs::list_std_methods(X)
 
-                  do.call(
-                    paste0,
-                    c(
-                      list(
-                        mth
-                      ),
-                      if (length(mth_versions) > 0) {
-                        list(" (", mth_versions, ")")
-                      }
-                    )
-                  )
-                }
-              ))
-            } else {
-              return("")
-            }
+          #   all_meth_vers <- unlist(lapply(
+          #     methods_available,
+          #     \(mth) {
+          #       mth_versions <- ntrs::list_method_versions(X, mth)
 
-            as.character(
-              shiny::selectizeInput(
-                inputId = shiny::NS(id, paste0(x, "method")),
-                label = NULL,
-                choices = all_meth_vers,
-                selected = def_method
-              )
+          #       do.call(
+          #         paste0,
+          #         c(
+          #           list(
+          #             mth
+          #           ),
+          #           if (length(mth_versions) > 0) {
+          #             list(" (", mth_versions, ")")
+          #           }
+          #         )
+          #       )
+          #     }
+          #   ))
+          # } else {
+          #   return("")
+          # }
+
+          # fmt: skip
+          if (!x %in% ntrs::list_npsych_scores()) return("")
+          # fmt: skip
+          if (length(ntrs::list_std_methods(ntrs::get_npsych_scores(x)())) == 0) return("")
+
+          as.character(
+            shiny::selectizeInput(
+              inputId = shiny::NS(id, paste0(x, "method")),
+              label = NULL,
+              # choices = all_meth_vers,
+              choices = NULL,
+              # selected = def_method
+              selected = NULL
             )
-          }
-        ))
+          )
+        }))
       )
 
       tmp_table <- tmp_table[order(tmp_table$var_group)]
@@ -259,7 +267,6 @@ methodSelectServer <- function(
       for_DT(tmp_table)
     }) |>
       shiny::bindEvent(
-        # dat_obj()
         col_names() #,
         # data_type()
       )
@@ -336,8 +343,7 @@ methodSelectServer <- function(
                   // Set input$varstableDrawn to "on"
                   Shiny.setInputValue("',
               shiny::NS(id, "varstableDrawn"),
-              '", "on");
-                }'
+              '", "on", {priority: "event"});}'
             )
           )
         )
@@ -474,52 +480,119 @@ methodSelectServer <- function(
     }) |>
       shiny::bindEvent(input$change_column)
 
-    ## When table first completed, check if enough variables have been identified to move on.
     shiny::observe({
-      ## Create a named vector with entries corresponding to "Column" and
-      ## names corresponding to "Variable" such that all_input_cols["SEX"]
-      ## gives column in data to use for SEX
-      all_input_cols <- setNames(
-        vars_table()$Column,
-        vars_table()$Variable
-      )
+      shiny::req(input$varsTableDrawn)
 
-      ## If all critical variables have been assigned a column...
-      if (all(all_input_cols[critical_vars] %in% col_names())) {
-        ## ... and EITHER visit date or visit year+mo+day.
-        if (
-          !all_input_cols["VISITDATE"] %in% c("(blank)", "") |
-            !all(
-              all_input_cols[c("VISITYR", "VISITMO", "VISITDAY")] %in%
-                c("(blank)", "")
-            )
-        ) {
-          ## Next, get vector of variables that have been assigned columns
-          vars_found <- names(all_input_cols[which(
-            all_input_cols != "(blank)"
-          )])
+      browser()
 
-          ## Check if there are methods available for the variables automatically detected
-          methods_avail <- sapply(vars_found, \(x) {
-            # sum(NpsychBatteryNorms::std_methods(var_name = x)$available)
-            if (!x %in% ntrs::list_npsych_scores()) {
-              return(0)
+      for (x in names(default_methods())) {
+        def_method <- do.call(
+          paste0,
+          c(
+            list(
+              default_methods()[[x]]["method"]
+            ),
+            if (!is.na(default_methods()[[x]]["version"])) {
+              list(
+                " (",
+                default_methods()[[x]]["version"],
+                ")"
+              )
             }
+          )
+        )
 
-            length(ntrs::list_std_methods(ntrs::get_npsych_scores(x)()))
-          })
+        X <- ntrs::get_npsych_scores(x)()
 
-          ## If sum is greater than 0, this means some variables with methods available
-          ## have been found, and so we move on automatically.
-          if (sum(methods_avail > 0) > 0) {
-            # Use NS since this is passed to JS, and not aware of module
-            session$sendCustomMessage("click", shiny::NS(id, "assign"))
-            session$sendCustomMessage("click", "moveToTables")
+        methods_available <- ntrs::list_std_methods(X)
+
+        all_meth_vers <- unlist(lapply(
+          methods_available,
+          \(mth) {
+            mth_versions <- ntrs::list_method_versions(X, mth)
+
+            do.call(
+              paste0,
+              c(
+                list(
+                  mth
+                ),
+                if (length(mth_versions) > 0) {
+                  list(" (", mth_versions, ")")
+                }
+              )
+            )
           }
-        }
+        ))
+
+        shiny::updateSelectizeInput(
+          session,
+          inputId = paste0(x, "method"),
+          choices = all_meth_vers,
+          selected = def_method
+        )
       }
     }) |>
-      shiny::bindEvent(input$varstableDrawn)
+      shiny::bindEvent(
+        input$varsDrawnTable
+      )
+
+    firstRun <- reactiveVal(TRUE)
+
+    ## When table first completed, check if enough variables have been identified to move on.
+    shiny::observe({
+      shiny::req(input$varsTableDrawn)
+
+      if (firstRun()) {
+        ## Create a named vector with entries corresponding to "Column" and
+        ## names corresponding to "Variable" such that all_input_cols["SEX"]
+        ## gives column in data to use for SEX
+        all_input_cols <- setNames(
+          vars_table()$Column,
+          vars_table()$Variable
+        )
+
+        ## If all critical variables have been assigned a column...
+        if (all(all_input_cols[critical_vars] %in% col_names())) {
+          ## ... and EITHER visit date or visit year+mo+day.
+          if (
+            !all_input_cols["VISITDATE"] %in% c("(blank)", "") |
+              !all(
+                all_input_cols[c("VISITYR", "VISITMO", "VISITDAY")] %in%
+                  c("(blank)", "")
+              )
+          ) {
+            ## Next, get vector of variables that have been assigned columns
+            vars_found <- names(all_input_cols[which(
+              all_input_cols != "(blank)"
+            )])
+
+            ## Check if there are methods available for the variables automatically detected
+            methods_avail <- sapply(vars_found, \(x) {
+              # sum(NpsychBatteryNorms::std_methods(var_name = x)$available)
+              if (!x %in% ntrs::list_npsych_scores()) {
+                return(0)
+              }
+
+              length(ntrs::list_std_methods(ntrs::get_npsych_scores(x)()))
+            })
+
+            ## If sum is greater than 0, this means some variables with methods available
+            ## have been found, and so we move on automatically.
+            if (sum(methods_avail > 0) > 0) {
+              # Use NS since this is passed to JS, and not aware of module
+              session$sendCustomMessage("click", shiny::NS(id, "assign"))
+              session$sendCustomMessage("click", "moveToTables")
+            }
+          }
+        }
+
+        firstRun(FALSE)
+      }
+    }) |>
+      shiny::bindEvent(
+        input$varstableDrawn
+      )
 
     var_cols <- shiny::reactiveVal()
     std_methods <- shiny::reactiveVal()

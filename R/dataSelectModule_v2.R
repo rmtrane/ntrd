@@ -277,8 +277,6 @@ dataSelectServer_v2 <- function(id) {
         }
       }
 
-      # have_defaults <- ls(ntrs:::.std_defaults)
-
       default_methods(purrr::discard(
         lapply(
           setNames(ntrs::list_npsych_scores(), ntrs::list_npsych_scores()),

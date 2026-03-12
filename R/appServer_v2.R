@@ -41,6 +41,12 @@ appServer_v2 <- function(input, output, session) {
     }
   })
 
+  default_methods <- shiny::reactive({
+    shiny::req(dat_sel$default_methods())
+
+    dat_sel$default_methods
+  })
+
   ## Reactive values to hold selected columns, and methods
   col_sel <- shiny::reactiveVal()
   std_methods <- shiny::reactiveVal()
@@ -60,51 +66,7 @@ appServer_v2 <- function(input, output, session) {
     "colSelect",
     # col_names = cols_avail,
     dat_obj = dat_sel$dat_obj,
-    default_methods = dat_sel$default_methods,
-    # default_methods = list(
-    #   MOCATOTS = c(method = "regression", version = "nacc"),
-    #   OTRAILA = c(method = "regression", version = "updated_2025.06"),
-    #   OTRAILB = c(method = "regression", version = "updated_2025.06"),
-    #   # OTRLARR = c(method = "regression", version = "updated"),
-    #   # OTRLBRR = c(method = "regression", version = "updated"),
-    #   DIGFORCT = c(method = "regression", version = "nacc"),
-    #   DIGFORSL = c(method = "regression", version = "nacc"),
-    #   DIGBACCT = c(method = "regression", version = "nacc"),
-    #   DIGBACLS = c(method = "regression", version = "nacc"),
-    #   TRAILA = c(method = "regression", version = "nacc"),
-    #   TRAILB = c(method = "regression", version = "nacc"),
-    #   WAIS = c(method = "T-score", version = NA),
-    #   MINTTOTS = c(method = "regression", version = "nacc"),
-    #   ANIMALS = c(method = "regression", version = "nacc"),
-    #   VEG = c(method = "regression", version = "nacc"),
-    #   UDSVERFC = c(method = "regression", version = "nacc"),
-    #   UDSVERLC = c(method = "regression", version = "nacc"),
-    #   UDSVERTN = c(method = "regression", version = "nacc"),
-    #   UDSBENTC = c(method = "regression", version = "nacc"),
-    #   UDSBENTD = c(method = "regression", version = "nacc"),
-    #   CRAFTVRS = c(method = "regression", version = "nacc"),
-    #   CRAFTURS = c(method = "regression", version = "nacc"),
-    #   CRAFTDVR = c(method = "regression", version = "nacc"),
-    #   CRAFTDRE = c(method = "regression", version = "nacc"),
-    #   # REY1REC = c(method = "T-score", version = NA),
-    #   # REY2REC = c(method = "T-score", version = NA),
-    #   # REY3REC = c(method = "T-score", version = NA),
-    #   # REY4REC = c(method = "T-score", version = NA),
-    #   # REY5REC = c(method = "T-score", version = NA),
-    #   REY6REC = c(method = "T-score", version = NA),
-    #   REYDREC = c(method = "T-score", version = NA),
-    #   REYTOTAL = c(method = "T-score", version = NA),
-    #   REYAREC = c(method = "T-score", version = NA),
-    #   REYDLIST = c(method = "T-score", version = NA),
-    #   NACCMMSE = c(method = "regression", version = "nacc"),
-    #   BOSTON = c(method = "regression", version = "nacc"),
-    #   LOGIMEM = c(method = "regression", version = "nacc"),
-    #   MEMUNITS = c(method = "regression", version = "nacc"),
-    #   DIGIF = c(method = "regression", version = "nacc"),
-    #   DIGIFLEN = c(method = "regression", version = "nacc"),
-    #   DIGIB = c(method = "regression", version = "nacc"),
-    #   DIGIBLEN = c(method = "regression", version = "nacc")
-    # ),
+    default_methods = default_methods,
     col_selection = "disable" # allow_col_selections()
   )
 
