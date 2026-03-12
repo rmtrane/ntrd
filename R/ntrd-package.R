@@ -14,5 +14,6 @@
 #' @importFrom stats setNames
 #' @importFrom utils head
 #' @importFrom utils tail
+#' @import ntrs
 ## usethis namespace: end
 NULL

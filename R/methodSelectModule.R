@@ -207,7 +207,7 @@ methodSelectServer <- function(
               #   NpsychBatteryNorms::std_methods(var_name = x)$available == 1,
               # ]
 
-              x_fun <- match.fun(x)
+              x_fun <- ntrs::get_npsych_scores(x)
 
               methods_available <- ntrs::list_std_methods(x_fun())
 
@@ -501,7 +501,7 @@ methodSelectServer <- function(
               return(0)
             }
 
-            length(ntrs::list_std_methods(do.call(x, args = list())))
+            length(ntrs::list_std_methods(ntrs::get_npsych_scores(x)()))
           })
 
           ## If sum is greater than 0, this means some variables with methods available

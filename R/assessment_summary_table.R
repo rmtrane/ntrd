@@ -486,7 +486,7 @@ assessment_summary_data <- function(
     ) := list(
       unlist(sapply(name, \(x) {
         if (x %in% ntrs::list_npsych_scores()) {
-          return(match.fun(x)()@domain)
+          return(ntrs::get_npsych_scores(x)()@domain)
         }
 
         unname(nacc_var_groups[x])
@@ -505,8 +505,8 @@ assessment_summary_data <- function(
           return("")
         }
 
-        if (x %in% list_npsych_scores()) {
-          x <- match.fun(x)()
+        if (x %in% ntrs::list_npsych_scores()) {
+          x <- ntrs::get_npsych_scores(x)()
         } else {
           return("")
         }
@@ -526,8 +526,8 @@ assessment_summary_data <- function(
           return("")
         }
 
-        if (x %in% list_npsych_scores()) {
-          x <- match.fun(x)()
+        if (x %in% ntrs::list_npsych_scores()) {
+          x <- ntrs::get_npsych_scores(x)()
         } else {
           return("")
         }
@@ -547,8 +547,8 @@ assessment_summary_data <- function(
           return(FALSE)
         }
 
-        if (x %in% list_npsych_scores()) {
-          x <- match.fun(x)()
+        if (x %in% ntrs::list_npsych_scores()) {
+          x <- ntrs::get_npsych_scores(x)()
         } else {
           return(FALSE)
         }
@@ -673,8 +673,8 @@ assessment_summary_data <- function(
         return(sprintf("%.1f", y))
       }
 
-      if (x %in% list_npsych_scores()) {
-        x <- match.fun(x)()
+      if (x %in% ntrs::list_npsych_scores()) {
+        x <- ntrs::get_npsych_scores(x)()
       } else {
         return("")
       }

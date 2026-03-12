@@ -149,9 +149,10 @@ appServer_v2 <- function(input, output, session) {
       nacc_var_groups(
         unlist(
           lapply(
-            setNames(list_npsych_scores(), list_npsych_scores()),
+            setNames(ntrs::list_npsych_scores(), ntrs::list_npsych_scores()),
             \(x) {
-              match.fun(x)()@domain
+              # match.fun(x)()@domain
+              ntrs::get_npsych_scores(x)()@domain
             }
           )
         )
@@ -419,7 +420,8 @@ appServer_v2 <- function(input, output, session) {
   ## Plots UI
   output$plots_accordion <- shiny::renderUI({
     bslib::accordion(
-      !!!lapply(unique(nacc_var_groups()), \(x) plotUI(id = x)),
+      #!!!lapply(unique(nacc_var_groups()), \(x) plotUI(id = x)),
+      !!!lapply(nacc_groups, \(x) plotUI(id = x)),
       id = "plots-accordion",
       open = TRUE
     )
@@ -427,7 +429,8 @@ appServer_v2 <- function(input, output, session) {
 
   ## Create all plots
   shiny::observe({
-    lapply(unique(nacc_var_groups()), \(x) {
+    # lapply(unique(nacc_var_groups()), \(x) {
+    lapply(nacc_groups, \(x) {
       plotServer(
         x,
         dat = current_studyid_dat,

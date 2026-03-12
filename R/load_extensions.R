@@ -73,5 +73,38 @@ load_extensions <- function() {
     }
   }
 
+  .check_generic_conflicts()
+
   invisible(NULL)
+}
+
+#' Check for conflicting generic definitions across extensions
+#'
+#' Warns when two loaded packages both define an S7 generic with the
+#' same `std_using_*` name, which indicates an extension design issue.
+#'
+#' @returns NULL (called for side effects)
+#' @keywords internal
+.check_generic_conflicts <- function() {
+  seen <- list() # generic_name -> package_name
+
+  for (ns_name in loadedNamespaces()) {
+    ns <- asNamespace(ns_name)
+
+    for (nm in grep("^std_using_", ls(ns), value = TRUE)) {
+      obj <- get(nm, envir = ns)
+      if (!inherits(obj, "S7_generic")) {
+        next
+      }
+
+      if (nm %in% names(seen) && seen[[nm]] != ns_name) {
+        cli::cli_warn(c(
+          "!" = "Generic {.fn {nm}} is defined in both {.pkg {seen[[nm]]}} and {.pkg {ns_name}}.",
+          "i" = "Extension authors should use shared generics from a common dependency rather than redefining them."
+        ))
+      } else {
+        seen[[nm]] <- ns_name
+      }
+    }
+  }
 }

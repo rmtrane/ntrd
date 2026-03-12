@@ -91,6 +91,7 @@ dataSelectServer_v2 <- function(id) {
       }
 
       # Check for saved configs
+      shiny::req(config_file())
       has_saved <- file.exists(config_file())
       data_source_ns <- \(id) session$ns(shiny::NS(source@id, id))
 
@@ -261,23 +262,18 @@ dataSelectServer_v2 <- function(id) {
 
       ## Get current source, and server results
       source <- sources[[input$data_source]]
-
-      ## Attach namespace for chosen extension, and remove other extensions
       ext_pkg <- S7::S7_class(source)@package
-      all_ext_pkg <- unlist(lapply(sources, \(x) S7::S7_class(x)@package))
 
-      # First, remove
-      for (pkg in setdiff(all_ext_pkg, "ntrd")) {
-        unloadNamespace(ns = pkg)
-      }
-
-      # Attach for desired namespace
+      ## Set defaults for the active extension
       if (ext_pkg != "ntrd") {
-        # if (ext_pkg %in% names(sessionInfo()$otherPkgs)) {
-        #   unloadNamespace(ext_pkg)
-        # }
+        set_defaults <- get0(
+          ".set_defaults",
+          envir = asNamespace(ext_pkg)
+        )
 
-        library(ext_pkg, character.only = TRUE)
+        if (is.function(set_defaults)) {
+          set_defaults()
+        }
       }
 
       dat_src_server <- data_source_servers[[input$data_source]]

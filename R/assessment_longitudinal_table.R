@@ -258,13 +258,15 @@ assessment_longitudinal_table <- function(
       #   return(nacc_var_labels[x])
       # }
       if (!grepl("--", x)) {
-        return(S7::prop(match.fun(x)(), "label"))
+        # return(S7::prop(match.fun(x)(), "label"))
+        return(S7::prop(ntrs::get_npsych_scores(x)(), "label"))
       }
 
       # to_combine <- nacc_var_labels[unlist(strsplit(x, split = "--"))]
 
       to_combine <- unlist(lapply(unlist(strsplit(x, split = "--")), \(x) {
-        S7::prop(match.fun(x)(), "label")
+        #S7::prop(match.fun(x)(), "label")
+        S7::prop(ntrs::get_npsych_scores(x)(), "label")
       }))
 
       to_combine[2] <- gsub(
@@ -313,7 +315,9 @@ assessment_longitudinal_table <- function(
 
   ## Add column indicating groups
   for_table$group <- # unname(nacc_var_groups[for_table$name])
-    purrr::map_chr(for_table$name, \(x) S7::prop(match.fun(x)(), "domain"))
+    purrr::map_chr(for_table$name, \(x) {
+      S7::prop(ntrs::get_npsych_scores(x)(), "domain")
+    })
 
   # for_table_std$group <- unname(nacc_var_groups[for_table_std$name])
 
