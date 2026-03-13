@@ -20,13 +20,13 @@ methodSelectApp(col_selection = "enable", testing = FALSE)
 \arguments{
 \item{id}{id to link shiny modules}
 
+\item{dat_obj}{reactive data object containing the loaded data.}
+
 \item{default_methods}{named list. Each entry should be named after a variable. The entry should be a named character vector with to elements: one named 'method' to indicate the standardization method to use, and one name 'version' to indicate the version to use for standardization.}
 
 \item{col_selection}{string; one of 'enable', 'disable', or 'hide'. If 'enable', allow user to select which columns should be used for each variable. If 'disable', show columns used, but without the option to select. If 'hide', hide the column.}
 
 \item{testing}{logical; passed to \code{shiny::shinyApp(..., options = list(test.mode))}}
-
-\item{col_names}{reactive character vector with names to choose from}
 }
 \value{
 A shiny app.

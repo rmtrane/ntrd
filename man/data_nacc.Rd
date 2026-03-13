@@ -6,6 +6,11 @@
 \usage{
 data_nacc(data = NULL)
 }
+\arguments{
+\item{data}{A \code{data.table} containing NACC data. If the provided value
+is not a \code{data.table}, it will be coerced to one by the setter, which
+also adds \code{VISITDATE} and \code{NACCAGE} if these are not already present.}
+}
 \value{
 An S7 object of class \code{data_nacc}. Object construction will fail if the
 provided data is missing required columns, has incorrect column types
@@ -17,11 +22,3 @@ or an invalid date combination from year/month/day).
 \description{
 A short description...
 }
-\section{Slots}{
-
-\describe{
-\item{\code{data}}{A \code{data.table} containing NACC data. If the provided value
-is not a \code{data.table}, it will be coerced to one by the setter, which
-also adds \code{VISITDATE} and \code{NACCAGE} if these are not already present.}
-}}
-

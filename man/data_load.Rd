@@ -8,6 +8,8 @@ data_load(source, ...)
 }
 \arguments{
 \item{source}{The data source object for dispatch.}
+
+\item{...}{Arguments passed to S7 methods.}
 }
 \value{
 The loaded data.

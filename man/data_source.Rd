@@ -6,14 +6,11 @@
 \usage{
 data_source(name = character(0), id = character(0))
 }
+\arguments{
+\item{name}{A character string for the display name.}
+
+\item{id}{A character string for the unique identifier.}
+}
 \description{
 A short description...
 }
-\section{Slots}{
-
-\describe{
-\item{\code{name}}{A character string for the display name.}
-
-\item{\code{id}}{A character string for the unique identifier.}
-}}
-

@@ -3,8 +3,8 @@
 #' @description
 #' A short description...
 #'
-#' @slot name A character string for the display name.
-#' @slot id A character string for the unique identifier.
+#' @param name A character string for the display name.
+#' @param id A character string for the unique identifier.
 #'
 #' @export
 data_source <- S7::new_class(
@@ -26,6 +26,7 @@ data_source <- S7::new_class(
 #' A short description...
 #'
 #' @param source An S7 data source object.
+#' @param ... Arguments passed to S7 methods.
 #'
 #' @returns
 #' A Shiny UI element.
@@ -59,6 +60,7 @@ data_source_server <- S7::new_generic(
 #' A short description...
 #'
 #' @param source The data source object for dispatch.
+#' @param ... Arguments passed to S7 methods.
 #'
 #' @returns
 #' The loaded data.

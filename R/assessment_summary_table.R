@@ -14,6 +14,7 @@
 #'   latter, methods are infered from the `dat` object using
 #'   `NpsychBatteryNorms::methods_from_std_data`. If specified, footnotes are added
 #'   to indicate the methods used.
+#' @param summary_dat A list as returned by `assessment_summary_data()`.
 #' @param bar_height In pixels. Height of the percentile bars. Default: 16
 #' @param include_caption Logical; should a caption be included above the table
 #'   with age and IQCODEs at current visit?
