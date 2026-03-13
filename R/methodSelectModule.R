@@ -481,9 +481,8 @@ methodSelectServer <- function(
       shiny::bindEvent(input$change_column)
 
     shiny::observe({
-      shiny::req(input$varsTableDrawn)
-
-      browser()
+      shiny::req(input$varstableDrawn)
+      shiny::req(default_methods())
 
       for (x in names(default_methods())) {
         def_method <- do.call(
@@ -532,66 +531,74 @@ methodSelectServer <- function(
           selected = def_method
         )
       }
+
+      if (firstRun()) {
+        # session$sendCustomMessage("click", NS(id, "runCheck"))
+
+        firstRun(FALSE)
+      }
     }) |>
       shiny::bindEvent(
-        input$varsDrawnTable
+        input$varstableDrawn, # fires after DT is drawn (inputs exist)
+        default_methods(), # fires when defaults become available
+        ignoreInit = TRUE
       )
 
     firstRun <- reactiveVal(TRUE)
 
     ## When table first completed, check if enough variables have been identified to move on.
     shiny::observe({
-      shiny::req(input$varsTableDrawn)
+      ## Create a named vector with entries corresponding to "Column" and
+      ## names corresponding to "Variable" such that all_input_cols["SEX"]
+      ## gives column in data to use for SEX
+      all_input_cols <- setNames(
+        vars_table()$Column,
+        vars_table()$Variable
+      )
 
-      if (firstRun()) {
-        ## Create a named vector with entries corresponding to "Column" and
-        ## names corresponding to "Variable" such that all_input_cols["SEX"]
-        ## gives column in data to use for SEX
-        all_input_cols <- setNames(
-          vars_table()$Column,
-          vars_table()$Variable
-        )
+      ## If all critical variables have been assigned a column...
+      if (all(all_input_cols[critical_vars] %in% col_names())) {
+        ## ... and EITHER visit date or visit year+mo+day.
+        if (
+          !all_input_cols["VISITDATE"] %in% c("(blank)", "") |
+            !all(
+              all_input_cols[c("VISITYR", "VISITMO", "VISITDAY")] %in%
+                c("(blank)", "")
+            )
+        ) {
+          ## Next, get vector of variables that have been assigned columns
+          vars_found <- names(all_input_cols[which(
+            all_input_cols != "(blank)"
+          )])
 
-        ## If all critical variables have been assigned a column...
-        if (all(all_input_cols[critical_vars] %in% col_names())) {
-          ## ... and EITHER visit date or visit year+mo+day.
-          if (
-            !all_input_cols["VISITDATE"] %in% c("(blank)", "") |
-              !all(
-                all_input_cols[c("VISITYR", "VISITMO", "VISITDAY")] %in%
-                  c("(blank)", "")
-              )
-          ) {
-            ## Next, get vector of variables that have been assigned columns
-            vars_found <- names(all_input_cols[which(
-              all_input_cols != "(blank)"
-            )])
-
-            ## Check if there are methods available for the variables automatically detected
-            methods_avail <- sapply(vars_found, \(x) {
-              # sum(NpsychBatteryNorms::std_methods(var_name = x)$available)
-              if (!x %in% ntrs::list_npsych_scores()) {
-                return(0)
-              }
-
-              length(ntrs::list_std_methods(ntrs::get_npsych_scores(x)()))
-            })
-
-            ## If sum is greater than 0, this means some variables with methods available
-            ## have been found, and so we move on automatically.
-            if (sum(methods_avail > 0) > 0) {
-              # Use NS since this is passed to JS, and not aware of module
-              session$sendCustomMessage("click", shiny::NS(id, "assign"))
-              session$sendCustomMessage("click", "moveToTables")
+          ## Check if there are default methods available for the variables automatically detected
+          methods_avail <- sapply(vars_found, \(x) {
+            # sum(NpsychBatteryNorms::std_methods(var_name = x)$available)
+            if (!x %in% ntrs::list_npsych_scores()) {
+              return(0)
             }
+
+            if (
+              !is.null(ntrs::get_std_defaults(ntrs::get_npsych_scores(x)()))
+            ) {
+              return(1)
+            }
+
+            0
+          })
+
+          ## If sum is greater than 0, this means some variables with methods available
+          ## have been found, and so we move on automatically.
+          if (sum(methods_avail > 0) > 0) {
+            # Use NS since this is passed to JS, and not aware of module
+            session$sendCustomMessage("click", shiny::NS(id, "assign"))
+            session$sendCustomMessage("click", "moveToTables")
           }
         }
-
-        firstRun(FALSE)
       }
     }) |>
       shiny::bindEvent(
-        input$varstableDrawn
+        input$runCheck
       )
 
     var_cols <- shiny::reactiveVal()

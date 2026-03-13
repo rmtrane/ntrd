@@ -277,15 +277,14 @@ dataSelectServer_v2 <- function(id) {
         }
       }
 
-      default_methods(purrr::discard(
-        lapply(
-          setNames(ntrs::list_npsych_scores(), ntrs::list_npsych_scores()),
-          \(x) {
-            get_std_defaults(get_npsych_scores(x)())
-          }
-        ),
-        is.null
-      ))
+      lapply(
+        setNames(ntrs::list_npsych_scores(), ntrs::list_npsych_scores()),
+        \(x) {
+          get_std_defaults(get_npsych_scores(x)())
+        }
+      ) |>
+        purrr::discard(is.null) |>
+        default_methods()
 
       dat_src_server <- data_source_servers[[input$data_source]]
 

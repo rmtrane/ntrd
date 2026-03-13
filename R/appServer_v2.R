@@ -41,11 +41,11 @@ appServer_v2 <- function(input, output, session) {
     }
   })
 
-  default_methods <- shiny::reactive({
-    shiny::req(dat_sel$default_methods())
+  # default_methods <- shiny::reactive({
+  #   shiny::req(dat_sel$default_methods())
 
-    dat_sel$default_methods
-  })
+  #   dat_sel$default_methods()
+  # })
 
   ## Reactive values to hold selected columns, and methods
   col_sel <- shiny::reactiveVal()
@@ -66,7 +66,7 @@ appServer_v2 <- function(input, output, session) {
     "colSelect",
     # col_names = cols_avail,
     dat_obj = dat_sel$dat_obj,
-    default_methods = default_methods,
+    default_methods = dat_sel$default_methods,
     col_selection = "disable" # allow_col_selections()
   )
 

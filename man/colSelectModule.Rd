@@ -41,7 +41,7 @@ methodSelectApp(col_selection = "enable", testing = FALSE)
 
 \item{col_names}{Column names.}
 
-\item{default_methods}{Default methods.}
+\item{default_methods}{Default methods. Must be a reactive}
 
 \item{col_selection}{string; one of 'enable', 'disable', or 'hide'. If 'enable', allow user to select which columns should be used for each variable. If 'disable', show columns used, but without the option to select. If 'hide', hide the column.}
 
