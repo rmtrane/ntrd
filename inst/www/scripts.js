@@ -15,6 +15,13 @@ Shiny.addCustomMessageHandler("click", (message) => {
   Shiny.setInputValue(message, "click", {priority: "event"});
 })
 
+// Click virtual buttons, but wait for shiny to be idle
+Shiny.addCustomMessageHandler("clickOnIdle", (message) => {
+  $(document).on('shiny:idle', function() {
+    Shiny.setInputValue(message, "click");
+  });
+});
+
 // Custom Message Handler to set input value
 Shiny.addCustomMessageHandler("setInputValue", (message) => {
   console.log("Setting input " + message.inputId + " to " + message.inputValue);

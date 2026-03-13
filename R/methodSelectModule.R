@@ -343,7 +343,7 @@ methodSelectServer <- function(
                   // Set input$varstableDrawn to "on"
                   Shiny.setInputValue("',
               shiny::NS(id, "varstableDrawn"),
-              '", "on", {priority: "event"});}'
+              '", "on");}'
             )
           )
         )
@@ -489,12 +489,12 @@ methodSelectServer <- function(
           paste0,
           c(
             list(
-              default_methods()[[x]]["method"]
+              default_methods()[[x]]$method
             ),
-            if (!is.na(default_methods()[[x]]["version"])) {
+            if (!is.null(default_methods()[[x]]$version)) {
               list(
                 " (",
-                default_methods()[[x]]["version"],
+                default_methods()[[x]]$version,
                 ")"
               )
             }
@@ -532,9 +532,10 @@ methodSelectServer <- function(
         )
       }
 
-      if (firstRun()) {
-        # session$sendCustomMessage("click", NS(id, "runCheck"))
+      browser()
 
+      if (firstRun()) {
+        session$sendCustomMessage("clickOnIdle", NS(id, "runCheck"))
         firstRun(FALSE)
       }
     }) |>

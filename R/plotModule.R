@@ -318,7 +318,7 @@ plotServer <- function(
       d <- plotly::event_data("plotly_click", source = id)
 
       if (!is.null(d) && !is.null(d$x)) {
-        shiny::showNotification(shiny::h2(d$x))
+        # shiny::showNotification(shiny::h2(d$x))
 
         session$sendCustomMessage("updateDate", message = list(value = d$x))
       }

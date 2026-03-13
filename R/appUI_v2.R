@@ -8,7 +8,7 @@ appUI_v2 <- function() {
     ## Header: add JS scripts, CSS, and spinner elements to be shown/hidden later.
     header = shinyApp_header(),
     theme = bslib::bs_theme(version = 5),
-    title = "Npsych Scoring Application",
+    title = "Npsych Test Result Dashboard",
     id = "main_navbar",
     navbar_options = bslib::navbar_options(underline = TRUE),
     ######
