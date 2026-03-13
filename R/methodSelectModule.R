@@ -6,7 +6,7 @@
 #' @param col_names character vector of column names
 #' @param id id to link shiny modules
 #'
-#' @rdname colSelectModule
+#' @rdname methodSelectModule
 #'
 #' @export
 
@@ -24,7 +24,7 @@ methodSelectUI <- function(id) {
   )
 }
 
-#' @rdname colSelectModule
+#' @rdname methodSelectModule
 #'
 #' @param id id to link shiny modules
 #' @param col_names reactive character vector with names to choose from
@@ -54,20 +54,6 @@ methodSelectServer <- function(
 
       col_names(gsub("^raw_", "", tmp_col_names))
     })
-
-    ## If not provided, get default_methods
-    # if (is.null(default_methods)) {
-    #   have_defaults <- ls(ntrs:::.std_defaults)
-    #   default_methods <- lapply(
-    #     setNames(have_defaults, have_defaults),
-    #     \(x) {
-    #       with(
-    #         ntrs:::.std_defaults[[x]],
-    #         c("method" = method, "version" = version)
-    #       )
-    #     }
-    #   )
-    # }
 
     ## All variables
     all_vars <- c(
@@ -166,7 +152,17 @@ methodSelectServer <- function(
         Required = all_vars %in% critical_vars,
         "Short Descriptor" = lapply(
           all_vars,
-          \(x) ntrs::rdd[[x]]$short_descriptor
+          \(x) {
+            if (x %in% ntrs::list_npsych_scores()) {
+              return(S7::prop(get_npsych_scores(x)(), "short_descriptor"))
+            }
+
+            if (x %in% names(ntrs::rdd)) {
+              return(ntrs::rdd[[x]]$short_descriptor)
+            }
+
+            NA
+          }
         ),
         Column = unlist(lapply(
           # purrr::map2_chr(
@@ -188,55 +184,6 @@ methodSelectServer <- function(
           }
         )),
         Method = unlist(lapply(all_vars, \(x) {
-          # if (x == "TRAILA") {
-          #   browser()
-          # }
-          ## If no method given in default_methods, then we do not give the
-          ## option to choose a method.
-
-          # if (x %in% names(default_methods())) {
-          #   def_method <- do.call(
-          #     paste0,
-          #     c(
-          #       list(
-          #         default_methods()[[x]]["method"]
-          #       ),
-          #       if (!is.na(default_methods()[[x]]["version"])) {
-          #         list(
-          #           " (",
-          #           default_methods()[[x]]["version"],
-          #           ")"
-          #         )
-          #       }
-          #     )
-          #   )
-
-          #   X <- ntrs::get_npsych_scores(x)()
-
-          #   methods_available <- ntrs::list_std_methods(X)
-
-          #   all_meth_vers <- unlist(lapply(
-          #     methods_available,
-          #     \(mth) {
-          #       mth_versions <- ntrs::list_method_versions(X, mth)
-
-          #       do.call(
-          #         paste0,
-          #         c(
-          #           list(
-          #             mth
-          #           ),
-          #           if (length(mth_versions) > 0) {
-          #             list(" (", mth_versions, ")")
-          #           }
-          #         )
-          #       )
-          #     }
-          #   ))
-          # } else {
-          #   return("")
-          # }
-
           # fmt: skip
           if (!x %in% ntrs::list_npsych_scores()) return("")
           # fmt: skip
@@ -694,12 +641,10 @@ methodSelectServer <- function(
 #' @description
 #' A short description...
 #'
-#' @param col_names Column names.
-#' @param default_methods Default methods. Must be a reactive
 #' @param col_selection string; one of 'enable', 'disable', or 'hide'. If 'enable', allow user to select which columns should be used for each variable. If 'disable', show columns used, but without the option to select. If 'hide', hide the column.
 #' @param testing logical; passed to `shiny::shinyApp(..., options = list(test.mode))`
 #'
-#' @rdname colSelectModule
+#' @rdname methodSelectModule
 #'
 #' @returns
 #' A shiny app.
@@ -707,9 +652,6 @@ methodSelectServer <- function(
 #' @export
 
 methodSelectApp <- function(
-  # col_names,
-  # dat_obj = shiny::reactive(prepare_data(data_load(demo_source()))),
-  # default_methods = NULL,
   col_selection = "enable",
   testing = FALSE
 ) {
