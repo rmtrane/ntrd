@@ -2,7 +2,7 @@
 #'
 #' @param id An ID string to match module UI and server UI
 #' @param table_font_size (optional) scalar indicating font size as a percentage.
-#' @inheritParams assessment_summary_table
+#' @inheritParams assessment_summary_data
 #'
 #' @rdname mainTableModule
 #'
@@ -193,6 +193,7 @@ mainTableServer <- function(
 
 #' @rdname mainTableModule
 #'
+#' @inheritParams assessment_summary_data
 #' @param testing logical (default `FALSE`); should the app be run in testing mode?
 #'
 #' @return a Shiny app object.

@@ -32,6 +32,9 @@ By default, evenly spread out colors from red through yellow to green are used.}
 \item{fill_alpha}{opacity value for shaded areas}
 
 \item{source}{passed to \code{plotly::plot_ly}}
+
+\item{new_id}{Optional. String to use as the plotly source ID. If \code{NULL}
+(default), a random string is assigned.}
 }
 \description{
 Create a base plot where traces can later be added.

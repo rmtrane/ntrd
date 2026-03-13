@@ -17,16 +17,12 @@ optional within each entry; omitted elements resolve to the registered
 default. Classes not listed use their defaults.
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{methods = list(
-  MOCATOTS = c(method = "regression", version = "nacc"),
-  ANIMALS  = c(method = "norms")
+  MOCATOTS = list(method = "regression", version = "nacc"),
+  ANIMALS  = list(method = "norms")
 )
 }\if{html}{\out{</div>}}}
 }
 \description{
 This is a wrapper function that returns only the desired columns, adds
 variables that can be derived to the data, and adds standardized scores.
-}
-\examples{
-prepare_data(demo_data)
-
 }

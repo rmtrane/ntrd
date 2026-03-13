@@ -1,5 +1,7 @@
 #' Server Logic for shinyAssessmentApp
 #'
+#' @param input,output,session Standard Shiny server arguments.
+#'
 #' @keywords internal
 #'
 #' @export

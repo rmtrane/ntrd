@@ -16,7 +16,6 @@ Suggests:
     httr2,
     jsonlite,
     pagedown,
-    REDCapR (>= 1.5.0),
     shinytest2,
     testthat (>= 3.0.0),
     rvest,

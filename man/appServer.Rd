@@ -6,6 +6,9 @@
 \usage{
 appServer(input, output, session)
 }
+\arguments{
+\item{input, output, session}{Standard Shiny server arguments.}
+}
 \description{
 Server Logic for shinyAssessmentApp
 }

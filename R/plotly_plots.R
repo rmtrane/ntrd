@@ -8,7 +8,9 @@
 #' @param fill_alpha opacity value for shaded areas
 #' @param source passed to `plotly::plot_ly`
 #'
-#' @inheritParams assessment_summary_table
+#' @param new_id Optional. String to use as the plotly source ID. If `NULL`
+#'   (default), a random string is assigned.
+#' @inheritParams assessment_summary_data
 #'
 #' @keywords internal
 #'

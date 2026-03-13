@@ -8,6 +8,8 @@ data_source_ui(source, ...)
 }
 \arguments{
 \item{source}{An S7 data source object.}
+
+\item{...}{Arguments passed to S7 methods.}
 }
 \value{
 A Shiny UI element.

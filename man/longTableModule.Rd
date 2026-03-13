@@ -32,7 +32,7 @@ longTableApp(
 \arguments{
 \item{id}{string to tie UI to Server}
 
-\item{dat}{A data frame.}
+\item{dat}{A data.table object.}
 
 \item{descriptions}{A named numeric vector. Default has names \code{"Impaired"}, \code{"Borderline"}, \code{"Low Average"}, \code{"Average"}, \code{"High Average"}, \code{"Superior"}, and \code{"Very Superior"} with corresponding values \code{0.03}, \code{0.10}, \code{0.26}, \code{0.76}, \code{0.92}, \code{0.97}, and \code{1}.}
 

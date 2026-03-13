@@ -3,7 +3,7 @@
 #' @description
 #' A short description...
 #'
-#' @slot data A `data.table` containing NACC data. If the provided value
+#' @param data A `data.table` containing NACC data. If the provided value
 #'   is not a `data.table`, it will be coerced to one by the setter, which
 #'   also adds `VISITDATE` and `NACCAGE` if these are not already present.
 #'

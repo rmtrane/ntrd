@@ -8,8 +8,6 @@
 #' @inheritParams ntrs::std_data
 #'
 #'
-#' @examples prepare_data(demo_data)
-#'
 #' @export
 prepare_data <- function(
   dat,

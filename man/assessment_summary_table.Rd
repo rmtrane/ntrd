@@ -18,6 +18,8 @@ assessment_summary_data(
 )
 }
 \arguments{
+\item{summary_dat}{A list as returned by \code{assessment_summary_data()}.}
+
 \item{bar_height}{In pixels. Height of the percentile bars. Default: 16}
 
 \item{dat}{Data to use. Must have exactly one row (data from one participant and one visit).}
