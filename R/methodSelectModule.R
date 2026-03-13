@@ -532,10 +532,8 @@ methodSelectServer <- function(
         )
       }
 
-      browser()
-
       if (firstRun()) {
-        session$sendCustomMessage("clickOnIdle", NS(id, "runCheck"))
+        session$sendCustomMessage("clickOnIdle", shiny::NS(id, "runCheck"))
         firstRun(FALSE)
       }
     }) |>
@@ -545,7 +543,7 @@ methodSelectServer <- function(
         ignoreInit = TRUE
       )
 
-    firstRun <- reactiveVal(TRUE)
+    firstRun <- shiny::reactiveVal(TRUE)
 
     ## When table first completed, check if enough variables have been identified to move on.
     shiny::observe({
@@ -734,16 +732,14 @@ methodSelectApp <- function(
   # shiny::addResourcePath("www", www_path)
   # shiny::addResourcePath("qmd", qmd_path)
 
-  have_defaults <- ls(ntrs:::.std_defaults)
+  # have_defaults <- ls(ntrs:::.std_defaults)
   default_methods <- lapply(
-    setNames(have_defaults, have_defaults),
+    setNames(ntrs::list_npsych_scores(), ntrs::list_npsych_scores()),
     \(x) {
-      with(
-        ntrs:::.std_defaults[[x]],
-        c("method" = method, "version" = version)
-      )
+      get_std_defaults(get_npsych_scores(x)())
     }
-  )
+  ) |>
+    purrr::discard(is.null)
 
   ui <- bslib::page_fluid(
     shinyApp_header(),

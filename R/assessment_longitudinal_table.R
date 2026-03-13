@@ -321,6 +321,9 @@ assessment_longitudinal_table <- function(
 
   # for_table_std$group <- unname(nacc_var_groups[for_table_std$name])
 
+  # To avoid R CMD check NOTE:
+  group <- NULL
+
   for_table <- for_table[!is.na(group)]
 
   all_grp_names <- unique(c(nacc_groups), unique(for_table$group))
@@ -328,6 +331,10 @@ assessment_longitudinal_table <- function(
 
   ## Make sure both tables are in right order. Remove "--(legacy)" from names involving
   ## two scores
+
+  # To avoid R CMD check NOTE:
+  name <- NULL
+
   for_table <- for_table[
     order(
       # match(for_table$name, names(nacc_var_labels)),

@@ -320,6 +320,9 @@ assessment_summary_data <- function(
   methods = "infer",
   include_caption = TRUE
 ) {
+  # To avoid R CMD check NOTE:
+  value.name <- name <- for_percentile <- group <- NULL
+
   stopifnot(
     "'id' must be a character string specifying a column in the data frame 'dat'" = is.character(
       id
@@ -563,10 +566,10 @@ assessment_summary_data <- function(
     )
   ][,
     c("Percentile", "Description") := list(
-      pnorm(for_percentile) * 100,
+      stats::pnorm(for_percentile) * 100,
       names(descriptions)[
         findInterval(
-          pnorm(for_percentile),
+          stats::pnorm(for_percentile),
           vec = descriptions,
           rightmost.closed = T
         ) +

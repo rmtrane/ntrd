@@ -6,7 +6,6 @@
 #' @importFrom data.table .SD
 #' @importFrom methods formalArgs
 #' @importFrom methods missingArg
-#' @importFrom NpsychBatteryNorms rdd
 #' @importFrom rlang .data
 #' @importFrom stats complete.cases
 #' @importFrom stats na.omit

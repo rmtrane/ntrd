@@ -4,23 +4,23 @@
 \alias{prepare_data}
 \title{Wrapper to prepare raw data}
 \usage{
-prepare_data(dat, methods = NULL, print_messages = F, with_diags = T)
+prepare_data(dat, methods = NULL)
 }
 \arguments{
 \item{dat}{data set similar to the NACC data. For an example, see
 \code{?demo_data}.}
 
-\item{methods}{NULL (default) or list of named entries specifying which model to use
-for standardizing cognitive scores. If NULL, defaults are applied for all
-variables in the dataset for which methods have been implemented (see \code{NpsychBatteryNorms::default_methods})}
+\item{methods}{An optional named list keyed by \code{npsych_scores} \strong{class
+name} (not column name). Each element is a named character vector of
+the form \code{c(method = "...", version = "...")}. Both elements are
+optional within each entry; omitted elements resolve to the registered
+default. Classes not listed use their defaults.
 
-\item{print_messages}{logical; should messages be printed? If TRUE (default), a message will
-be print with the methods used if methods is omitted (or NULL)}
-
-\item{with_diags}{logical (default \code{TRUE}); should diagnoses be included?}
-
-\item{selected_cols}{vector with columns to keep. If named, the names must
-correspond to NACC variable names and entries columns in the data set \code{dat}.}
+\if{html}{\out{<div class="sourceCode">}}\preformatted{methods = list(
+  MOCATOTS = c(method = "regression", version = "nacc"),
+  ANIMALS  = c(method = "norms")
+)
+}\if{html}{\out{</div>}}}
 }
 \description{
 This is a wrapper function that returns only the desired columns, adds

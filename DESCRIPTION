@@ -42,7 +42,8 @@ Imports:
     safer,
     stats,
     mirai,
-    ntrs
+    ntrs,
+    S7
 Depends: 
     R (>= 4.2.0)
 Remotes: 
@@ -59,21 +60,17 @@ Config/Needs/website:
     yaml
 Collate: 
     'appServer.R'
-    'appServer_v2.R'
     'appUI.R'
-    'appUI_v2.R'
     'assessment_longitudinal_table.R'
     'assessment_summary_table.R'
     'birth_vars.R'
     'calc_fill_colors.R'
     'check_colors.R'
-    'colSelectModule.R'
     'critical_vars.R'
     'crosswalk_translations.R'
     'data_source.R'
     'csv_source.R'
     'dataSelectModule.R'
-    'dataSelectModule_v2.R'
     'data_nacc.R'
     'demo_data.R'
     'demo_source.R'
@@ -88,6 +85,7 @@ Collate:
     'mainTableModule.R'
     'methodSelectModule.R'
     'my_gt_plt_bar_pct.R'
+    'nacc_groups.R'
     'nacc_to_wls.R'
     'nacc_var_groups.R'
     'nacc_var_labels.R'
@@ -101,11 +99,9 @@ Collate:
     'prevDiagnosesModule.R'
     'prev_diagnoses_table.R'
     'rdd.R'
-    'read_data.R'
     'shinyAddResources.R'
     'shinyApp_header.R'
     'shinyAssessmentApp.R'
-    'shinyAssessmentApp_v2.R'
     'var_labels.R'
     'visibility_defaults.R'
     'visit_vars.R'

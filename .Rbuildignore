@@ -24,3 +24,4 @@ tests/testthat/helper-secrets.R
 tests/testthat/_snaps/query-panda.md
 tests/testthat/_snaps/*/dataSelectMod-shinytest2/*
 update_codecov.R
+old-tests/*

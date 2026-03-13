@@ -1,519 +1,181 @@
-#' Shiny module to select data for assessment table
-#'
-#' @rdname dataSelectModule
+#' Data selection UI module
 #'
 #' @description
 #' A short description...
 #'
-#' @param id A string used to namespace the module.
+#' @param id A single string.
 #'
 #' @returns
-#' A UI definition.
+#' A `bslib::card` containing UI elements for selecting a data source and related options.
 #'
 #' @export
-
 dataSelectUI <- function(id) {
   ns <- shiny::NS(id)
 
   bslib::card(
-    bslib::layout_sidebar(
-      sidebar = bslib::sidebar(
-        open = "always",
-        width = 400,
-        bslib::card_body(
-          # gt::gt_output(ns("data_sources_table")),
-          shiny::h4("Data Sources"),
-          DT::dataTableOutput(ns("data_sources_table")),
-          shiny::uiOutput(ns("submit_button"))
-        )
-      ),
-
-      shiny::selectizeInput(
-        inputId = ns("data_source"),
-        label = "Data Source",
-        choices = c(
-          "Pull From REDCap" = "redcap",
-          "Panda (biomarker)" = "panda",
-          "Upload CSV File" = "csv_upload",
-          "Upload Previously Saved Data Sources" = "retrieve",
-          "Demo" = "demo"
-        ),
-
-        options = list(
-          onInitialize = I(
-            "function() {
-            this.$control_input.attr('readonly', true);
-          }"
-          ),
-          disabledField = "disabled",
-          options = list(
-            list(
-              disabled = !rlang::is_installed("REDCapR")
-            ),
-            list(
-              disabled = !rlang::is_installed("httr2") &&
-                !rlang::is_installed("jsonlite")
-            ),
-            list(disabled = FALSE),
-            list(disabled = FALSE),
-            list(disabled = FALSE)
-          )
-        )
-      ),
-      shiny::uiOutput(ns("data_type_ui")),
-      shiny::uiOutput(ns("data_upload_or_password")),
-      shiny::uiOutput(ns("fetch_data"))
-    ),
-    height = "100vh"
+    style = "width: 600px;",
+    class = "mx-auto",
+    shiny::uiOutput(ns("data_source_selector")),
+    shiny::uiOutput(ns("data_source_ui")),
+    height = "95vh"
   )
 }
 
-#' @rdname dataSelectModule
+
+#' Data Selection Server Module
 #'
 #' @description
-#' Server logic for dataSelectModule.
+#' A short description...
 #'
-#' @param id A string used to create a namespace within the shiny app.
+#' @param id A single string representing the module's identifier.
 #'
 #' @returns
-#' A list containing reactive values for the data object (`dat_obj`),
-#'  the data source, the data type, and the biomarker API.
+#' A `shiny::moduleServer` function that returns a list containing:
+#' \itemize{
+#'   \item `dat_obj`: A reactive value holding the loaded data, which is expected
+#'   to be a `data_nacc` object.
+#'   \item `data_source_extras`: A reactive value holding a list of additional
+#'   data source parameters or values.
+#' }
+#' Errors will be raised if the loaded data is not a `data_nacc` object.
 #'
 #' @export
 dataSelectServer <- function(id) {
   shiny::moduleServer(id, function(input, output, session) {
-    ## UI for data type selection
-    output$data_type_ui <- shiny::renderUI({
-      missing_pkgs_messages <- shiny::tagList(
-        if (!rlang::is_installed("REDCapR")) {
-          shiny::markdown(
-            "The package `REDCapR` is required to pull data from REDCap. Close the app and install the package using `install.pakages(\"REDCapR\")`."
+    # Find all available data_sources
+    sources <- discover_data_sources()
+
+    choices <- setNames(
+      vapply(sources, \(s) s@id, character(1)),
+      vapply(sources, \(s) s@name, character(1))
+    )
+
+    # print(choices)
+
+    output$data_source_selector <- shiny::renderUI({
+      if (length(choices) > 0) {
+        shiny::selectizeInput(
+          inputId = shiny::NS(id, "data_source"),
+          label = "Data Source",
+          choices = choices
+        )
+      }
+    })
+
+    # Config storage path
+    config_dir <- tools::R_user_dir("ntrd", "config")
+    if (!dir.exists(config_dir)) {
+      dir.create(config_dir, recursive = TRUE, showWarnings = FALSE)
+    }
+
+    # Config file
+    config_file <- shiny::reactiveVal()
+
+    shiny::observe({
+      shiny::req(input$data_source)
+      source <- sources[[input$data_source]]
+
+      config_file(file.path(config_dir, paste0(source@id, ".bin")))
+    })
+
+    # --- Create data source UI ---
+    output$data_source_ui <- shiny::renderUI({
+      shiny::req(input$data_source)
+
+      source <- sources[[input$data_source]]
+      has_restore <- "restore" %in%
+        names(data_source_servers[[input$data_source]])
+
+      if (is.null(source)) {
+        return(NULL)
+      }
+
+      # Check for saved configs
+      shiny::req(config_file())
+      has_saved <- file.exists(config_file())
+      data_source_ns <- \(id) session$ns(shiny::NS(source@id, id))
+
+      shiny::tagList(
+        if (has_saved) {
+          shiny::tagList(
+            shiny::actionButton(
+              inputId = shiny::NS(id, "load_config"),
+              label = "Load saved configuration"
+            ),
+            shiny::hr()
           )
         },
-        if (!rlang::is_installed("httr2") | !rlang::is_installed("jsonlite")) {
-          missing_pkgs <- c("httr2", "jsonlite")[c(
-            !rlang::is_installed("httr2"),
-            !rlang::is_installed("jsonlite")
-          )]
-
-          pluralize <- if (length(missing_pkgs) > 1) "s" else NULL
-
-          shiny::markdown(
-            paste0(
-              "The package",
-              pluralize,
-              " '",
-              paste(missing_pkgs, collapse = "' and '"),
-              "' ",
-              c("is", "are")[as.numeric(!is.null(pluralize)) + 1],
-              " needed to pull data from panda. ",
-              "Close the app, install the package",
-              pluralize,
-              " using `install.packages(c('",
-              paste0(missing_pkgs, collapse = "', '"),
-              "'))`."
-            )
-          )
-        }
-      )
-
-      if (input$data_source != "retrieve") {
-        shiny::tagList(
-          shiny::selectizeInput(
-            inputId = shiny::NS(id, "data_type"),
-            label = "Data Type",
-            choices = c(
-              # "NACC" = "nacc",
-              # "WLS" = "wls",
-              "WADRC (UDS-2)" = "wadrc_uds2",
-              "WADRC (UDS-3)" = "wadrc_uds3",
-              "WADRC (UDS-4)" = "wadrc_uds4"
-            ),
-            options = list(
-              placeholder = "Select an option below",
-              onInitialize = I('function() { this.setValue(""); }')
-            )
+        data_source_ui(source, ns = data_source_ns),
+        bslib::layout_columns(
+          bslib::input_task_button(
+            id = shiny::NS(id, "go"),
+            label = "Go"
           ),
-          missing_pkgs_messages
+          if (has_restore) {
+            shiny::actionButton(
+              label = "Save Configuration",
+              inputId = shiny::NS(id, "launch_save_config")
+            )
+          }
         )
-      } else {
-        shiny::tagList(
-          shiny::fileInput(
-            inputId = shiny::NS(id, "saved_data_file"),
-            label = "Select File",
-            accept = ".bin"
-          ),
-          # shiny::textInput(
-          #   inputId = shiny::NS(id, "data_file_key"),
-          #   label = "Data File Password",
-          #   value = NULL,
-          #   placeholder = "Enter password to load data"
-          # )
+      )
+    })
+
+    # --- Modal to load previously saved config ---
+    shiny::observe({
+      shiny::showModal(
+        shiny::modalDialog(
+          title = "Load Configuration",
+          easyClose = TRUE,
+          footer = NULL,
           shiny::tagAppendAttributes(
             shiny::passwordInput(
-              inputId = shiny::NS(id, "data_file_key"),
+              inputId = shiny::NS(id, "config_password"),
               label = "Data File Password",
               placeholder = "Enter Password"
             ),
             .cssSelector = "input",
             autocomplete = "current-password"
+          ),
+          bslib::input_task_button(
+            id = shiny::NS(id, "retrieve_config"),
+            label = "Load"
           )
         )
-      }
-    })
-
-    shiny::observe({
-      shiny::updateSelectizeInput(
-        inputId = "data_type",
-        choices = switch(
-          input$data_source, # list(
-          demo = c("NACC" = "nacc"),
-          redcap = c(
-            "WADRC (UDS-2)" = "wadrc_uds2",
-            "WADRC (UDS-3)" = "wadrc_uds3",
-            "WADRC (UDS-4)" = "wadrc_uds4"
-            # "WLS" = "wls"
-          ),
-          csv_upload = c(
-            "NACC" = "nacc",
-            "WLS" = "wls",
-            "WADRC (UDS-2)" = "wadrc_uds2",
-            "WADRC (UDS-3)" = "wadrc_uds3",
-            "WADRC (UDS-4)" = "wadrc_uds4"
-          ),
-          panda = c("Biomarker" = "biomarker")
-        ),
-        selected = switch(
-          input$data_source,
-          "demo" = "nacc",
-          "panda" = "biomarker"
-        ) # if (input$data_source == "demo") "nacc" else NULL
       )
     }) |>
-      shiny::bindEvent(
-        input$data_source
-      )
+      shiny::bindEvent(input$load_config)
 
-    output$data_upload_or_password <- shiny::renderUI({
+    shiny::observe({
       shiny::req(input$data_source)
-      shiny::req(input$data_type)
 
-      out <- shiny::p(
-        "Click the 'Go' button to continue with demo data."
-      )
-
-      if (input$data_source == "panda") {
-        out <- shiny::tagAppendAttributes(
-          shiny::passwordInput(
-            inputId = shiny::NS(id, "panda_api_token"),
-            label = "Panda API Token",
-            value = NULL
-          ),
-          .cssSelector = "input",
-          autocomplete = "current-password"
-        )
-      }
-
-      if (input$data_source == "redcap") {
-        uri_and_token <- NULL
-
-        out <- shiny::tagList(
-          shiny::tagAppendAttributes(
-            shiny::textInput(
-              inputId = shiny::NS(id, "redcap_uri"),
-              label = "REDCap URL",
-              value = NULL
-            ),
-            .cssSelector = "input",
-            autocomplete = "username"
-          ),
-          shiny::tagAppendAttributes(
-            shiny::passwordInput(
-              inputId = shiny::NS(id, "api_token"),
-              label = "REDCap API Token",
-              value = NULL
-            ),
-            .cssSelector = "input",
-            autocomplete = "current-password"
-          )
-        )
-      }
-
-      if (input$data_source == "csv_upload") {
-        out <- shiny::fileInput(
-          inputId = shiny::NS(id, "input_file"),
-          label = "Select File",
-          accept = ".csv"
-        )
-      }
-
-      # if (input$data_source %in% c("redcap", "panda")) {
-      #   out <- shiny::tagList(
-      #     out,
-      #     shiny::checkboxInput(
-      #       inputId = shiny::NS(id, "show_password"),
-      #       label = "Show token"
-      #     )
-      #   )
-      # }
-
-      out
-    })
-
-    # shiny::observe({
-    #   session$sendCustomMessage(
-    #     "showHidePassword",
-    #     list(show = input$show_password)
-    #   )
-    # }) |>
-    #   shiny::bindEvent(input$show_password)
-
-    output$fetch_data <- shiny::renderUI({
-      out <- NULL
-
-      redcap_uri_and_token <-
-        !is.null(input$api_token) &&
-        input$api_token != "" &&
-        !is.null(input$redcap_uri) &&
-        input$redcap_uri != ""
-
-      redcap_data_ready <- (input$data_source == "redcap" &
-        redcap_uri_and_token &
-        isTRUE(input$data_type != ""))
-
-      csv_file_ready <- input$data_source == "csv_upload" &
-        !is.null(input$input_file) &
-        isTRUE(input$data_type != "")
-
-      panda_ready <- input$data_source == "panda" &
-        !is.null(input$panda_api_token) &&
-        input$panda_api_token != ""
-
-      if (
-        input$data_source == "demo" |
-          redcap_data_ready |
-          csv_file_ready |
-          panda_ready
-      ) {
-        out <- bslib::input_task_button(
-          id = shiny::NS(id, "fetch_data_button"),
-          label = "Add"
-        )
-      }
-
-      if (
-        input$data_source == "retrieve" &&
-          !is.null(input$data_file_key) &&
-          input$data_file_key != ""
-      ) {
-        out <- bslib::input_task_button(
-          id = shiny::NS(id, "retrieve_data_button"),
-          label = "Upload"
-        )
-      }
-
-      out
-    })
-
-    shiny::observe({
-      loaded_data_sources <- try(safer::retrieve_object(
-        conn = input$saved_data_file$datapath,
-        key = input$data_file_key
-      ))
-
-      if (inherits(loaded_data_sources, "try-error")) {
-        shiny::showNotification(
-          type = "error",
-          "Could not load data sources. Make sure the file is a valid .bin file, and that the password is correct."
-        )
-        return()
-      }
-
-      for (dat_source in loaded_data_sources) {
-        i <- length(shiny::reactiveValuesToList(data_sources)) + 1
-
-        data_sources[[as.character(i)]] <- dat_source
-      }
-    }) |>
-      shiny::bindEvent(input$retrieve_data_button)
-
-    data_sources <- shiny::reactiveValues()
-
-    shiny::observe({
-      ## Add data source to output reactiveValues object
-      i <- length(shiny::reactiveValuesToList(data_sources)) + 1
-
-      new_source <- list(
-        data_source = input$data_source,
-        data_type = input$data_type
-      )
-
-      if (input$data_source == "redcap") {
-        new_source$redcap_auth <-
-          list(
-            redcap_uri = input$redcap_uri,
-            token = input$api_token
-          )
-      }
-
-      if (input$data_source == "panda") {
-        req_panda <- try(
-          expr = {
-            httr2::request("https://panda.medicine.wisc.edu") |>
-              httr2::req_perform()
-          },
-          TRUE
-        )
-
-        if (inherits(req_panda, "try-error")) {
+      params <- tryCatch(
+        safer::retrieve_object(
+          config_file(),
+          key = input$config_password
+        ),
+        error = \(e) {
           shiny::showNotification(
-            type = "error",
-            "Could not access https://panda.medicine.wisc.edu. Make sure you are connected to the campus network, either directly or via VPN. If you just connected to the VPN, restart the R session, and relaunch the application."
+            "Failed to load saved config.",
+            type = "error"
           )
-          new_source <- NULL
-        } else {
-          new_source$panda_auth <- input$panda_api_token
+          NULL
         }
-      }
+      )
 
-      if (input$data_source == "csv_upload") {
-        new_source$data_file <- input$input_file$datapath
-      }
-
-      if (
-        !is.null(new_source$redcap_auth$redcap_uri) &&
-          new_source$redcap_auth$redcap_uri != ""
-      ) {
-        # Make sure URI ends with API\\/
-        if (
-          !grepl(pattern = "API\\/$", x = new_source$redcap_auth$redcap_uri)
-        ) {
-          # If that is not the case, check if it ends with API
-          if (grepl(pattern = "API$", x = new_source$redcap_auth$redcap_uri)) {
-            # If yes, add trailing /
-            new_source$redcap_auth$redcap_uri <- paste0(
-              new_source$redcap_auth$redcap_uri,
-              "/"
-            )
-          } else {
-            # If no, notify the user that the URI is invalid
-            shiny::showNotification(
-              type = "error",
-              "The URI must end in \"API/\". Double check the URI."
-            )
-
-            new_source <- NULL
-          }
-        }
-      }
-
-      if (!is.null(new_source)) {
-        data_sources[[as.character(i)]] <- new_source
-
-        ## Update Data Type selectizeInput
-        shiny::updateSelectizeInput(
-          inputId = "data_type",
-          choices = switch(
-            input$data_source, # list(
-            demo = c("NACC" = "nacc"),
-            redcap = c(
-              "WADRC (UDS-2)" = "wadrc_uds2",
-              "WADRC (UDS-3)" = "wadrc_uds3",
-              "WADRC (UDS-4)" = "wadrc_uds4"
-              # "WLS" = "wls"
-            ),
-            csv_upload = c(
-              "NACC" = "nacc",
-              "WLS" = "wls",
-              "WADRC (UDS-2)" = "wadrc_uds2",
-              "WADRC (UDS-3)" = "wadrc_uds3",
-              "WADRC (UDS-4)" = "wadrc_uds4"
-            ),
-            panda = c("Biomarker" = "biomarker")
-          ),
-          selected = switch(
-            input$data_source,
-            "demo" = "nacc",
-            "panda" = "biomarker"
-          ) # if (input$data_source == "demo") "nacc" else NULL
-        )
+      if (!is.null(params)) {
+        data_source_servers[[input$data_source]]$restore(params)
+        shiny::removeModal()
       }
     }) |>
-      shiny::bindEvent(
-        input$fetch_data_button,
-        ignoreInit = TRUE
-      )
+      shiny::bindEvent(input$retrieve_config)
 
-    output$data_sources_table <- # gt::render_gt(
-      DT::renderDataTable(
-        {
-          tmp <- shiny::reactiveValuesToList(data_sources)
+    # --- Start extension servers ---
+    data_source_servers <- lapply(sources, \(source) {
+      data_source_server(source, id = source@id)
+    })
 
-          if (length(tmp) == 0) {
-            # for_out <- data.frame(
-            #   .id = NA,
-            #   data_source = NA,
-            #   data_type = NA
-            # )
-
-            out <- DT::datatable(
-              data = data.frame(
-                x = "Add data sources using the UI on the right"
-              ),
-              colnames = c(
-                " " = "x"
-              ),
-              escape = FALSE,
-              rownames = FALSE,
-              selection = list(mode = "multiple", target = "row"),
-              class = list(stripe = FALSE),
-              filter = "none",
-              options = list(
-                dom = "t",
-                ordering = F
-              )
-            )
-
-            return(out)
-          } else {
-            for_out <- lapply(tmp, \(x) {
-              x[c("data_source", "data_type")]
-            }) |>
-              data.table::rbindlist(idcol = TRUE)
-          }
-
-          DT::datatable(
-            for_out[, -1],
-            escape = FALSE,
-            rownames = FALSE,
-            selection = list(mode = "multiple", target = "row"),
-            class = list(stripe = FALSE),
-            filter = "none",
-            colnames = c(
-              "Data Source" = "data_source",
-              "Data Type" = "data_type"
-            ),
-            options = list(
-              dom = "ltip",
-              ordering = F
-            )
-          )
-        }
-      )
-
-    output$download_data_sources <- shiny::downloadHandler(
-      filename = function() {
-        paste0("data_sources_", Sys.Date(), ".bin")
-      },
-      content = function(file) {
-        safer::save_object(
-          object = shiny::reactiveValuesToList(data_sources),
-          key = input$data_file_key,
-          conn = file
-        )
-      }
-    )
-
+    # --- Click "Save Configuration" to access save popup
     shiny::observe({
       shiny::showModal(
         shiny::modalDialog(
@@ -522,7 +184,7 @@ dataSelectServer <- function(id) {
           footer = NULL,
           shiny::tagAppendAttributes(
             shiny::passwordInput(
-              inputId = shiny::NS(id, "data_file_key"),
+              inputId = shiny::NS(id, "config_password"),
               label = "Enter a password to save data sources",
               placeholder = "Enter Password"
             ),
@@ -531,7 +193,7 @@ dataSelectServer <- function(id) {
           ),
           shiny::tagAppendAttributes(
             shiny::passwordInput(
-              inputId = shiny::NS(id, "data_file_key_repeated"),
+              inputId = shiny::NS(id, "config_password_repeated"),
               label = "Confirm Password",
               placeholder = "Re-enter Password"
             ),
@@ -542,231 +204,142 @@ dataSelectServer <- function(id) {
         )
       )
     }) |>
-      shiny::bindEvent(input$save_data_sources)
+      shiny::bindEvent(input$launch_save_config)
 
+    # --- Check repeated passwords match. If yes, return save button
     output$check_passwords <- shiny::renderUI({
-      shiny::req(input$data_file_key, input$data_file_key_repeated)
+      shiny::req(input$config_password, input$config_password_repeated)
 
-      if (input$data_file_key != input$data_file_key_repeated) {
+      if (input$config_password != input$config_password_repeated) {
         return(shiny::HTML(
           "<span style='color: red; font-weight: bold;'>Passwords don't match</span>"
         ))
       }
 
-      shiny::tagList(
-        shiny::downloadButton(
-          outputId = shiny::NS(id, "download_data_sources"),
-          label = "Save Data Sources"
-        ),
-        shiny::tags$script(shiny::HTML(
-          sprintf(
-            "$(document).on('click', '#%1$s-download_data_sources', function() {Shiny.setInputValue(%1$s-download_data_sources_clicked, 1, {priority: 'event'});});",
-            id
-          )
-        ))
+      # shiny::tagList(
+      shiny::actionButton(
+        inputId = shiny::NS(id, "save_config"),
+        label = "Save Data Sources"
+        # ),
+        # shiny::tags$script(shiny::HTML(
+        #   sprintf(
+        #     "$(document).on('click', '#%1$s-download_data_sources', function() {Shiny.setInputValue(%1$s-download_data_sources_clicked, 1, {priority: 'event'});});",
+        #     id
+        #   )
+        # ))
       )
     })
 
-    shiny::observe(
-      print(input$data_sources_table_rows_selected)
-    )
-
+    # --- Click "Save Configuration" to save output of data_source_servers[[source]]
     shiny::observe({
+      shiny::req(input$data_source)
+
+      ## Get current source, and server results
+      source <- sources[[input$data_source]]
+      dat_src_server <- data_source_servers[[input$data_source]]
+
+      if (file.exists(config_file())) {
+        file.remove(config_file())
+      }
+
+      safer::save_object(
+        object = dat_src_server$params(),
+        key = input$config_password,
+        conn = config_file()
+      )
+
       shiny::removeModal()
     }) |>
-      shiny::bindEvent(input$download_data_sources_clicked)
+      shiny::bindEvent(input$save_config)
 
-    output$submit_button <- shiny::renderUI({
-      if (length(shiny::reactiveValuesToList(data_sources)) == 0) {
+    # --- Reactive values for data object and extras
+    dat_obj <- shiny::reactiveVal(NULL)
+    data_source_extras <- shiny::reactiveVal(NULL)
+    default_methods <- shiny::reactiveVal(NULL)
+
+    # --- Click "Go!" to load data ---
+    shiny::observe({
+      shiny::req(input$data_source)
+
+      ## Get current source, and server results
+      source <- sources[[input$data_source]]
+      ext_pkg <- S7::S7_class(source)@package
+
+      ## Set defaults for the active extension
+      if (ext_pkg != "ntrd") {
+        set_defaults <- get0(
+          ".set_defaults",
+          envir = asNamespace(ext_pkg)
+        )
+
+        if (is.function(set_defaults)) {
+          set_defaults()
+        }
+      }
+
+      lapply(
+        setNames(ntrs::list_npsych_scores(), ntrs::list_npsych_scores()),
+        \(x) {
+          get_std_defaults(get_npsych_scores(x)())
+        }
+      ) |>
+        purrr::discard(is.null) |>
+        default_methods()
+
+      dat_src_server <- data_source_servers[[input$data_source]]
+
+      if (is.null(dat_src_server)) {
         return()
       }
 
-      shiny::tagList(
-        if (!is.null(input$data_sources_table_rows_selected)) {
-          shiny::actionButton(
-            inputId = shiny::NS(id, "remove_rows"),
-            label = "Remove highlighted data source"
-          )
-        },
-        shiny::p(
-          "When all needed data sources have been added, click the 'Save Data Sources' below to save data sources for later use, or 'Load Data' button below to continue."
-        ),
-        shiny::actionButton(
-          inputId = shiny::NS(id, "submit"),
-          label = "Load Data"
-        ),
-        shiny::actionButton(
-          inputId = shiny::NS(id, "save_data_sources"),
-          label = "Save Data Sources"
+      result <- do.call(
+        data_load,
+        c(
+          source = source,
+          dat_src_server$params()
         )
       )
+
+      if (is.null(result)) {
+        return()
+      }
+
+      if (!S7::S7_inherits(result, data_nacc)) {
+        cli::cli_abort(
+          "{.val {input$data_source}}: {.fn data_source_server} must return a
+          {.cls data_nacc} object."
+        )
+      }
+
+      dat_obj(result)
+    }) |>
+      shiny::bindEvent(input$go)
+
+    # Proxy extras from active plugin
+    shiny::observe({
+      shiny::req(input$data_source)
+      srv <- data_source_servers[[input$data_source]]
+
+      if ("extras" %in% names(srv) && !is.null(srv$extras)) {
+        data_source_extras(shiny::reactiveValuesToList(srv$extras))
+      }
     })
-
-    shiny::observe({
-      data_sources_names <- names(data_sources)
-
-      for (nm in data_sources_names[input$data_sources_table_rows_selected]) {
-        data_sources[[nm]] <- NULL
-      }
-    }) |>
-      shiny::bindEvent(
-        input$remove_rows
-      )
-
-    dat_obj <- shiny::reactiveVal()
-    data_source <- shiny::reactiveVal()
-    data_type <- shiny::reactiveVal()
-    biomarker_api <- shiny::reactiveVal()
-
-    shiny::observe({
-      all_data_sources <- shiny::reactiveValuesToList(data_sources)
-      all_data_sources <- all_data_sources[
-        !unlist(lapply(all_data_sources, is.null))
-      ]
-
-      biomarker_sources <- all_data_sources[unlist(lapply(
-        all_data_sources,
-        \(x) !is.null(x$panda_auth)
-      ))]
-
-      if (length(biomarker_sources) > 0) {
-        panda_accessible <- check_connection(
-          api_key = biomarker_sources[[1]]$panda_auth,
-          timeout =
-        )
-
-        panda_check <- ifelse(panda_accessible$connected, "passed", "failed")
-      } else {
-        panda_check <- "passed"
-      }
-
-      if (panda_check == "failed") {
-        shiny::showNotification(
-          type = "error",
-          "Cannot reach Panda. Make sure you are connected to the VPN, and that your API key is correct."
-        )
-      } else {
-        other_sources <- all_data_sources[setdiff(
-          names(all_data_sources),
-          names(biomarker_sources)
-        )]
-
-        tmp <- lapply(
-          other_sources,
-          \(x) {
-            cbind(
-              uds = x$data_type,
-              do.call(read_data, args = x)
-            )
-          }
-        ) |>
-          data.table::rbindlist(idcol = FALSE, fill = TRUE) |>
-          fill_data_downup(
-            ptid = "NACCID",
-            visityr = "VISITYR",
-            visitmo = "VISITMO",
-            visitday = "VISITDAY",
-            educ = "EDUC",
-            constant_across_visits = c(
-              "SEX",
-              "RACE",
-              "BIRTHYR",
-              "BIRTHMO"
-            )
-          )
-
-        uds <- NULL # for R check
-
-        ## Set uds to NA if there is only one value for a visit
-        tmp[,
-          uds := ifelse(nrow(unique(.SD)) == 1, NA, uds),
-          .SDcols = setdiff(colnames(tmp), "uds"),
-          by = c("NACCID", "VISITYR", "VISITMO", "VISITDAY")
-        ]
-
-        ## For those visits with entries in both UDS-3 and UDS-4, keep only the UDS-4 data
-        tmp <- tmp[
-          is.na(uds) | uds == "wadrc_uds4"
-        ] |>
-          unique()
-
-        ## Remove the uds column
-        tmp$uds <- NULL
-
-        ## Remove rows with missing VISITYR
-        tmp <- tmp[!is.na(tmp$VISITYR)]
-
-        tmp <- fill_data_downup(
-          out = tmp,
-          ptid = "NACCID",
-          visityr = "VISITYR",
-          visitmo = "VISITMO",
-          visitday = "VISITDAY",
-          educ = "EDUC",
-          constant_across_visits = c("BIRTHYR", "BIRTHMO", "SEX", "RACE")
-        )
-
-        dat_obj(tmp)
-
-        if ("csv" %in% all_data_sources$data_source) {
-          data_source("csv")
-        } else if (length(unique(all_data_sources$data_source)) == 1) {
-          data_source(all_data_sources$data_source[1])
-        } else if ("redcap" %in% all_data_sources$data_source) {
-          data_source("redcap")
-        }
-
-        data_type("wadrc")
-
-        if (length(biomarker_sources) > 0) {
-          biomarker_api(biomarker_sources[[1]]$panda_auth)
-        }
-
-        shiny::updateTextInput(inputId = "redcap_uri", value = NULL)
-        shiny::updateTextInput(inputId = "panda_api_token", value = NULL)
-      }
-    }) |>
-      shiny::bindEvent(input$submit)
-
-    shiny::exportTestValues(
-      data_sources = shiny::reactiveValuesToList(data_sources)
-    )
 
     return(list(
       dat_obj = dat_obj,
-      data_source = data_source,
-      data_type = data_type,
-      biomarker_api = biomarker_api
+      extras = data_source_extras,
+      default_methods = default_methods
     ))
   })
 }
 
-#' @rdname dataSelectModule
-#'
-#' @param testing Logical, whether to run the app in testing mode.
-#'
-#' @export
+
 dataSelectApp <- function(testing = FALSE) {
   shinyAddResources()
 
   ui <- bslib::page_fluid(
-    # shiny::tagList(
-    #   shiny::tags$head(
-    #     shiny::tags$script(
-    #       src = "www/scripts.js"
-    #     ),
-    #     shiny::tags$link(
-    #       rel = "stylesheet",
-    #       type = "text/css",
-    #       href = "www/styles.css"
-    #     )
-    #   ),
-    #   shiny::tags$div(id = "spinner", class = "loader"),
-    #   shiny::tags$div(id = "spinner_overlay", class = "loader_overlay")
-    # ),
     shinyApp_header(),
-    dataSelectUI("dat_select") #,
-    # shiny::actionButton("fetch_data", label = "Submit")
+    dataSelectUI("dat_select")
   )
 
   server <- function(input, output, session) {
@@ -778,17 +351,21 @@ dataSelectApp <- function(testing = FALSE) {
 
     shiny::observe({
       dat_obj(data_input$dat_obj())
+    }) |>
+      shiny::bindEvent(data_input$dat_obj())
 
-      if (!testing) {
-        shiny::showNotification(
-          ui = paste(dim(dat_obj()), collapse = "; "),
-          duration = 2
-        )
-      }
-    })
+    # shiny::observe({
+    #   shiny::req(data_input$data_source_extras)
+    #   # cat("data_source_extras:")
+    #   # print(data_input$data_source_extras)
+    #   browser()
+    # })
 
-    shiny::exportTestValues(dat_obj = dat_obj())
-    shiny::exportTestValues(biomarker_api = data_input$biomarker_api())
+    # shiny::observe({
+    #   # print(names(data_input$dat_obj))
+    #   # print(class(data_input$dat_obj))
+    #   print(data_input$extras())
+    # })
   }
 
   shiny::shinyApp(ui, server, options = list(test.mode = testing))

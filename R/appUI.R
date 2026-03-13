@@ -8,7 +8,7 @@ appUI <- function() {
     ## Header: add JS scripts, CSS, and spinner elements to be shown/hidden later.
     header = shinyApp_header(),
     theme = bslib::bs_theme(version = 5),
-    title = "Npsych Scoring Application",
+    title = "Npsych Test Result Dashboard",
     id = "main_navbar",
     navbar_options = bslib::navbar_options(underline = TRUE),
     ######
@@ -134,14 +134,7 @@ appUI <- function() {
               id = "long-trends",
               bslib::nav_panel(
                 title = "Cognitive Scores (Plots)",
-                # plotVarUI("plot_var")
-                #do.call(
-                #htmltools::tagList,
-                bslib::accordion(
-                  !!!lapply(unique(nacc_var_groups), \(x) plotUI(id = x)),
-                  id = "plots-accordion",
-                  open = TRUE
-                ) #
+                shiny::uiOutput("plots_accordion"),
               ),
               bslib::nav_panel(
                 title = "Cognitive Scores (Table)",
@@ -154,8 +147,9 @@ appUI <- function() {
               bslib::nav_panel(
                 title = "Biomarkers",
                 value = "biomarkers",
-                biomarkerUI("biomarker-tables")
+                shiny::uiOutput("extension_ui")
               )
+              # shiny::uiOutput("extension_ui")
             )
           )
         )
@@ -164,7 +158,7 @@ appUI <- function() {
     bslib::nav_panel(
       title = "Setup",
       value = "colSelect",
-      colSelectUI("colSelect")
+      methodSelectUI("colSelect")
     )
   )
 }
