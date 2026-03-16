@@ -265,6 +265,8 @@ dataSelectServer <- function(id) {
       source <- sources[[input$data_source]]
       ext_pkg <- S7::S7_class(source)@package
 
+      browser()
+
       ## Set defaults for the active extension
       if (ext_pkg != "ntrd") {
         set_defaults <- get0(
@@ -353,19 +355,6 @@ dataSelectApp <- function(testing = FALSE) {
       dat_obj(data_input$dat_obj())
     }) |>
       shiny::bindEvent(data_input$dat_obj())
-
-    # shiny::observe({
-    #   shiny::req(data_input$data_source_extras)
-    #   # cat("data_source_extras:")
-    #   # print(data_input$data_source_extras)
-    #   browser()
-    # })
-
-    # shiny::observe({
-    #   # print(names(data_input$dat_obj))
-    #   # print(class(data_input$dat_obj))
-    #   print(data_input$extras())
-    # })
   }
 
   shiny::shinyApp(ui, server, options = list(test.mode = testing))

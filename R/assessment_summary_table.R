@@ -26,31 +26,6 @@ assessment_summary_table <- function(
   summary_dat,
   bar_height = 16
 ) {
-  # if (missingArg(fill_values)) fill_values <- NULL
-
-  # stopifnot(
-  #   "Exactly one of 'dat' or 'summary_dat' must be provided" = missingArg(dat) +
-  #     missingArg(summary_dat) ==
-  #     1
-  # )
-
-  # if (
-  #   unique(dat$NACCID) == "adrc000178" & unique(dat$VISITDATE == "2020-10-12")
-  # ) {
-  #   browser()
-  # }
-
-  # if (missingArg(summary_dat)) {
-  # summary_dat <- assessment_summary_data(
-  #   dat = dat,
-  #   id = id,
-  #   descriptions = descriptions,
-  #   fill_values = fill_values,
-  #   methods = methods,
-  #   include_caption = include_caption
-  # )
-  # }
-
   for_main_table <- summary_dat$for_main_table
 
   fill_values <- summary_dat$fill_values
@@ -478,6 +453,25 @@ assessment_summary_data <- function(
   # Overwrite if special label necessary
   all_labels[names(cur_labels)] <- cur_labels
 
+  ## If no rows, return empty data.table
+  # if (nrow(for_main_table) == 0) {
+  #   for_main_table[,
+  #     labels := factor(
+  #       all_labels[name],
+  #       levels = all_labels[order(match(
+  #         names(all_labels),
+  #         names(cur_labels),
+  #         nomatch = 99
+  #       ))]
+  #     )
+  #   ]
+
+  #   return(list(
+  #     for_main_table = for_main_table,
+  #     fill_values = fill_values
+  #   ))
+  # }
+
   ## Add additional columns. Avoid tidyverse verbs for devtools::check (? not sure why this throws a warning here... EDIT: fixed by importing .data from rlang. Could rewrite back to use tidyverse syntax...)
   for_main_table[,
     c(
@@ -488,14 +482,18 @@ assessment_summary_data <- function(
       "units",
       "is_error"
     ) := list(
-      unlist(sapply(name, \(x) {
-        tmp <- ntrs::get_npsych_scores(x)()@domain
-        if (length(tmp) != 0) {
-          return(tmp)
-        }
+      if (length(name) == 0) {
+        return(character())
+      } else {
+        unlist(sapply(name, \(x) {
+          tmp <- ntrs::get_npsych_scores(x)()@domain
+          if (length(tmp) != 0) {
+            return(tmp)
+          }
 
-        NA
-      })),
+          NA
+        }))
+      },
       factor(
         all_labels[name],
         levels = all_labels[order(match(
@@ -504,7 +502,7 @@ assessment_summary_data <- function(
           nomatch = 99
         ))]
       ),
-      ifelse(name %in% t_scores, (std - 50) / 10, std),
+      as.numeric(ifelse(name %in% t_scores, (std - 50) / 10, std)),
       purrr::map2_chr(name, raw, \(x, y) {
         if (is.na(y)) {
           return("")
@@ -567,10 +565,10 @@ assessment_summary_data <- function(
     )
   ][,
     c("Percentile", "Description") := list(
-      stats::pnorm(for_percentile) * 100,
+      stats::pnorm(as.numeric(for_percentile)) * 100, # for some reason, for_main_table$for_percentile is character if nrow(for_main_table) == 0.
       names(descriptions)[
         findInterval(
-          stats::pnorm(for_percentile),
+          stats::pnorm(as.numeric(for_percentile)),
           vec = descriptions,
           rightmost.closed = T
         ) +
