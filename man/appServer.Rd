@@ -2,7 +2,7 @@
 % Please edit documentation in R/appServer.R
 \name{appServer}
 \alias{appServer}
-\title{Server Logic for shinyAssessmentApp}
+\title{Server Logic for shinyDashboard}
 \usage{
 appServer(input, output, session)
 }
@@ -10,6 +10,6 @@ appServer(input, output, session)
 \item{input, output, session}{Standard Shiny server arguments.}
 }
 \description{
-Server Logic for shinyAssessmentApp
+Server Logic for shinyDashboard
 }
 \keyword{internal}

@@ -4,7 +4,7 @@
 #' (from installed packages that declare themselves via DESCRIPTION fields).
 #'
 #' @returns A named list of `data_source` objects, keyed by their `id`.
-#' @export
+#' @keywords internal
 discover_data_sources <- function() {
   # Step 1: Load extensions packages so their S7 methods get registered
   load_extensions()

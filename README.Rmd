@@ -51,7 +51,7 @@ You can start the application as follows:
 
 ```{r example, eval=FALSE}
 library(ntrd)
-shinyAssessmentApp()
+shinyDashboard()
 ```
 
 Alternatively, the app is also available as an RStudio add-in. I.e., once the package is installed, you should be able to launch it from the RStudio add-in dropdown menu:

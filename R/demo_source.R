@@ -1,15 +1,4 @@
-demo_source <- S7::new_class(
-  "demo_source",
-  parent = data_source,
-  constructor = function() {
-    S7::new_object(
-      data_source(
-        name = "Demo NACC data",
-        id = "demo"
-      )
-    )
-  }
-)
+demo_source <- new_data_source(name = "Demo NACC data", id = "demo")
 
 S7::method(data_source_ui, demo_source) <- function(source, ns) {
   shiny::p("Click 'Go' to load demo data. No configuration needed.")

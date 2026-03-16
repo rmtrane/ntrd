@@ -1,4 +1,4 @@
-#' UI for shinyAssessmentApp
+#' UI for shinyDashboard
 #'
 #' @keywords internal
 #' @export

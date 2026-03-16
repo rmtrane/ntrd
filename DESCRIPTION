@@ -12,10 +12,11 @@ Description: Building on the ntrs package,
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-Suggests: 
+Suggests:
     httr2,
     jsonlite,
     pagedown,
+    quarto,
     shinytest2,
     testthat (>= 3.0.0),
     rvest,
@@ -47,9 +48,15 @@ Depends:
     R (>= 4.2.0)
 Remotes: 
     rmtrane/ntrs
+VignetteBuilder: quarto
 Roxygen: list(markdown = TRUE)
 Authors@R: c(
-    person("Ralph", "Møller Trane", email = "rtrane@wisc.edu", role = c("aut", "cre"), comment = c(ORCID = "0000-0001-7824-1785"))
+    person(
+        "Ralph", "Møller Trane", 
+        email = "rtrane@wisc.edu", 
+        role = c("aut", "cre"), 
+        comment = c(ORCID = "0000-0001-7824-1785")
+    )
   )
 URL: https://rmtrane.github.io/ntrd
 BugReports: https://github.com/rmtrane/ntrd/issues
@@ -100,7 +107,7 @@ Collate:
     'rdd.R'
     'shinyAddResources.R'
     'shinyApp_header.R'
-    'shinyAssessmentApp.R'
+    'shinyDashboard.R'
     'var_labels.R'
     'visibility_defaults.R'
     'visit_vars.R'

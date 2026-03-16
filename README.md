@@ -53,7 +53,7 @@ You can start the application as follows:
 
 ``` r
 library(ntrd)
-shinyAssessmentApp()
+shinyDashboard()
 ```
 
 Alternatively, the app is also available as an RStudio add-in. I.e.,

@@ -13,3 +13,4 @@ A named list of \code{data_source} objects, keyed by their \code{id}.
 Finds built-in data sources (defined in this package) and data sources from extensions
 (from installed packages that declare themselves via DESCRIPTION fields).
 }
+\keyword{internal}

@@ -5,8 +5,16 @@ template:
 
 reference:
   - contents: 
-      - shinyAssessmentApp
-  - title: ""
+      - shinyDashboard
+  - title: "Extension Functions"
+    desc: >
+      Functions that enables third parties to implement new data sources.
+    contents:
+      - data_source
+      - data_source_server
+      - data_source_ui
+      - data_load
+      - data_nacc
   - title: "Tables"
     desc: >
       Functions to create tables

@@ -1,0 +1,443 @@
+---
+title: "Extension API"
+description: "How to create an ntrd extension package"
+vignette: >
+  %\VignetteIndexEntry{Vignette's Title}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r}
+#| include: false
+library(ntrd)
+```
+
+## Introduction
+
+The `ntrd` package is designed to be extensible. While it ships with built-in
+data sources (CSV upload and a demo dataset), the real power comes from
+**extension packages** that add new data sources --- pulling data from REDCap,
+institutional databases, or any other system accessible via API.
+
+Extensions are regular R packages that:
+
+1. Declare themselves as `ntrd` extensions via a DESCRIPTION field
+2. Define a new data source class using S7
+3. Implement three S7 generic methods: `data_source_ui()`, `data_source_server()`, and `data_load()`
+4. Optionally provide additional UI, configuration persistence, and scoring defaults
+
+The [`ntrdWisconsin`](https://github.com/rmtrane/ntrdWisconsin) package is a
+full working example and is referenced throughout this guide.
+
+## How extensions are discovered
+
+When the `ntrd` Shiny app starts, it calls `discover_data_sources()`, which
+triggers the following sequence:
+
+1. **Scan**: `load_extensions()` iterates over all installed packages (via
+   `.libPaths()`) and reads each package's `DESCRIPTION` file looking for
+   `Config/ntrd/extension: true`.
+2. **Load**: For each extension found, its namespace is loaded via
+   `loadNamespace()`, which triggers `.onLoad()` and registers S7 methods.
+3. **Introspect**: `discover_data_sources()` inspects the registered methods on
+   the `data_source_server` and `data_source_ui` generics, instantiates each
+   data source class, and returns a named list of `data_source` objects.
+4. **Render**: The Shiny app presents all discovered data sources in a dropdown
+   for the user to choose from.
+
+## Package setup
+
+### DESCRIPTION
+
+Your extension package must include two things in its `DESCRIPTION`:
+
+1. The extension declaration field
+2. `ntrd` and `S7` as imports
+
+```yaml
+# DESCRIPTION
+Package: myExtension
+Title: My ntrd Extension
+Version: 0.1.0
+Imports:
+    ntrd,
+    S7,
+    shiny
+Config/ntrd/extension: true
+```
+
+::: {.callout-note}
+The field name is exactly `Config/ntrd/extension` and the value must be
+`true` (lowercase).
+:::
+
+Here is the relevant section from `ntrdWisconsin`'s DESCRIPTION:
+
+```yaml
+Imports:
+    S7,
+    ntrd,
+    ntrs,
+    shiny,
+    ...
+Config/ntrd/extension: true
+```
+
+### .onLoad hook
+
+Your package **must** call `S7::methods_register()` in `.onLoad()` so that your
+S7 method implementations are registered when the namespace is loaded:
+```r
+# R/zzz.R
+.onLoad <- function(...) {
+  S7::methods_register()
+}
+```
+
+This is standard practice for any package defining S7 methods for external
+generics.
+
+## Defining a data source class
+
+Use `new_data_source()` to create an S7 class that inherits from
+`ntrd::data_source`. You provide two arguments:
+
+- **`name`**: A human-readable display name (shown in the data source dropdown)
+- **`id`**: A unique identifier string (used internally as a key)
+
+```r
+# R/my_source.R
+my_source <- ntrd::new_data_source(
+  name = "My Data Source",
+  id = "my_source"
+)
+```
+
+This returns a **class** (not an instance). Calling `my_source()` produces an
+instance with the `name` and `id` properties set.
+
+For reference, here is how `ntrdWisconsin` defines its source class:
+
+```r
+# ntrdWisconsin/R/wadrc_source.R
+wadrc_source <- ntrd::new_data_source(
+  name = "Wisconsin ADRC",
+  id = "wadrc_redcap"
+)
+```
+
+::: {.callout-tip}
+For advanced use cases (e.g., adding custom S7 properties), you can still use
+`S7::new_class()` directly with `parent = ntrd::data_source`.
+:::
+
+## Implementing the required generics
+
+Your extension must provide S7 methods for three generics exported by `ntrd`.
+Each method file should declare the external generic using
+`S7::new_external_generic()`:
+
+```r
+data_source_ui <- S7::new_external_generic("ntrd", "data_source_ui", "source")
+data_source_server <- S7::new_external_generic("ntrd", "data_source_server", "source")
+data_load <- S7::new_external_generic("ntrd", "data_load", "source")
+```
+
+### `data_source_ui(source, ns)`
+
+Returns a Shiny UI element (`tagList`) that will be rendered when the user
+selects your data source. The `ns` argument is a namespace function --- use it
+to wrap all input IDs.
+
+```r
+S7::method(data_source_ui, my_source) <- function(source, ns) {
+  shiny::tagList(
+    shiny::passwordInput(
+      inputId = ns("api_token"),
+      label = "API Token"
+    )
+  )
+}
+```
+
+### `data_source_server(source, id)`
+
+Returns a Shiny module server (via `shiny::moduleServer()`) that must return a
+**list** with the following elements:
+
+| Element | Required | Description |
+|---------|----------|-------------|
+| `params` | Yes | A `shiny::reactive()` returning a named list of parameters. These are passed as arguments to `data_load()` when the user clicks "Go". Use `shiny::req()` to ensure required inputs are present. |
+| `session` | Yes | The Shiny session object. |
+| `restore` | No | A function that accepts a `params` list and restores input values (for configuration persistence). |
+| `extras` | No | A `shiny::reactiveValues()` object for passing additional data/UI to the main app (see [Extension UI](#optional-extension-ui-via-extras)). |
+
+```r
+S7::method(data_source_server, my_source) <- function(source, id) {
+  shiny::moduleServer(id, function(input, output, session) {
+    params <- shiny::reactive({
+      shiny::req(input$api_token)
+      list(api_token = input$api_token)
+    })
+
+    restore <- function(params) {
+      shiny::updateTextInput(session, "api_token", value = params$api_token)
+    }
+
+    list(
+      params = params,
+      restore = restore,
+      session = session
+    )
+  })
+}
+```
+
+### `data_load(source, ...)`
+
+This is where the actual data retrieval happens. The function receives the data
+source object and the parameters from `$params()` (unpacked via `do.call()`).
+It **must** return a `data_nacc` object.
+
+```r
+S7::method(data_load, my_source) <- function(source, api_token, ...) {
+  # Fetch data using your API
+  raw_data <- fetch_from_my_api(api_token)
+
+  # Transform to NACC format and validate
+  ntrd::data_nacc(data = raw_data)
+}
+```
+
+### When no user configuration is needed
+
+If your data source doesn't require any user input (e.g., it connects to a
+database with preconfigured credentials, or loads a bundled dataset), the
+generics simplify considerably. The built-in `demo_source` follows this pattern:
+
+- **`data_source_ui`** returns informational text instead of input widgets
+- **`data_source_server`** returns an empty params list (`reactive(list())`)
+- **`data_load`** takes only `source` (no extra arguments)
+
+```r
+S7::method(data_source_ui, my_source) <- function(source, ns) {
+  shiny::p("Click 'Go' to load data. No configuration needed.")
+}
+
+S7::method(data_source_server, my_source) <- function(source, id) {
+  shiny::moduleServer(id, function(input, output, session) {
+    list(params = shiny::reactive(list()), session = session)
+  })
+}
+
+S7::method(data_load, my_source) <- function(source, ...) {
+  raw <- fetch_data_from_preconfigured_source()
+  ntrd::data_nacc(data = raw)
+}
+```
+
+This works because `params()` returns an empty list, and the app calls
+`data_load` via `do.call(data_load, c(source = source, list()))`, which
+resolves to `data_load(source)`.
+
+## The `data_nacc` contract {#data-nacc}
+
+All data sources must return a `data_nacc` object from `data_load()`. This S7
+class validates the data on construction, ensuring it meets the expected format.
+
+### Required columns
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `NACCID` | character | Unique participant identifier |
+| `SEX` | numeric | 1 = Male, 2 = Female, or `NA` |
+| `EDUC` | numeric | Years of education |
+| `BIRTHYR` | numeric | Year of birth |
+
+### Date fields
+
+Either provide:
+
+- `VISITYR` (numeric), `VISITMO` (numeric, 1--12), and `VISITDAY` (numeric, 1--31)
+
+or:
+
+- `VISITDATE` (Date, `"YYYY-MM-DD"` format)
+
+If `VISITYR`, `VISITMO`, and `VISITDAY` are provided, `VISITDATE` is computed
+automatically and the year/month/day columns are removed.
+
+### Computed fields
+
+- `NACCAGE` is auto-computed from `VISITDATE` and `BIRTHYR`/`BIRTHMO` if not
+  already present.
+
+### Additional columns
+
+Any additional columns in the data (neuropsych scores, diagnostic variables,
+etc.) are preserved and can be used by the app.
+
+## Optional: Configuration persistence {#config-persistence}
+
+If your `data_source_server` returns a `$restore` function, the `ntrd` app will
+offer users the option to save and load their configuration (e.g., API tokens).
+
+Configurations are saved using the `safer` package (encrypted on disk) in
+`tools::R_user_dir("ntrd", "config")` with the filename `{source_id}.bin`.
+
+The `$restore` function receives the same named list that `$params()` returns
+and should update the Shiny inputs accordingly:
+
+```r
+restore <- function(params) {
+  shiny::updateTextInput(session, "api_token", value = params$api_token)
+}
+```
+
+## Optional: Extension UI via `$extras` {#optional-extension-ui-via-extras}
+
+Extensions can inject additional UI into the main `ntrd` app via the `$extras`
+reactive values in `data_source_server`. This is useful for features that go
+beyond data loading, such as displaying biomarker results.
+
+To provide extension UI, include `extension_ui` and `extension_server` in your
+`extras` reactive values:
+
+```r
+extras <- shiny::reactiveValues(
+  extension_ui = function() my_extension_ui(id = "my-module"),
+  extension_server = function(ptid, extras) {
+    my_extension_server(id = "my-module", ptid, extras)
+  }
+)
+```
+
+The `ntrd` app will:
+
+1. Call `extras$extension_ui()` to render additional UI (currently in the
+   "Biomarkers" tab)
+2. Call `extras$extension_server(ptid, extras)` with the selected participant ID
+
+You can also pass arbitrary data through `extras` (e.g., API tokens, cached
+query results) that your extension server can consume.
+
+In `ntrdWisconsin`, this mechanism is used to display biomarker data fetched
+from the Panda API:
+
+```r
+extras <- shiny::reactiveValues(
+  all_values = NULL,
+  panda_api_token = NULL,
+  extension_ui = \() extension_ui(id = "biomarker-tables"),
+  extension_server = \(ptid, extras) {
+    extension_server(id = "biomarker-tables", ptid, extras)
+  }
+)
+```
+
+## Optional: Setting scoring defaults {#set-defaults}
+
+When a data source is selected and the user clicks "Go", `ntrd` checks whether
+the extension package defines a `.set_defaults()` function. If it does, it is
+called to set standardization method defaults for neuropsych scores.
+
+Define this function in your package (it does not need to be exported):
+
+```r
+# R/zzz.R
+.set_defaults <- function() {
+  ntrs::set_std_defaults(ntrs::WAIS(), "tscores", overwrite = TRUE)
+  ntrs::set_std_defaults(ntrs::REY1REC(), "tscores", overwrite = TRUE)
+  # ... additional defaults
+}
+```
+
+::: {.callout-note}
+In `ntrdWisconsin`, `.set_defaults()` is also called from `.onAttach()` so
+that defaults are set both when the package is attached directly and when the
+`ntrd` app activates the extension.
+:::
+
+## Conflict detection
+
+If multiple extension packages define S7 generics with the same `std_using_*`
+name, `ntrd` will emit a warning at startup. Extension authors should use shared
+generics from a common dependency (e.g., `ntrs`) rather than redefining them.
+
+## Complete example: `ntrdWisconsin`
+
+Here is a summary of the key files in the `ntrdWisconsin` package and how they
+map to the extension API:
+
+| File | Purpose |
+|------|---------|
+| `DESCRIPTION` | Declares `Config/ntrd/extension: true` and imports `ntrd`, `S7` |
+| `R/zzz.R` | `.onLoad()` calls `S7::methods_register()`; `.set_defaults()` sets T-score defaults |
+| `R/wadrc_source.R` | Defines `wadrc_source` class (extends `ntrd::data_source`) |
+| `R/data_source_ui.R` | Implements `data_source_ui` for `wadrc_source` --- REDCap token inputs |
+| `R/data_source_server.R` | Implements `data_source_server` for `wadrc_source` --- collects tokens, provides `$restore` and `$extras` |
+| `R/data_load.R` | Implements `data_load` for `wadrc_source` --- pulls from REDCap, returns `data_nacc` |
+| `R/extensionModule.R` | Defines `extension_ui()` / `extension_server()` for biomarker display (passed via `$extras`) |
+
+### Minimal skeleton
+
+To create a new extension from scratch, you need at minimum four files:
+
+**`R/my_source.R`**
+```r
+my_source <- ntrd::new_data_source(name = "My Source", id = "my_source")
+```
+
+**`R/data_source_ui.R`**
+```r
+data_source_ui <- S7::new_external_generic("ntrd", "data_source_ui", "source")
+
+S7::method(data_source_ui, my_source) <- function(source, ns) {
+  shiny::tagList(
+    shiny::textInput(ns("token"), "API Token")
+  )
+}
+```
+
+**`R/data_source_server.R`**
+```r
+data_source_server <- S7::new_external_generic("ntrd", "data_source_server", "source")
+
+S7::method(data_source_server, my_source) <- function(source, id) {
+  shiny::moduleServer(id, function(input, output, session) {
+    params <- shiny::reactive({
+      shiny::req(input$token)
+      list(token = input$token)
+    })
+
+    list(
+      params = params,
+      session = session
+    )
+  })
+}
+```
+
+**`R/data_load.R`**
+```r
+#' @include my_source.R
+data_load <- S7::new_external_generic("ntrd", "data_load", "source")
+
+S7::method(data_load, my_source) <- function(source, token, ...) {
+  raw <- my_api_fetch(token)
+  ntrd::data_nacc(data = raw)
+}
+```
+
+**`R/zzz.R`**
+```r
+.onLoad <- function(...) {
+  S7::methods_register()
+}
+```
+
+::: {.callout-important}
+Make sure your source class file is loaded before the method files. Use
+`@include` roxygen tags or the `Collate` field in `DESCRIPTION` to control
+file ordering.
+:::

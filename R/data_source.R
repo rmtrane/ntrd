@@ -15,6 +15,34 @@ data_source <- S7::new_class(
   )
 )
 
+#' Create a new data source class
+#'
+#' Convenience constructor that creates an S7 class inheriting from
+#' [data_source]. The returned object is a **class** (not an instance) that
+#' can be instantiated with no arguments.
+#'
+#' @param name Character. Human-readable display name shown in the UI dropdown.
+#' @param id Character. Unique identifier used internally as a key.
+#'
+#' @returns An S7 class that inherits from `data_source`.
+#'
+#' @examples
+#' my_source <- new_data_source(name = "My Source", id = "my_source")
+#' my_source()
+#'
+#' @export
+new_data_source <- function(name, id) {
+  S7::new_class(
+    id,
+    parent = data_source,
+    constructor = function() {
+      S7::new_object(
+        data_source(name = name, id = id)
+      )
+    }
+  )
+}
+
 
 # =============================================================================
 # Generics

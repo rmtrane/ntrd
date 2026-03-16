@@ -1,17 +1,6 @@
 #' @include data_source.R
 #' @keywords internal
-csv_source <- S7::new_class(
-  "csv_source",
-  parent = data_source,
-  constructor = function() {
-    S7::new_object(
-      data_source(
-        name = "CSV file",
-        id = "csv"
-      )
-    )
-  }
-)
+csv_source <- new_data_source(name = "CSV file", id = "csv")
 
 #' @keywords internal
 S7::method(data_source_ui, csv_source) <- function(source, ns) {

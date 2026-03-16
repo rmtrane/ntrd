@@ -9,7 +9,7 @@
 #' Runs the Shiny app.
 #'
 #' @export
-shinyAssessmentApp <- function(
+shinyDashboard <- function(
   testing = FALSE
 ) {
   options(

@@ -1,4 +1,4 @@
-#' Server Logic for shinyAssessmentApp
+#' Server Logic for shinyDashboard
 #'
 #' @param input,output,session Standard Shiny server arguments.
 #'

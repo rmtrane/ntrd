@@ -1,4 +1,4 @@
-Name: Neuropsychological Assessment Tool
+Name: Neuropsychological Test Result Dashboard
 Description: Opens the application from the ntrd package
-Binding: shinyAssessmentApp
+Binding: shinyDashboard
 Interactive: true
