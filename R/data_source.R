@@ -32,12 +32,14 @@ data_source <- S7::new_class(
 #'
 #' @export
 new_data_source <- function(name, id) {
+  pkg <- package %||% environmentName(topenv(parent.frame()))
+
   S7::new_class(
     id,
     parent = data_source,
     constructor = function() {
       S7::new_object(
-        data_source(name = name, id = id)
+        data_source(name = name, id = id, package = pkg, ...)
       )
     }
   )

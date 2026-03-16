@@ -133,12 +133,7 @@ mainTableServer <- function(
         gt::gtsave(
           data = mainTable() |>
             gt::tab_caption(
-              caption = paste(
-                "ID:",
-                unique(dat()$NACCID),
-                ". Visit Date:",
-                unique(dat()$VISITDATE)
-              )
+              caption = make_table_caption(dat()$NACCID, dat()$VISITDATE)
             ),
           filename = tmp_html
         )
@@ -158,15 +153,7 @@ mainTableServer <- function(
             )
             output$downloadPDF <- shiny::downloadHandler(
               filename = function() {
-                paste0(
-                  paste(dat()$NACCID, dat()$VISITDATE, sep = "-"),
-                  "_created-on-",
-                  Sys.Date(),
-                  "-at-",
-                  format(Sys.time(), "%I-%M_%P"),
-                  # format(Sys.time(), "%r"),
-                  ".pdf"
-                )
+                make_pdf_filename(dat()$NACCID, dat()$VISITDATE)
               },
               content = function(file) {
                 file.copy(value, file)
@@ -245,6 +232,39 @@ mainTableApp <- function(
   shiny::shinyApp(ui, server, options = list(port = 3229, test.mode = testing))
 }
 
+
+#' Generate PDF filename for download
+#'
+#' @param naccid Character string with the NACC ID.
+#' @param visitdate Character string or Date with the visit date.
+#' @param time POSIXct timestamp used for the "created-on" portion of the
+#'   filename. Defaults to [Sys.time()].
+#'
+#' @return A character string suitable for use as a PDF filename.
+#'
+#' @export
+make_pdf_filename <- function(naccid, visitdate, time = Sys.time()) {
+  paste0(
+    paste(naccid, visitdate, sep = "-"),
+    "_created-on-",
+    as.Date(time),
+    "-at-",
+    format(time, "%I-%M_%P"),
+    ".pdf"
+  )
+}
+
+#' Generate table caption from ID and visit date
+#'
+#' @param naccid Character vector of NACC IDs (will be uniquified).
+#' @param visitdate Character or Date vector of visit dates (will be uniquified).
+#'
+#' @return A single character string caption.
+#'
+#' @export
+make_table_caption <- function(naccid, visitdate) {
+  paste("ID:", unique(naccid), ". Visit Date:", unique(visitdate))
+}
 
 #' Return Chrome CLI arguments
 #'
