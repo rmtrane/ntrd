@@ -1,63 +1,61 @@
-url: https://rmtrane.github.io/ntrd
+url: https://rmtrane.github.io/ntrd/
 template:
   bootstrap: 5
-  light-switch: true
-
+  light-switch: yes
 reference:
-  - contents: 
-      - shinyDashboard
-  - title: "Extension Functions"
-    desc: >
-      Functions that enables third parties to implement new data sources.
-    contents:
-      - data_source
-      - new_data_source
-      - data_source_server
-      - data_source_ui
-      - data_load
-      - data_nacc
-  - title: "Tables"
-    desc: >
-      Functions to create tables
-    contents:
-      - ends_with("_table")
-  - title: "Shiny Modules"
-    desc: >
-      Shiny modules used for the main Shiny application
-    contents:
-      - starts_with("dataSelect")
-      - starts_with("methodSelect")
-      - starts_with("descriptions")
-      - starts_with("mainTable")
-      - plotServer
-      - plotUI
-      - plotApp
-      - starts_with("longTable")
-      - starts_with("prevDiagnoses")
-  - title: "Shiny Helpers"
-    desc: >
-    contents:
-      - shinyAddResources
-      - shinyApp_header
-  - title: "Variable Definitions"
-    desc: >
-      Vectors/lists used to map variable names to/from NACC variable names
-    contents:
-      - ends_with("_vars")
-      - contains("_to_")
-      - nacc_var_groups
-      - nacc_groups
-      - rdd
-      - visibility_defaults
-      - diag_contr_pairs
-      - ends_with("_labels")
-      - crosswalk_translations
-      - demo_data
-  - title: "Misc Functions"
-    contents:
-      - calc_fill_colors
-      - check_colors
-      - chrome_extra_args
-      - onRender
-      - plotly_new_traces
-      - prepare_data
+- contents: shinyDashboard
+- title: Extension Functions
+  desc: |
+    Functions that enables third parties to implement new data sources.
+  contents:
+  - data_source
+  - new_data_source
+  - data_source_server
+  - data_source_ui
+  - data_load
+  - data_nacc
+- title: Tables
+  desc: |
+    Functions to create tables
+  contents: ends_with("_table")
+- title: Shiny Modules
+  desc: |
+    Shiny modules used for the main Shiny application
+  contents:
+  - starts_with("dataSelect")
+  - starts_with("methodSelect")
+  - starts_with("descriptions")
+  - starts_with("mainTable")
+  - plotServer
+  - plotUI
+  - plotApp
+  - starts_with("longTable")
+  - starts_with("prevDiagnoses")
+- title: Shiny Helpers
+  desc: ~
+  contents:
+  - shinyAddResources
+  - shinyApp_header
+- title: Variable Definitions
+  desc: |
+    Vectors/lists used to map variable names to/from NACC variable names
+  contents:
+  - ends_with("_vars")
+  - contains("_to_")
+  - nacc_var_groups
+  - nacc_groups
+  - rdd
+  - visibility_defaults
+  - diag_contr_pairs
+  - ends_with("_labels")
+  - crosswalk_translations
+  - demo_data
+- title: Misc Functions
+  contents:
+  - calc_fill_colors
+  - check_colors
+  - chrome_extra_args
+  - onRender
+  - plotly_new_traces
+  - prepare_data
+

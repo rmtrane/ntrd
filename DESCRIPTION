@@ -59,7 +59,7 @@ Authors@R: c(
         comment = c(ORCID = "0000-0001-7824-1785")
     )
   )
-URL: https://rmtrane.github.io/ntrd
+URL: https://rmtrane.github.io/ntrd, https://rmtrane.github.io/ntrd/
 BugReports: https://github.com/rmtrane/ntrd/issues
 Config/Needs/website:
     htmltools,

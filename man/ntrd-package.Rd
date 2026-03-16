@@ -12,6 +12,7 @@ Building on the ntrs package, this package includes a Shiny application that mak
 Useful links:
 \itemize{
   \item \url{https://rmtrane.github.io/ntrd}
+  \item \url{https://rmtrane.github.io/ntrd/}
   \item Report bugs at \url{https://github.com/rmtrane/ntrd/issues}
 }
 
