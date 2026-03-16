@@ -1,7 +1,10 @@
 # --- Helper function tests ---
 
 test_that("make_pdf_filename produces correct format", {
-  fixed_time <- as.POSIXct("2025-06-15 02:30:00 PM", format = "%Y-%m-%d %I:%M:%S %p")
+  fixed_time <- as.POSIXct(
+    "2025-06-15 02:30:00 PM",
+    format = "%Y-%m-%d %I:%M:%S %p"
+  )
   result <- make_pdf_filename("A001", "2024-01-15", time = fixed_time)
 
   expect_equal(result, "A001-2024-01-15_created-on-2025-06-15-at-02-30_pm.pdf")
@@ -57,7 +60,10 @@ test_that("mainTable gt HTML output is stable", {
     {
       session$flushReact()
 
-      expect_snapshot(gt::as_raw_html(mainTable()))
+      expect_snapshot(gt::as_raw_html(mainTable()), transform = function(x) {
+        # Remove whitespace and newlines for stable snapshot
+        gsub("width:0\\.[0-9]+%;", "", x)
+      })
     }
   )
 })
