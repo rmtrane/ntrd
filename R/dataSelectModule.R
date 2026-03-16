@@ -263,7 +263,7 @@ dataSelectServer <- function(id) {
 
       ## Get current source, and server results
       source <- sources[[input$data_source]]
-      ext_pkg <- S7::S7_class(source)@package
+      ext_pkg <- source@package
 
       browser()
 
