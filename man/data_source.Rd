@@ -4,12 +4,14 @@
 \alias{data_source}
 \title{data_source}
 \usage{
-data_source(name = character(0), id = character(0))
+data_source(name = character(0), id = character(0), package = character(0))
 }
 \arguments{
 \item{name}{A character string for the display name.}
 
 \item{id}{A character string for the unique identifier.}
+
+\item{package}{A character string. Must match the name of the package the data source lives in.}
 }
 \description{
 A short description...

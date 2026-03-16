@@ -4,12 +4,14 @@
 \alias{new_data_source}
 \title{Create a new data source class}
 \usage{
-new_data_source(name, id)
+new_data_source(name, id, package, ...)
 }
 \arguments{
 \item{name}{Character. Human-readable display name shown in the UI dropdown.}
 
 \item{id}{Character. Unique identifier used internally as a key.}
+
+\item{package}{Character giving the name of the package containing the data source.}
 }
 \value{
 An S7 class that inherits from \code{data_source}.

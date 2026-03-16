@@ -19,13 +19,30 @@ S7::method(data_source_ui, csv_source) <- function(source, ns) {
 #' @keywords internal
 S7::method(data_source_server, csv_source) <- function(source, id) {
   shiny::moduleServer(id, function(input, output, session) {
-    shiny::reactive({
+    params <- shiny::reactive({
       shiny::req(input$csv_file)
 
-      dat <- data.table::fread(input$csv_file$datapath)
-
-      # data_nacc validates the data set
-      data_nacc(dat)
+      list(file_path = input$csv_file$datapath)
     })
+
+    list(params = params)
   })
+}
+
+#' @keywords internal
+S7::method(data_load, csv_source) <- function(source, file_path) {
+  dat <- data.table::fread(file_path)
+
+  dat[,
+    names(.SD) := purrr::imap(
+      .SD,
+      \(x, idx) {
+        ntrs::get_npsych_scores(idx)(x)
+      }
+    ),
+    .SDcols = names(dat)[names(dat) %in% ntrs::list_npsych_scores()]
+  ]
+
+  # data_nacc validates the data set
+  data_nacc(dat)
 }

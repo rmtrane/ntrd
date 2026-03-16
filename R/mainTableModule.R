@@ -242,7 +242,7 @@ mainTableApp <- function(
 #'
 #' @return A character string suitable for use as a PDF filename.
 #'
-#' @export
+#' @keywords internal
 make_pdf_filename <- function(naccid, visitdate, time = Sys.time()) {
   paste0(
     paste(naccid, visitdate, sep = "-"),
@@ -261,7 +261,7 @@ make_pdf_filename <- function(naccid, visitdate, time = Sys.time()) {
 #'
 #' @return A single character string caption.
 #'
-#' @export
+#' @keywords internal
 make_table_caption <- function(naccid, visitdate) {
   paste("ID:", unique(naccid), ". Visit Date:", unique(visitdate))
 }
@@ -275,6 +275,8 @@ make_table_caption <- function(naccid, visitdate) {
 #' @param default_args Arguments to be used in any circumstances.
 #'
 #' @return A character vector with CLI arguments to be passed to Chrome.
+#'
+#' @keywords internal
 chrome_extra_args <- function(default_args = c("--disable-gpu")) {
   args <- default_args
   # Test whether we are in a shinyapps container

@@ -25,6 +25,7 @@ data_source <- S7::new_class(
 #'
 #' @param name Character. Human-readable display name shown in the UI dropdown.
 #' @param id Character. Unique identifier used internally as a key.
+#' @param package Character giving the name of the package containing the data source.
 #'
 #' @returns An S7 class that inherits from `data_source`.
 #'

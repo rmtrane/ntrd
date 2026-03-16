@@ -11,6 +11,7 @@ reference:
       Functions that enables third parties to implement new data sources.
     contents:
       - data_source
+      - new_data_source
       - data_source_server
       - data_source_ui
       - data_load
