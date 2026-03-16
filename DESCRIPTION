@@ -18,6 +18,7 @@ Suggests:
     pagedown,
     quarto,
     shinytest2,
+    withr,
     testthat (>= 3.0.0),
     rvest,
     dplyr,

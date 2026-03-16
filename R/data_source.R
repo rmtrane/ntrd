@@ -13,7 +13,7 @@ data_source <- S7::new_class(
   properties = list(
     name = S7::class_character, # display name, e.g. "WADRC (REDCap)"
     id = S7::class_character, # unique identifier, e.g. "wadrc_redcap",
-    package = S7::class_character #
+    package = S7::class_character
   )
 )
 
@@ -36,12 +36,16 @@ data_source <- S7::new_class(
 #'
 #' @export
 new_data_source <- function(name, id, package, ...) {
+  dots <- list(...)
   S7::new_class(
     id,
     parent = data_source,
     constructor = function() {
       S7::new_object(
-        data_source(name = name, id = id, package = package, ...)
+        do.call(
+          data_source,
+          c(list(name = name, id = id, package = package), dots)
+        )
       )
     }
   )
