@@ -6,6 +6,7 @@ template:
 reference:
   - contents: 
       - shinyAssessmentApp
+  - title: ""
   - title: "Tables"
     desc: >
       Functions to create tables
@@ -16,7 +17,7 @@ reference:
       Shiny modules used for the main Shiny application
     contents:
       - starts_with("dataSelect")
-      - starts_with("colSelect")
+      - starts_with("methodSelect")
       - starts_with("descriptions")
       - starts_with("mainTable")
       - plotServer
@@ -24,7 +25,11 @@ reference:
       - plotApp
       - starts_with("longTable")
       - starts_with("prevDiagnoses")
-      - starts_with("biomarker")
+  - title: "Shiny Helpers"
+    desc: >
+    contents:
+      - shinyAddResources
+      - shinyApp_header
   - title: "Variable Definitions"
     desc: >
       Vectors/lists used to map variable names to/from NACC variable names
@@ -32,7 +37,7 @@ reference:
       - ends_with("_vars")
       - contains("_to_")
       - nacc_var_groups
-      - ends_with("redcap_fields")
+      - nacc_groups
       - rdd
       - visibility_defaults
       - diag_contr_pairs
@@ -46,6 +51,4 @@ reference:
       - chrome_extra_args
       - onRender
       - plotly_new_traces
-      - density_plot
       - prepare_data
-      - read_data

@@ -4,7 +4,7 @@
 #' UI for displaying plots of standardized scores across visits.
 #'
 #' @param id A single string to ID the Shiny module, which also indicates
-#' which group of variables to plot. Should be one of `unique(nacc_var_groups)`.
+#' which group of variables to plot. Should be one of `nacc_groups`.
 #'
 #' @returns
 #' A `shiny::tagList` object containing two `shiny::conditionalPanel`'s:
