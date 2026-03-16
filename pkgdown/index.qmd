@@ -20,7 +20,7 @@ cat("</style>\n")
 #| classes: '.g-col-lg-6 .g-col-12 .g-col-md-12'
 #| warning: false
 #| echo: false
-#| eval: true
+#| eval: false
 
 source(here::here("inst/qmd/carousel.R"))
 source(here::here("inst/qmd/get_image_uri.R"))
