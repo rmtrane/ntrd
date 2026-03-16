@@ -265,8 +265,6 @@ dataSelectServer <- function(id) {
       source <- sources[[input$data_source]]
       ext_pkg <- source@package
 
-      browser()
-
       ## Set defaults for the active extension
       if (ext_pkg != "ntrd") {
         set_defaults <- get0(

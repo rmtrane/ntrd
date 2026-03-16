@@ -1,4 +1,8 @@
-demo_source <- new_data_source(name = "Demo NACC data", id = "demo")
+demo_source <- new_data_source(
+  name = "Demo NACC data",
+  id = "demo",
+  package = "ntrd"
+)
 
 S7::method(data_source_ui, demo_source) <- function(source, ns) {
   shiny::p("Click 'Go' to load demo data. No configuration needed.")

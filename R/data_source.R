@@ -5,13 +5,15 @@
 #'
 #' @param name A character string for the display name.
 #' @param id A character string for the unique identifier.
+#' @param package A character string. Must match the name of the package the data source lives in.
 #'
 #' @export
 data_source <- S7::new_class(
   "data_source",
   properties = list(
     name = S7::class_character, # display name, e.g. "WADRC (REDCap)"
-    id = S7::class_character # unique identifier, e.g. "wadrc_redcap"
+    id = S7::class_character, # unique identifier, e.g. "wadrc_redcap",
+    package = S7::class_character #
   )
 )
 
@@ -31,15 +33,13 @@ data_source <- S7::new_class(
 #' my_source()
 #'
 #' @export
-new_data_source <- function(name, id) {
-  pkg <- package %||% environmentName(topenv(parent.frame()))
-
+new_data_source <- function(name, id, package, ...) {
   S7::new_class(
     id,
     parent = data_source,
     constructor = function() {
       S7::new_object(
-        data_source(name = name, id = id, package = pkg, ...)
+        data_source(name = name, id = id, package = package, ...)
       )
     }
   )

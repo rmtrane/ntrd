@@ -1,6 +1,6 @@
 #' @include data_source.R
 #' @keywords internal
-csv_source <- new_data_source(name = "CSV file", id = "csv")
+csv_source <- new_data_source(name = "CSV file", id = "csv", package = "ntrd")
 
 #' @keywords internal
 S7::method(data_source_ui, csv_source) <- function(source, ns) {
