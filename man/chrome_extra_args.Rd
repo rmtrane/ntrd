@@ -17,3 +17,4 @@ This is a helper function which returns arguments to be passed to Chrome.
 This function tests whether the code is running on shinyapps and returns the
 appropriate Chrome extra arguments. Source: https://github.com/RLesur/chrome_print_shiny
 }
+\keyword{internal}

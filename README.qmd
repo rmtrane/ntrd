@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 [![codecov](https://codecov.io/gh/rmtrane/ntrd/graph/badge.svg?token=FRFC07GNEW)](https://codecov.io/gh/rmtrane/ntrd)
 <!-- badges: end -->
 
-This package provides an [R Shiny](https://shiny.posit.co) application used for diagnosis of cognitive status based on neuropsychological scores. 
+This package provides a [Shiny](https://shiny.posit.co) application used for diagnosis of cognitive status based on neuropsychological scores. 
 
 ## Installation
 

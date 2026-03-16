@@ -17,3 +17,4 @@ A single character string caption.
 \description{
 Generate table caption from ID and visit date
 }
+\keyword{internal}
