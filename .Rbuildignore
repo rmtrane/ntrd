@@ -1,3 +1,4 @@
+^.Renviron$
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^data-raw$
@@ -9,6 +10,7 @@
 ^inst/qmd/*.mp4
 ^references.bib$
 ^scratch/*
+^scripts/*
 ^paper/*
 ^LICENSE\.md$
 ^\.github$

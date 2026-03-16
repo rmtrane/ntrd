@@ -22,8 +22,12 @@ if (upload) {
   token <- Sys.getenv("CODECOV_TOKEN")
   if (nzchar(token)) {
     message("\nUploading to Codecov...")
-    covr::codecov(coverage = cov, token = token)
-    message("Done.")
+    upload_res <- covr::codecov(coverage = cov, token = token)
+    if (!upload_res$uploaded) {
+      stop("Upload failed: ", upload_res$message)
+    } else {
+      message("Upload successful! View report at: ", upload_res$url)
+    }
   } else {
     warning(
       "CODECOV_TOKEN not set. Skipping upload.\n",
