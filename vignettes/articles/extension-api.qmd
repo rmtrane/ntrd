@@ -100,16 +100,18 @@ generics.
 ## Defining a data source class
 
 Use `new_data_source()` to create an S7 class that inherits from
-`ntrd::data_source`. You provide two arguments:
+`ntrd::data_source`. You provide three arguments:
 
 - **`name`**: A human-readable display name (shown in the data source dropdown)
 - **`id`**: A unique identifier string (used internally as a key)
+- **`package`**: The name of the package defining this data source
 
 ```r
 # R/my_source.R
 my_source <- ntrd::new_data_source(
   name = "My Data Source",
-  id = "my_source"
+  id = "my_source",
+  package = "myExtension"
 )
 ```
 
@@ -122,7 +124,8 @@ For reference, here is how `ntrdWisconsin` defines its source class:
 # ntrdWisconsin/R/wadrc_source.R
 wadrc_source <- ntrd::new_data_source(
   name = "Wisconsin ADRC",
-  id = "wadrc_redcap"
+  id = "wadrc_redcap",
+  package = "ntrdWisconsin"
 )
 ```
 
@@ -337,8 +340,9 @@ extras <- shiny::reactiveValues(
 
 ## Optional: Setting scoring defaults {#set-defaults}
 
-When a data source is selected and the user clicks "Go", `ntrd` checks whether
-the extension package defines a `.set_defaults()` function. If it does, it is
+When a data source is selected and the user clicks "Go", `ntrd` uses the
+`package` property of the data source to identify the extension package and
+checks whether it defines a `.set_defaults()` function. If it does, it is
 called to set standardization method defaults for neuropsych scores.
 
 Define this function in your package (it does not need to be exported):
@@ -355,7 +359,8 @@ Define this function in your package (it does not need to be exported):
 ::: {.callout-note}
 In `ntrdWisconsin`, `.set_defaults()` is also called from `.onAttach()` so
 that defaults are set both when the package is attached directly and when the
-`ntrd` app activates the extension.
+`ntrd` app activates the extension. Also, note that the T-scores referenced by
+`ntrdWisconsin` are found in the `ntrsTscores` package.
 :::
 
 ## Conflict detection
@@ -385,7 +390,7 @@ To create a new extension from scratch, you need at minimum four files:
 
 **`R/my_source.R`**
 ```r
-my_source <- ntrd::new_data_source(name = "My Source", id = "my_source")
+my_source <- ntrd::new_data_source(name = "My Source", id = "my_source", package = "myExtension")
 ```
 
 **`R/data_source_ui.R`**

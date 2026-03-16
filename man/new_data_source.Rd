@@ -4,12 +4,16 @@
 \alias{new_data_source}
 \title{Create a new data source class}
 \usage{
-new_data_source(name, id)
+new_data_source(name, id, package, ...)
 }
 \arguments{
 \item{name}{Character. Human-readable display name shown in the UI dropdown.}
 
 \item{id}{Character. Unique identifier used internally as a key.}
+
+\item{package}{Character. The name of the package defining this data source.}
+
+\item{...}{Additional arguments passed to \code{\link[=data_source]{data_source()}}.}
 }
 \value{
 An S7 class that inherits from \code{data_source}.
@@ -20,7 +24,7 @@ Convenience constructor that creates an S7 class inheriting from
 can be instantiated with no arguments.
 }
 \examples{
-my_source <- new_data_source(name = "My Source", id = "my_source")
+my_source <- new_data_source(name = "My Source", id = "my_source", package = "ntrd")
 my_source()
 
 }
