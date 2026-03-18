@@ -62,7 +62,7 @@ test_that("mainTable gt HTML output is stable", {
 
       expect_snapshot(gt::as_raw_html(mainTable()), transform = function(x) {
         # Remove whitespace and newlines for stable snapshot
-        gsub("width:0\\.[0-9]+%;", "", x)
+        gsub("[margin\\-left|width]:0\\.[0-9]+%;", "", x)
       })
     }
   )

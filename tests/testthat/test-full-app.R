@@ -10,9 +10,13 @@ test_that("full app flow with demo data produces correct views", {
   skip_on_cran()
   skip_if_not_installed("shinytest2")
 
-  man_figures <- test_path("..", "..", "man", "figures")
-  if (!dir.exists(man_figures)) {
-    dir.create(man_figures, recursive = TRUE)
+  # Only save figures when not running R CMD check.
+  save_figures <- !testthat::is_checking()
+  if (save_figures) {
+    man_figures <- test_path("..", "..", "man", "figures")
+    if (!dir.exists(man_figures)) {
+      dir.create(man_figures, recursive = TRUE)
+    }
   }
 
   # Write a temporary app.R that shinytest2 will source in a fresh R process.
@@ -63,7 +67,9 @@ test_that("full app flow with demo data produces correct views", {
 
   # Screenshot 1: Data selection page
   app$expect_screenshot(name = "data-selection")
-  save_screenshot(app, file.path(man_figures, "data-selection.png"))
+  if (save_figures) {
+    save_screenshot(app, file.path(man_figures, "data-selection.png"))
+  }
 
   app$wait_for_idle()
 
@@ -104,7 +110,9 @@ test_that("full app flow with demo data produces correct views", {
   app$wait_for_idle()
   # Screenshot 2: Main view with assessment summary table + plots
   app$expect_screenshot(name = "main-view")
-  save_screenshot(app, file.path(man_figures, "main-view.png"))
+  if (save_figures) {
+    save_screenshot(app, file.path(man_figures, "main-view.png"))
+  }
 
   # Verify key elements rendered
   main_table_html <- app$get_html("#assessment-summary-table")
@@ -118,14 +126,18 @@ test_that("full app flow with demo data produces correct views", {
   app$wait_for_idle(timeout = 15000)
 
   app$expect_screenshot(name = "longitudinal-table")
-  save_screenshot(app, file.path(man_figures, "longitudinal-table.png"))
+  if (save_figures) {
+    save_screenshot(app, file.path(man_figures, "longitudinal-table.png"))
+  }
 
   # Screenshot 4: Click "Diagnoses" tab
   app$click(selector = "#long-trends [data-value='Diagnoses']")
   app$wait_for_idle(timeout = 15000)
 
   app$expect_screenshot(name = "diagnoses")
-  save_screenshot(app, file.path(man_figures, "diagnoses.png"))
+  if (save_figures) {
+    save_screenshot(app, file.path(man_figures, "diagnoses.png"))
+  }
 
   # Step 6: Change study ID and verify reactivity
   first_id_html <- app$get_html("#assessment-summary-table")
@@ -157,7 +169,9 @@ test_that("full app flow with demo data produces correct views", {
 
   # Screenshot 5: Main view with different participant
   app$expect_screenshot(name = "main-view-alt")
-  save_screenshot(app, file.path(man_figures, "main-view-alt.png"))
+  if (save_figures) {
+    save_screenshot(app, file.path(man_figures, "main-view-alt.png"))
+  }
 
   # Verify the table changed
   alt_id_html <- app$get_html("#assessment-summary-table")
