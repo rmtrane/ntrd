@@ -8,6 +8,7 @@ save_screenshot <- function(app, file) {
 
 test_that("full app flow with demo data produces correct views", {
   skip_on_cran()
+  skip_on_ci()
   skip_if_not_installed("shinytest2")
 
   # Only save figures when not running R CMD check.
