@@ -9,7 +9,7 @@ appServer <- function(input, output, session) {
   ## Hide 'Participant Data' on startup
   bslib::nav_hide(id = "main_navbar", target = "colSelect")
   bslib::nav_hide(id = "main_navbar", target = "tables-and-figures")
-  # bslib::nav_hide(id = "long-trends", target = "biomarkers")
+  bslib::nav_hide(id = "long-trends", target = "biomarkers")
 
   ## Setup data select module
   dat_sel <- dataSelectServer("dataSelect")
@@ -32,7 +32,7 @@ appServer <- function(input, output, session) {
         dat_sel$extras()$extension_ui()
         # )
       })
-      # bslib::nav_show(id = "long-trends", target = "biomarkers")
+      bslib::nav_show(id = "long-trends", target = "biomarkers")
     }
   }) #()$panda_api_token)
 

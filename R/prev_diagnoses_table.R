@@ -101,10 +101,6 @@ prev_diagnoses_table <- function(dat, table_font_size = 100) {
 
   # fmt: skip
   for (x in intersect(c("raw_MOCATOTS", "raw_NACCMMSE"), colnames(diagnosis_table))) {
-    # diagnosis_table[[x]] <- NpsychBatteryNorms::valid_values_only(
-    #   raw_score = diagnosis_table[[x]],
-    #   var_name = gsub("^raw_", "", x)
-    # )
     diagnosis_table[[x]] <- ntrs::remove_error_codes(diagnosis_table[[x]])
   }
 

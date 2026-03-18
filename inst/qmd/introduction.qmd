@@ -9,7 +9,7 @@ bibliography: references.bib
 
 ## Introduction
 
-This R Shiny application is build on the R package [`NpsychBatteryNorms`](https://rmtrane.github.io/NpsychBatteryNorms), which implements a handful of methods to standardize various 
+This R Shiny application is build on the R package [`ntrs`](https://rmtrane.github.io/ntrs), which implements a handful of methods to standardize various 
 neuropsychological scores. The main focus is to standardize scores that are part 
 of UDS 3, but some legacy and a few additional scores are included as well. 
 
@@ -37,15 +37,18 @@ and underlined) will show description when hovered.
 if (file.exists(here::here("inst/qmd/carousel.R"))) {
   source(here::here("inst/qmd/carousel.R"))
   source(here::here("inst/qmd/get_image_uri.R"))
-} 
+}
 
 if (file.exists("carousel.R")) {
   source("carousel.R")
   source("get_image_uri.R")
-} 
+}
 
 
-if (!file.exists(here::here("inst/qmd/carousel.yml")) & !file.exists("carousel.yml")) {
+if (
+  !file.exists(here::here("inst/qmd/carousel.yml")) &
+    !file.exists("carousel.yml")
+) {
   tmp <- getwd()
   cli::cli_abort(paste("File does not exist. Current directory is", tmp))
 }
@@ -64,9 +67,11 @@ carousel(
 )
 ```
 
+<!--
+
 ## Standardization Methods
 
-Multiple standardization methods are implemented in the R-package [`NpsychBatteryNorms`](https://rmtrane.github.io/NpsychBatteryNorms), though not all methods are available for all variables. 
+Two standardization methods are implemented in the R-package [`ntrs`](https://rmtrane.github.io/ntrs), though not both methods are available for all variables. 
 @tbl-implemented-methods lists all variables that can be standardization and all
 methods available.
 
@@ -86,7 +91,7 @@ regression model published by @weintraubVersionAlzheimerDisease2018, while
 "Updated (`X Y`)" tries to refit the same model to an updated normative 
 sample using the data lock from month `X` of year `Y`. 
 
-* `T-score` refers to the models presented in @strickerMayoNormativeStudies2021 and @karstensMayoNormativeStudies2024.
+* `T-score` refers to the models presented in @strickerMayoNormativeStudies2021 and @karstensMayoNormativeStudies2024. 
 
 Default methods are underlined in @tbl-implemented-methods. Not all variables 
 have default methods. This is because some variables are not used standardized 
@@ -98,13 +103,38 @@ in this application. The user can change the standardization methods used on the
 #| echo: false
 #| warning: false
 #| message: false
+#| eval: false
 
 library(dplyr)
 library(tidyr)
 library(purrr)
 library(stringr)
 
-all_methods <- c("norms", "regression", "T-score")
+for_tab <- tibble(
+  variables = ntrs::list_npsych_scores(),
+  methods = map(variables, \(x) {
+    ntrs::list_std_methods(ntrs::get_npsych_scores(x)())
+  })
+) |>
+  filter(map_lgl(methods, \(x) length(x) > 0)) |>
+  unnest_longer(methods) |>
+  mutate(
+    versions = map2(
+      variables,
+      methods,
+      \(x, y) {
+        ntrs::list_method_versions(
+          scores = ntrs::get_npsych_scores(x)(),
+          method = y
+        )
+      }
+    ),
+    def_meth = map(variables, \(x) {
+      ntrs::get_std_defaults(ntrs::get_npsych_scores(x)())
+    })
+  )
+
+all_methods <- c("norms", "regression")
 
 for_tab <- map(
   all_methods,
@@ -112,11 +142,11 @@ for_tab <- map(
     tab <- tibble(
       version = {
         if (mth == "norms") {
-          out <- names(NpsychBatteryNorms::normative_summaries)
+          out <- names(ntrs::normative_summaries)
         }
 
         if (mth == "regression") {
-          out <- names(NpsychBatteryNorms::reg_coefs)
+          out <- names(ntrs::reg_coefs)
         }
 
         if (mth == "T-score") {
@@ -125,13 +155,13 @@ for_tab <- map(
 
         out
       }
-    ) |> 
+    ) |>
       mutate(
         variables = map(
           version,
-          \(y) NpsychBatteryNorms::std_methods(method = mth, version = y)
+          \(y) ntrs::std_methods(method = mth, version = y)
         )
-      ) |> 
+      ) |>
       unnest_longer(variables) |>
       mutate(
         version = factor(
@@ -139,42 +169,44 @@ for_tab <- map(
           levels = c(na.omit(unique(version)), "T")
         ),
         available = "check"
-      ) |> 
+      ) |>
       complete(
         version,
         variables,
         fill = list(available = "x")
-      ) |> 
+      ) |>
       mutate(
         short_descriptor = purrr::map_chr(
           variables,
           \(x) {
-            out <- purrr::pluck(NpsychBatteryNorms::rdd, x, "short_descriptor")
+            out <- purrr::pluck(ntrs::rdd, x, "short_descriptor")
 
-            if (is.null(out)) return(NA)
+            if (is.null(out)) {
+              return(NA)
+            }
 
             out
           }
         )
-      ) |> 
-      arrange(variables) 
+      ) |>
+      arrange(variables)
 
     if (mth != "norms") {
       tab <- left_join(
         tab,
-        NpsychBatteryNorms::default_methods |>
+        ntrs::default_methods |>
           bind_rows(.id = "variables") |>
-          filter(method == mth) |> 
+          filter(method == mth) |>
           mutate(
             default = T,
-            version = if_else(method == "T-score", "T", version) 
+            version = if_else(method == "T-score", "T", version)
           )
       )
     } else {
       tab$default <- NA
     }
 
-    tab |> 
+    tab |>
       select(
         variables,
         short_descriptor,
@@ -220,8 +252,8 @@ for_tab <- map(
         })
       )
   }
-) |> 
-  set_names(all_methods) |> 
+) |>
+  set_names(all_methods) |>
   bind_rows(
     .id = "method"
   )
@@ -234,12 +266,13 @@ for_tab <- map(
 #| echo: false
 #| warning: false
 #| message: false
-#| include: true
+#| eval: false
+#| include: false
 
 for_tab |>
-  select(-default) |> 
-  summarize(.by = -version, version = paste(version, collapse = "<br>")) |> 
-  pivot_wider(names_from = method, values_from = version) |> 
+  select(-default) |>
+  summarize(.by = -version, version = paste(version, collapse = "<br>")) |>
+  pivot_wider(names_from = method, values_from = version) |>
   reactable::reactable(
     sortable = F,
     searchable = T,
@@ -255,3 +288,4 @@ for_tab |>
   )
 ```
 
+-->

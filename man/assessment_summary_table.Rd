@@ -35,7 +35,7 @@ By default, evenly spread out colors from red through yellow to green are used.}
 \item{methods}{(optional) either list of named entries specifying which model was used
 for standardizing cognitive scores, or the character string "infer". For the
 latter, methods are infered from the \code{dat} object using
-\code{NpsychBatteryNorms::methods_from_std_data}. If specified, footnotes are added
+\code{ntrs::methods_from_std_data}. If specified, footnotes are added
 to indicate the methods used.}
 
 \item{include_caption}{Logical; should a caption be included above the table

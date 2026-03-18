@@ -12,7 +12,7 @@
 #' @param methods (optional) either list of named entries specifying which model was used
 #'   for standardizing cognitive scores, or the character string "infer". For the
 #'   latter, methods are infered from the `dat` object using
-#'   `NpsychBatteryNorms::methods_from_std_data`. If specified, footnotes are added
+#'   `ntrs::methods_from_std_data`. If specified, footnotes are added
 #'   to indicate the methods used.
 #' @param summary_dat A list as returned by `assessment_summary_data()`.
 #' @param bar_height In pixels. Height of the percentile bars. Default: 16
@@ -325,10 +325,6 @@ assessment_summary_data <- function(
   )
 
   t_scores <- NULL
-
-  # if (length(methods) == 1 && methods == "infer") {
-  #   methods <- NpsychBatteryNorms::methods_from_std_data(std_data = dat)
-  # }
 
   base::stopifnot(
     "'methods' must either be given or included as attributes from 'dat'" = exists(

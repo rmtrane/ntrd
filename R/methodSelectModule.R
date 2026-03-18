@@ -77,7 +77,7 @@ methodSelectServer <- function(
     names(all_vars)[all_vars %in% birth_vars] <- "Age/Birthdate"
     names(all_vars)[all_vars %in% visit_vars] <- "Visit Date"
     names(all_vars)[
-      all_vars %in% formalArgs(ntrs::calc_FAS) # formalArgs(NpsychBatteryNorms::calculate_fas)
+      all_vars %in% formalArgs(ntrs::calc_FAS)
     ] <- "Functional Assessment Score"
     names(all_vars)[
       all_vars %in% names(nacc_var_groups)
@@ -518,7 +518,6 @@ methodSelectServer <- function(
 
           ## Check if there are default methods available for the variables automatically detected
           methods_avail <- sapply(vars_found, \(x) {
-            # sum(NpsychBatteryNorms::std_methods(var_name = x)$available)
             if (!x %in% ntrs::list_npsych_scores()) {
               return(0)
             }

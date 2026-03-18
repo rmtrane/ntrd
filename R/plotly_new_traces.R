@@ -31,7 +31,7 @@ plotly_new_traces <- function(
   ## Check if any standardized values
   any_left <- sum(grepl(pattern = "^std_", x = colnames(new_dat)))
 
-  if (is.null(any_left)) {
+  if (is.null(any_left) || any_left == 0) {
     return()
   }
 
@@ -53,6 +53,10 @@ plotly_new_traces <- function(
 
   ## Due to NSE notes in R CMD check:
   name <- value.name <- NULL
+
+  new_dat[, names(.SD) := lapply(.SD, as.numeric), .SDcols = \(x) {
+    S7::S7_inherits(x, ntrs::std_npsych_scores)
+  }]
 
   new_dat <- data.table::melt(
     new_dat,
