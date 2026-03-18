@@ -54,8 +54,9 @@ assessment_summary_data(
   (optional) either list of named entries specifying which model was
   used for standardizing cognitive scores, or the character string
   "infer". For the latter, methods are infered from the `dat` object
-  using `NpsychBatteryNorms::methods_from_std_data`. If specified,
-  footnotes are added to indicate the methods used.
+  using
+  [`ntrs::methods_from_std_data`](https://rmtrane.github.io/ntrs/reference/methods_from_std_data.html).
+  If specified, footnotes are added to indicate the methods used.
 
 - include_caption:
 
