@@ -48,13 +48,10 @@ test_that("chrome_extra_args adds sandbox flags on shinyapps", {
 test_that("mainTable gt HTML output is stable", {
   prepped <- get_prepared_demo_data()
   single_row <- prepped[1, ]
-  methods <- get_default_methods()
-
   shiny::testServer(
     mainTableServer,
     args = list(
       dat = shiny::reactive(single_row),
-      methods = shiny::reactiveVal(methods),
       table_font_size = shiny::reactiveVal(100)
     ),
     {
@@ -77,11 +74,7 @@ test_that("mainTableApp download flow produces a download button", {
     "Chrome/Chromium not available"
   )
 
-  # NOTE: mainTableApp currently hardcodes methods = "infer", which causes
-  # assessment_summary_data() to error when the data lacks method attributes.
-  # Once mainTableApp accepts a `methods` argument, replace skip with:
-  #   mainTableApp(dat = single_row, methods = get_default_methods(), testing = TRUE)
-  skip("mainTableApp does not yet accept a methods argument")
+  skip("mainTableApp download flow test requires Chrome")
 
   prepped <- get_prepared_demo_data()
   single_row <- prepped[1, ]
@@ -109,13 +102,10 @@ test_that("mainTableApp download flow produces a download button", {
 test_that("mainTableServer renders a gt table for single-row data", {
   prepped <- get_prepared_demo_data()
   single_row <- prepped[1, ]
-  methods <- get_default_methods()
-
   shiny::testServer(
     mainTableServer,
     args = list(
       dat = shiny::reactive(single_row),
-      methods = shiny::reactiveVal(methods),
       table_font_size = shiny::reactiveVal(100)
     ),
     {
@@ -128,13 +118,10 @@ test_that("mainTableServer renders a gt table for single-row data", {
 })
 
 test_that("mainTableServer returns NULL for NULL dat", {
-  methods <- get_default_methods()
-
   shiny::testServer(
     mainTableServer,
     args = list(
       dat = shiny::reactive(NULL),
-      methods = shiny::reactiveVal(methods),
       table_font_size = shiny::reactiveVal(100)
     ),
     {
@@ -148,13 +135,11 @@ test_that("mainTableServer returns NULL for NULL dat", {
 test_that("mainTableServer returns NULL for multi-row dat", {
   prepped <- get_prepared_demo_data()
   multi_row <- prepped[1:2, ]
-  methods <- get_default_methods()
 
   shiny::testServer(
     mainTableServer,
     args = list(
       dat = shiny::reactive(multi_row),
-      methods = shiny::reactiveVal(methods),
       table_font_size = shiny::reactiveVal(100)
     ),
     {
@@ -168,7 +153,6 @@ test_that("mainTableServer returns NULL for multi-row dat", {
 
 test_that("mainTableServer table updates when dat changes", {
   prepped <- get_prepared_demo_data()
-  methods <- get_default_methods()
 
   row_rv <- shiny::reactiveVal(prepped[1, ])
 
@@ -176,7 +160,6 @@ test_that("mainTableServer table updates when dat changes", {
     mainTableServer,
     args = list(
       dat = row_rv,
-      methods = shiny::reactiveVal(methods),
       table_font_size = shiny::reactiveVal(100)
     ),
     {

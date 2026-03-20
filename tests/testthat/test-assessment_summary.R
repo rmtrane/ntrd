@@ -3,16 +3,17 @@
 test_that("assessment_summary_data returns expected list structure", {
   prepped <- get_prepared_demo_data()
   single_row <- prepped[1, ]
-  methods <- get_default_methods()
-
   result <- assessment_summary_data(
     dat = single_row,
-    methods = methods,
     include_caption = FALSE
   )
 
   expect_type(result, "list")
-  expect_named(result, c("for_main_table", "fill_values", "footnotes"), ignore.order = TRUE)
+  expect_named(
+    result,
+    c("for_main_table", "fill_values", "footnotes"),
+    ignore.order = TRUE
+  )
   expect_s3_class(result$for_main_table, "data.table")
   expect_type(result$fill_values, "character")
 })
@@ -20,17 +21,22 @@ test_that("assessment_summary_data returns expected list structure", {
 test_that("assessment_summary_data for_main_table has required columns", {
   prepped <- get_prepared_demo_data()
   single_row <- prepped[1, ]
-  methods <- get_default_methods()
-
   result <- assessment_summary_data(
     dat = single_row,
-    methods = methods,
     include_caption = FALSE
   )
 
   expected_cols <- c(
-    "group", "labels", "name", "raw", "raw_suffix", "units",
-    "std", "Percentile", "Description", "is_error"
+    "group",
+    "labels",
+    "name",
+    "raw",
+    "raw_suffix",
+    "units",
+    "std",
+    "Percentile",
+    "Description",
+    "is_error"
   )
   expect_true(all(expected_cols %in% colnames(result$for_main_table)))
 })
@@ -38,11 +44,8 @@ test_that("assessment_summary_data for_main_table has required columns", {
 test_that("assessment_summary_data Percentile is between 0 and 100", {
   prepped <- get_prepared_demo_data()
   single_row <- prepped[1, ]
-  methods <- get_default_methods()
-
   result <- assessment_summary_data(
     dat = single_row,
-    methods = methods,
     include_caption = FALSE
   )
 
@@ -53,8 +56,6 @@ test_that("assessment_summary_data Percentile is between 0 and 100", {
 test_that("assessment_summary_data Description values match description names", {
   prepped <- get_prepared_demo_data()
   single_row <- prepped[1, ]
-  methods <- get_default_methods()
-
   descriptions <- c(
     "Impaired" = 0.03,
     "Borderline" = 0.10,
@@ -68,7 +69,6 @@ test_that("assessment_summary_data Description values match description names", 
   result <- assessment_summary_data(
     dat = single_row,
     descriptions = descriptions,
-    methods = methods,
     include_caption = FALSE
   )
 
@@ -79,10 +79,9 @@ test_that("assessment_summary_data Description values match description names", 
 test_that("assessment_summary_data errors on multi-row data", {
   prepped <- get_prepared_demo_data()
   multi_row <- prepped[1:2, ]
-  methods <- get_default_methods()
 
   expect_error(
-    assessment_summary_data(dat = multi_row, methods = methods),
+    assessment_summary_data(dat = multi_row),
     "exactly one row"
   )
 })
@@ -90,10 +89,9 @@ test_that("assessment_summary_data errors on multi-row data", {
 test_that("assessment_summary_data errors on non-data.table input", {
   prepped <- get_prepared_demo_data()
   df <- as.data.frame(prepped[1, ])
-  methods <- get_default_methods()
 
   expect_error(
-    assessment_summary_data(dat = df, methods = methods),
+    assessment_summary_data(dat = df),
     "data.table"
   )
 })
@@ -101,10 +99,9 @@ test_that("assessment_summary_data errors on non-data.table input", {
 test_that("assessment_summary_data errors when id column missing", {
   prepped <- get_prepared_demo_data()
   single_row <- prepped[1, ]
-  methods <- get_default_methods()
 
   expect_error(
-    assessment_summary_data(dat = single_row, id = "NONEXISTENT", methods = methods),
+    assessment_summary_data(dat = single_row, id = "NONEXISTENT"),
     "id"
   )
 })
@@ -112,7 +109,6 @@ test_that("assessment_summary_data errors when id column missing", {
 test_that("assessment_summary_data fill_values has same names as descriptions", {
   prepped <- get_prepared_demo_data()
   single_row <- prepped[1, ]
-  methods <- get_default_methods()
 
   descriptions <- c(
     "Impaired" = 0.03,
@@ -127,7 +123,6 @@ test_that("assessment_summary_data fill_values has same names as descriptions", 
   result <- assessment_summary_data(
     dat = single_row,
     descriptions = descriptions,
-    methods = methods,
     include_caption = FALSE
   )
 
@@ -137,7 +132,6 @@ test_that("assessment_summary_data fill_values has same names as descriptions", 
 test_that("assessment_summary_data custom fill_values are preserved", {
   prepped <- get_prepared_demo_data()
   single_row <- prepped[1, ]
-  methods <- get_default_methods()
 
   descriptions <- c(
     "Impaired" = 0.03,
@@ -150,7 +144,15 @@ test_that("assessment_summary_data custom fill_values are preserved", {
   )
 
   custom_fills <- setNames(
-    c("#FF0000", "#FF6600", "#FFCC00", "#FFFF00", "#99FF00", "#33FF00", "#00FF00"),
+    c(
+      "#FF0000",
+      "#FF6600",
+      "#FFCC00",
+      "#FFFF00",
+      "#99FF00",
+      "#33FF00",
+      "#00FF00"
+    ),
     names(descriptions)
   )
 
@@ -158,7 +160,6 @@ test_that("assessment_summary_data custom fill_values are preserved", {
     dat = single_row,
     descriptions = descriptions,
     fill_values = custom_fills,
-    methods = methods,
     include_caption = FALSE
   )
 
@@ -168,11 +169,9 @@ test_that("assessment_summary_data custom fill_values are preserved", {
 test_that("assessment_summary_data includes caption when requested", {
   prepped <- get_prepared_demo_data()
   single_row <- prepped[1, ]
-  methods <- get_default_methods()
 
   result <- assessment_summary_data(
     dat = single_row,
-    methods = methods,
     include_caption = TRUE
   )
 
@@ -183,11 +182,8 @@ test_that("assessment_summary_data includes caption when requested", {
 test_that("assessment_summary_data excludes caption when not requested", {
   prepped <- get_prepared_demo_data()
   single_row <- prepped[1, ]
-  methods <- get_default_methods()
-
   result <- assessment_summary_data(
     dat = single_row,
-    methods = methods,
     include_caption = FALSE
   )
 
@@ -197,22 +193,17 @@ test_that("assessment_summary_data excludes caption when not requested", {
 test_that("assessment_summary_data footnotes contain logical vectors", {
   prepped <- get_prepared_demo_data()
   single_row <- prepped[1, ]
-  methods <- get_default_methods()
-
   result <- assessment_summary_data(
     dat = single_row,
-    methods = methods,
     include_caption = FALSE
   )
 
   expect_true("footnotes" %in% names(result))
 
   fn <- result$footnotes
-  expected_footnote_names <- c(
-    "regression_rows_w_nacc", "regression_rows_w_updated",
-    "regression_rows_w_delay", "t_score_rows", "norm_rows"
-  )
-  expect_named(fn, expected_footnote_names, ignore.order = TRUE)
+  # Footnotes are now keyed by @description strings from std_npsych_scores columns
+  expect_true(length(fn) > 0)
+  expect_true(all(nchar(names(fn)) > 0))
 
   n_rows <- nrow(result$for_main_table)
   for (nm in names(fn)) {
@@ -223,17 +214,14 @@ test_that("assessment_summary_data footnotes contain logical vectors", {
 
 test_that("assessment_summary_data produces consistent results across rows", {
   prepped <- get_prepared_demo_data()
-  methods <- get_default_methods()
 
   result1 <- assessment_summary_data(
     dat = prepped[1, ],
-    methods = methods,
     include_caption = FALSE
   )
 
   result2 <- assessment_summary_data(
     dat = prepped[2, ],
-    methods = methods,
     include_caption = FALSE
   )
 
@@ -249,11 +237,8 @@ test_that("assessment_summary_data produces consistent results across rows", {
 test_that("assessment_summary_table returns a gt_tbl object", {
   prepped <- get_prepared_demo_data()
   single_row <- prepped[1, ]
-  methods <- get_default_methods()
-
   summary_dat <- assessment_summary_data(
     dat = single_row,
-    methods = methods,
     include_caption = FALSE
   )
 
@@ -265,11 +250,8 @@ test_that("assessment_summary_table returns a gt_tbl object", {
 test_that("assessment_summary_table has correct table id", {
   prepped <- get_prepared_demo_data()
   single_row <- prepped[1, ]
-  methods <- get_default_methods()
-
   summary_dat <- assessment_summary_data(
     dat = single_row,
-    methods = methods,
     include_caption = FALSE
   )
 
@@ -282,11 +264,8 @@ test_that("assessment_summary_table has correct table id", {
 test_that("assessment_summary_table works with caption", {
   prepped <- get_prepared_demo_data()
   single_row <- prepped[1, ]
-  methods <- get_default_methods()
-
   summary_dat <- assessment_summary_data(
     dat = single_row,
-    methods = methods,
     include_caption = TRUE
   )
 
@@ -300,11 +279,8 @@ test_that("assessment_summary_table works with caption", {
 test_that("assessment_summary_table renders to HTML without error", {
   prepped <- get_prepared_demo_data()
   single_row <- prepped[1, ]
-  methods <- get_default_methods()
-
   summary_dat <- assessment_summary_data(
     dat = single_row,
-    methods = methods,
     include_caption = FALSE
   )
 
@@ -317,12 +293,10 @@ test_that("assessment_summary_table renders to HTML without error", {
 
 test_that("assessment_summary_table works for multiple different rows", {
   prepped <- get_prepared_demo_data()
-  methods <- get_default_methods()
 
   for (i in 1:min(3, nrow(prepped))) {
     summary_dat <- assessment_summary_data(
       dat = prepped[i, ],
-      methods = methods,
       include_caption = FALSE
     )
 
@@ -334,17 +308,20 @@ test_that("assessment_summary_table works for multiple different rows", {
 test_that("assessment_summary_table bar_height parameter is respected", {
   prepped <- get_prepared_demo_data()
   single_row <- prepped[1, ]
-  methods <- get_default_methods()
-
   summary_dat <- assessment_summary_data(
     dat = single_row,
-    methods = methods,
     include_caption = FALSE
   )
 
   # Should not error with different bar heights
-  tbl_small <- assessment_summary_table(summary_dat = summary_dat, bar_height = 8)
-  tbl_large <- assessment_summary_table(summary_dat = summary_dat, bar_height = 32)
+  tbl_small <- assessment_summary_table(
+    summary_dat = summary_dat,
+    bar_height = 8
+  )
+  tbl_large <- assessment_summary_table(
+    summary_dat = summary_dat,
+    bar_height = 32
+  )
 
   expect_s3_class(tbl_small, "gt_tbl")
   expect_s3_class(tbl_large, "gt_tbl")
@@ -361,7 +338,10 @@ test_that("assessment_longitudinal_table returns HTML for valid multi-row data",
   id_counts <- table(ids)
   multi_visit_id <- names(id_counts[id_counts > 1])[1]
 
-  skip_if(is.na(multi_visit_id), "No individual with multiple visits in demo data")
+  skip_if(
+    is.na(multi_visit_id),
+    "No individual with multiple visits in demo data"
+  )
 
   multi_visit_data <- prepped[NACCID == multi_visit_id]
 
@@ -381,7 +361,10 @@ test_that("assessment_longitudinal_table errors on non-data.table", {
   id_counts <- table(ids)
   multi_visit_id <- names(id_counts[id_counts > 1])[1]
 
-  skip_if(is.na(multi_visit_id), "No individual with multiple visits in demo data")
+  skip_if(
+    is.na(multi_visit_id),
+    "No individual with multiple visits in demo data"
+  )
 
   df <- as.data.frame(prepped[NACCID == multi_visit_id])
 
@@ -399,12 +382,19 @@ test_that("assessment_longitudinal_table errors when id column missing", {
   id_counts <- table(ids)
   multi_visit_id <- names(id_counts[id_counts > 1])[1]
 
-  skip_if(is.na(multi_visit_id), "No individual with multiple visits in demo data")
+  skip_if(
+    is.na(multi_visit_id),
+    "No individual with multiple visits in demo data"
+  )
 
   multi_visit_data <- prepped[NACCID == multi_visit_id]
 
   expect_error(
-    assessment_longitudinal_table(dat = multi_visit_data, id = "BADID", methods = methods),
+    assessment_longitudinal_table(
+      dat = multi_visit_data,
+      id = "BADID",
+      methods = methods
+    ),
     "id"
   )
 })
@@ -417,7 +407,10 @@ test_that("assessment_longitudinal_table errors when date column missing", {
   id_counts <- table(ids)
   multi_visit_id <- names(id_counts[id_counts > 1])[1]
 
-  skip_if(is.na(multi_visit_id), "No individual with multiple visits in demo data")
+  skip_if(
+    is.na(multi_visit_id),
+    "No individual with multiple visits in demo data"
+  )
 
   multi_visit_data <- prepped[NACCID == multi_visit_id]
 
@@ -435,7 +428,10 @@ test_that("assessment_longitudinal_table errors for multiple individuals", {
   prepped <- get_prepared_demo_data()
   methods <- get_default_methods()
 
-  skip_if(length(unique(prepped$NACCID)) < 2, "Need at least 2 individuals in demo data")
+  skip_if(
+    length(unique(prepped$NACCID)) < 2,
+    "Need at least 2 individuals in demo data"
+  )
 
   # The function may hit duplicate dates or multiple individuals check first
   expect_error(
@@ -451,7 +447,10 @@ test_that("assessment_longitudinal_table custom table_id is used", {
   id_counts <- table(ids)
   multi_visit_id <- names(id_counts[id_counts > 1])[1]
 
-  skip_if(is.na(multi_visit_id), "No individual with multiple visits in demo data")
+  skip_if(
+    is.na(multi_visit_id),
+    "No individual with multiple visits in demo data"
+  )
 
   multi_visit_data <- prepped[NACCID == multi_visit_id]
 
@@ -472,7 +471,10 @@ test_that("assessment_longitudinal_table show_all_visits parameter works", {
   id_counts <- table(ids)
   multi_visit_id <- names(id_counts[id_counts > 1])[1]
 
-  skip_if(is.na(multi_visit_id), "No individual with multiple visits in demo data")
+  skip_if(
+    is.na(multi_visit_id),
+    "No individual with multiple visits in demo data"
+  )
 
   multi_visit_data <- prepped[NACCID == multi_visit_id]
 
@@ -501,7 +503,10 @@ test_that("assessment_longitudinal_table table_font_size parameter works", {
   id_counts <- table(ids)
   multi_visit_id <- names(id_counts[id_counts > 1])[1]
 
-  skip_if(is.na(multi_visit_id), "No individual with multiple visits in demo data")
+  skip_if(
+    is.na(multi_visit_id),
+    "No individual with multiple visits in demo data"
+  )
 
   multi_visit_data <- prepped[NACCID == multi_visit_id]
 
@@ -522,7 +527,10 @@ test_that("assessment_longitudinal_table returns message when no scores found", 
   id_counts <- table(ids)
   multi_visit_id <- names(id_counts[id_counts > 1])[1]
 
-  skip_if(is.na(multi_visit_id), "No individual with multiple visits in demo data")
+  skip_if(
+    is.na(multi_visit_id),
+    "No individual with multiple visits in demo data"
+  )
 
   minimal_dat <- data.table::data.table(
     NACCID = rep(multi_visit_id, 2),

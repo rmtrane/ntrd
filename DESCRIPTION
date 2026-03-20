@@ -14,7 +14,6 @@ Encoding: UTF-8
 LazyData: true
 Suggests:
     httr2,
-    jsonlite,
     pagedown,
     quarto,
     shinytest2,
@@ -27,7 +26,7 @@ Suggests:
 Config/testthat/edition: 3
 Config/testthat/load-all: list(export_all = TRUE, helpers = TRUE)
 RoxygenNote: 7.3.3
-Imports: 
+Imports:
     bslib,
     data.table (>= 1.9.8),
     DT,

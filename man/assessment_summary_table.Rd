@@ -13,7 +13,6 @@ assessment_summary_data(
   descriptions = c(Impaired = 0.03, Borderline = 0.1, `Low Average` = 0.26, Average =
     0.76, `High Average` = 0.92, Superior = 0.97, `Very Superior` = 1),
   fill_values = NULL,
-  methods = "infer",
   include_caption = TRUE
 )
 }
@@ -31,12 +30,6 @@ assessment_summary_data(
 \item{fill_values}{(optional) A named vector of same length (with same names)
 as \code{descriptions} with hex color values to use. If \code{NULL}, no colorcoding used.
 By default, evenly spread out colors from red through yellow to green are used.}
-
-\item{methods}{(optional) either list of named entries specifying which model was used
-for standardizing cognitive scores, or the character string "infer". For the
-latter, methods are infered from the \code{dat} object using
-\code{ntrs::methods_from_std_data}. If specified, footnotes are added
-to indicate the methods used.}
 
 \item{include_caption}{Logical; should a caption be included above the table
 with age and IQCODEs at current visit?}

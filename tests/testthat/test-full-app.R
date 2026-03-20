@@ -85,30 +85,30 @@ test_that("full app flow with demo data produces correct views", {
   # Click Go to load demo data
   app$click(selector = "#dataSelect-go")
 
-  # The data loading + prepare_data + methodSelect auto-detection takes time.
-  # Use wait_for_js to wait for the modal to appear instead of wait_for_idle,
-  # since the app may error transiently during the reactive chain.
-  app$wait_for_js(
-    "document.querySelector('.modal-dialog') !== null",
-    timeout = 60000
-  )
-  app$wait_for_idle()
+  # # The data loading + prepare_data + methodSelect auto-detection takes time.
+  # # Use wait_for_js to wait for the modal to appear instead of wait_for_idle,
+  # # since the app may error transiently during the reactive chain.
+  # app$wait_for_js(
+  #   "document.querySelector('.modal-dialog') !== null",
+  #   timeout = 60000
+  # )
+  # app$wait_for_idle()
 
-  # The methodSelect module auto-detects NACC columns and fires
-  # moveToTables, which shows a modal. Dismiss it.
-  app$click(
-    selector = ".modal-footer .btn[data-dismiss='modal'], .modal-footer .btn[data-bs-dismiss='modal']"
-  )
+  # # The methodSelect module auto-detects NACC columns and fires
+  # # moveToTables, which shows a modal. Dismiss it.
+  # app$click(
+  #   selector = ".modal-footer .btn[data-dismiss='modal'], .modal-footer .btn[data-bs-dismiss='modal']"
+  # )
 
   # After dismissing the modal, the app navigates to "Scoring Tables and Figures".
   # The plot observers may throw a transient error (plotly_new_traces range issue)
   # which causes wait_for_idle to fail. We wait for the assessment table to render
   # instead, using wait_for_js which is not affected by Shiny errors.
+  app$wait_for_idle()
   app$wait_for_js(
     "document.querySelector('#assessment-summary-table') !== null",
     timeout = 60000
   )
-  app$wait_for_idle()
   # Screenshot 2: Main view with assessment summary table + plots
   app$expect_screenshot(name = "main-view")
   if (save_figures) {

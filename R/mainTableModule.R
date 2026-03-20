@@ -46,7 +46,6 @@ mainTableServer <- function(
     "Very Superior" = 1
   ),
   fill_values = NULL,
-  methods = "infer",
   table_font_size = 100,
   include_caption = F,
   print_updating = F
@@ -64,10 +63,6 @@ mainTableServer <- function(
 
   if (!shiny::is.reactive(table_font_size)) {
     table_font_size <- shiny::reactiveVal(table_font_size)
-  }
-
-  if (!shiny::is.reactive(methods)) {
-    methods <- shiny::reactiveVal(methods)
   }
 
   shiny::moduleServer(id, function(input, output, session) {
@@ -107,7 +102,6 @@ mainTableServer <- function(
       summary_dat <- assessment_summary_data(
         dat = for_table,
         id = "NACCID",
-        methods = methods(),
         include_caption = include_caption
       )
 
@@ -223,7 +217,6 @@ mainTableApp <- function(
     mainTableServer(
       "main_table",
       dat = shiny::reactive(dat),
-      methods = "infer",
       table_font_size = shiny::reactive(100),
       include_caption = T
     )

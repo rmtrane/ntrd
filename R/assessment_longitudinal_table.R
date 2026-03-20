@@ -38,33 +38,34 @@ assessment_longitudinal_table <- function(
   show_all_visits = TRUE,
   stubhead_label = NULL
 ) {
-  stopifnot(
-    "'id' must be a character string specifying a column in the data frame 'dat'" = is.character(
-      id
-    ) &&
-      id %in% colnames(dat)
-  )
-  stopifnot(
-    "'date' must be a character string specifying a column in the data frame 'dat'" = is.character(
-      date
-    ) &&
-      date %in% colnames(dat)
-  )
+  if (!data.table::is.data.table(dat)) {
+    cli::cli_abort("{.arg dat} must be of class {.cls data.table}.")
+  }
 
-  stopifnot(
-    "'dat' must be a data.table object" = data.table::is.data.table(dat)
-  )
+  dat <- data.table::copy(dat)
 
-  colnames(dat)[colnames(dat) == id] <- "id"
-  colnames(dat)[colnames(dat) == date] <- "date"
+  if (!is.character(id) || !id %in% colnames(dat)) {
+    cli::cli_abort(
+      "{.arg id} must be a character string specifying a column in {.arg dat}."
+    )
+  }
 
-  stopifnot(
-    "'date' must be a column containing dates" = lubridate::is.Date(dat$date)
-  )
-  stopifnot(
-    "'date' should not contain duplicates" = length(unique(dat$date)) ==
-      nrow(dat)
-  )
+  if (!is.character(date) || !date %in% colnames(dat)) {
+    cli::cli_abort(
+      "{.arg date} must be a character string specifying a column in {.arg dat}."
+    )
+  }
+
+  data.table::setnames(dat, old = id, new = "id")
+  data.table::setnames(dat, old = date, new = "date")
+
+  if (!lubridate::is.Date(dat$date)) {
+    cli::cli_abort("{.arg date} column must contain dates.")
+  }
+
+  if (length(unique(dat$date)) != nrow(dat)) {
+    cli::cli_abort("{.arg date} column should not contain duplicates.")
+  }
 
   if (is.null(table_id)) {
     table_id <- paste(sample(letters, size = 10, replace = T), collapse = "")
@@ -77,84 +78,104 @@ assessment_longitudinal_table <- function(
     )
   }
 
-  stopifnot(
-    "Data provided must pertain to only one individual" = length(unique(
-      dat$id
-    )) ==
-      1
+  if (length(unique(dat$id)) != 1) {
+    cli::cli_abort("Data provided must pertain to only one individual.")
+  }
+
+  ## Get npsych_scores columns: map column name -> class name
+  npsych_class_map <- unlist(dat[,
+    lapply(.SD, \(x) S7::S7_class(x)@name),
+    .SDcols = ntrs::is_npsych_scores
+  ])
+
+  ## Get std_npsych_scores columns: map column name -> scores_subclass
+  std_subclass_map <- unlist(dat[,
+    lapply(.SD, \(x) x@scores_subclass),
+    .SDcols = \(x) S7::S7_inherits(x, ntrs::std_npsych_scores)
+  ])
+
+  ## Build label and domain maps from npsych_scores columns, keyed by class name
+  label_map <- setNames(
+    unlist(lapply(dat[, names(npsych_class_map), with = F], \(x) x@label)),
+    npsych_class_map
+  )
+  domain_map <- setNames(
+    unlist(lapply(dat[, names(npsych_class_map), with = F], \(x) x@domain)),
+    npsych_class_map
   )
 
-  npsych_scores_cols <- colnames(dat[0, .SD, .SDcols = is_npsych_scores])
-  npsych_scores_cols <- gsub("^raw_", "", npsych_scores_cols)
+  ## Select std columns whose scores_subclass matches an npsych_scores class name,
+  ## but exclude scores without a domain.
+  scores_with_domain <- names(domain_map)[!is.na(domain_map)]
+  std_to_keep <- names(std_subclass_map)[
+    std_subclass_map %in%
+      npsych_class_map &
+      std_subclass_map %in% scores_with_domain
+  ]
+
+  if (length(std_to_keep) == 0) {
+    return(shiny::h3("No scores found."))
+  }
 
   for_table_std <- dat[
     ## Remove rows without dates
     !is.na(date),
-    ## Only return columns that are non-empty...
-    setNames(
-      ## New names
-      nm = gsub("^std_", "", names(.SD)),
-      ## New columns
-      object = lapply(.SD, \(x) if (any(!is.na(x))) x)
-    ),
-    ## ... among the columns "date" and standardized cols that match npsych_scores cols
-    .SDcols = c(
-      "date",
-      intersect(colnames(dat), paste("std", npsych_scores_cols, sep = "_"))
-    )
+    ## Only return columns that are non-empty
+    lapply(.SD, \(x) if (any(!is.na(x))) x),
+    .SDcols = c("date", std_to_keep)
   ][
     ## Order by date
     order(date)
   ]
+
+  ## Rename std columns using scores_subclass
+  std_cols_remaining <- intersect(std_to_keep, colnames(for_table_std))
+
+  data.table::setnames(
+    for_table_std,
+    old = std_cols_remaining,
+    new = unname(std_subclass_map[std_cols_remaining])
+  )
 
   if (ncol(for_table_std) == 1) {
     return(shiny::h3("No scores found."))
   }
 
+  ## Match raw columns: npsych_scores whose class name appears in for_table_std
+  raw_to_keep <- names(npsych_class_map)[
+    npsych_class_map %in% colnames(for_table_std)
+  ]
+
   for_table <- dat[
     ## Remove rows without dates
     !is.na(date),
-    ## Only return columns that are non-empty...
-    setNames(
-      ## Remove prefix raw_ when present
-      nm = gsub("^raw_", "", names(.SD)),
-      ## New columns
-      object = purrr::imap(.SD, \(x, idx) {
-        if (idx == "date") {
-          return(x)
-        }
+    ## Only return columns that are non-empty
+    purrr::imap(.SD, \(x, idx) {
+      if (idx == "date") {
+        return(x)
+      }
 
-        x <- ntrs::remove_error_codes(x)
+      x <- ntrs::remove_error_codes(x)
 
-        if (any(!is.na(x))) x
-      })
-    ),
-    ## ... among the columns "date" and standardized cols that match nacc_var_labels
-    .SDcols = c(
-      "date",
-      intersect(colnames(dat), paste("raw", names(for_table_std), sep = "_"))
-    )
+      if (any(!is.na(x))) x
+    }),
+    .SDcols = c("date", raw_to_keep)
   ][
     ## Order by date
     order(date)
   ]
 
-  ## Get methods for variables left
-  # if (length(methods) == 1 && methods == "infer") {
-  #   methods <- NpsychBatteryNorms::methods_from_std_data(
-  #     std_data = for_table_std
-  #   )
-  # } else {
+  ## Rename raw columns using class name
+  raw_cols_remaining <- intersect(raw_to_keep, colnames(for_table))
+  data.table::setnames(
+    for_table,
+    old = raw_cols_remaining,
+    new = unname(npsych_class_map[raw_cols_remaining])
+  )
 
   ## Get methods for variables left
-  vars_present <- colnames(for_table_std)[grepl(
-    pattern = paste0("^", names(methods), "$", collapse = "|"), # nacc_var_labels
-    x = colnames(for_table_std)
-  )]
-
+  vars_present <- intersect(colnames(for_table_std), names(methods))
   methods <- methods[vars_present]
-
-  # }
 
   if (!is.list(methods)) {
     cli::cli_abort(
@@ -162,9 +183,14 @@ assessment_longitudinal_table <- function(
     )
   }
 
-  ## Get names of scores standardized using t-scores. Needed for adjusting before
-  ## adding color codes to table
-  t_scores <- names(methods)[sapply(methods, `[[`, "method") == "tscores"]
+  ## Identify t-scores from std_npsych_scores @method property
+  std_col_methods <- lapply(
+    dat[, std_to_keep, with = F],
+    \(x) x@method
+  )
+  t_scores <- unname(
+    std_subclass_map[std_to_keep][unlist(std_col_methods) == "tscores"]
+  )
 
   ## Combine crosswalk pairs into one column
   crosswalk_pairs <- list(
@@ -250,24 +276,15 @@ assessment_longitudinal_table <- function(
     }
   }
 
-  ## Add labels
+  ## Add labels using label_map (keyed by class name)
   for_table$labels <- unlist(lapply(
     for_table$name,
     \(x) {
-      # if (x %in% names(nacc_var_labels)) {
-      #   return(nacc_var_labels[x])
-      # }
       if (!grepl("--", x)) {
-        # return(S7::prop(match.fun(x)(), "label"))
-        return(S7::prop(ntrs::get_npsych_scores(x)(), "label"))
+        return(unname(label_map[x]))
       }
 
-      # to_combine <- nacc_var_labels[unlist(strsplit(x, split = "--"))]
-
-      to_combine <- unlist(lapply(unlist(strsplit(x, split = "--")), \(x) {
-        #S7::prop(match.fun(x)(), "label")
-        S7::prop(ntrs::get_npsych_scores(x)(), "label")
-      }))
+      to_combine <- label_map[unlist(strsplit(x, split = "--"))]
 
       to_combine[2] <- gsub(
         pattern = " Span (Forward|Backward) - (Span Length|Total)",
@@ -314,10 +331,7 @@ assessment_longitudinal_table <- function(
   # )
 
   ## Add column indicating groups
-  for_table$group <- # unname(nacc_var_groups[for_table$name])
-    purrr::map_chr(for_table$name, \(x) {
-      S7::prop(ntrs::get_npsych_scores(x)(), "domain") %||% NA
-    })
+  for_table$group <- unname(domain_map[for_table$name])
 
   # for_table_std$group <- unname(nacc_var_groups[for_table_std$name])
 
