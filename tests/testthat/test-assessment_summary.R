@@ -545,3 +545,169 @@ test_that("assessment_longitudinal_table returns message when no scores found", 
   # Should return an h3 "No scores found." message
   expect_true(inherits(result, "shiny.tag"))
 })
+
+test_that("assessment_longitudinal_table errors on non-Date date column", {
+  prepped <- get_prepared_demo_data()
+
+  ids <- prepped$NACCID
+  id_counts <- table(ids)
+  multi_visit_id <- names(id_counts[id_counts > 1])[1]
+
+  skip_if(
+    is.na(multi_visit_id),
+    "No individual with multiple visits in demo data"
+  )
+
+  multi_visit_data <- data.table::copy(prepped[NACCID == multi_visit_id])
+  # Convert date to character to trigger error
+  multi_visit_data[, VISITDATE := as.character(VISITDATE)]
+
+  expect_error(
+    assessment_longitudinal_table(dat = multi_visit_data, methods = list()),
+    "dates"
+  )
+})
+
+test_that("assessment_longitudinal_table errors on duplicate dates", {
+  prepped <- get_prepared_demo_data()
+
+  ids <- prepped$NACCID
+  id_counts <- table(ids)
+  multi_visit_id <- names(id_counts[id_counts > 1])[1]
+
+  skip_if(
+    is.na(multi_visit_id),
+    "No individual with multiple visits in demo data"
+  )
+
+  multi_visit_data <- data.table::copy(prepped[NACCID == multi_visit_id])
+  # Set all dates to the same value to trigger duplicate error
+  multi_visit_data[, VISITDATE := as.Date("2020-01-01")]
+
+  expect_error(
+    assessment_longitudinal_table(dat = multi_visit_data, methods = list()),
+    "duplicates"
+  )
+})
+
+test_that("assessment_longitudinal_table stubhead_label parameter works", {
+  prepped <- get_prepared_demo_data()
+  methods <- get_default_methods()
+
+  ids <- prepped$NACCID
+  id_counts <- table(ids)
+  multi_visit_id <- names(id_counts[id_counts > 1])[1]
+
+  skip_if(
+    is.na(multi_visit_id),
+    "No individual with multiple visits in demo data"
+  )
+
+  multi_visit_data <- prepped[NACCID == multi_visit_id]
+
+  result <- assessment_longitudinal_table(
+    dat = multi_visit_data,
+    methods = methods,
+    stubhead_label = "Test Label"
+  )
+
+  expect_s3_class(result, "html")
+  expect_true(grepl("Test Label", as.character(result)))
+})
+
+test_that("assessment_longitudinal_table crosswalk pairs are merged", {
+  prepped <- get_prepared_demo_data()
+  methods <- get_default_methods()
+
+  # Find an individual that has both members of a crosswalk pair with non-NA values
+  crosswalk_pairs <- list(
+    c("MOCATOTS", "NACCMMSE"),
+    c("MINTTOTS", "BOSTON"),
+    c("CRAFTURS", "LOGIMEM"),
+    c("CRAFTDRE", "MEMUNITS")
+  )
+
+  ids <- prepped$NACCID
+  id_counts <- table(ids)
+  multi_visit_ids <- names(id_counts[id_counts > 1])
+
+  skip_if(
+    length(multi_visit_ids) == 0,
+    "No individual with multiple visits in demo data"
+  )
+
+  # For each multi-visit individual, check if any crosswalk pair has both
+  # members with non-NA std_npsych_scores values
+  found <- FALSE
+  test_data <- NULL
+
+  for (mid in multi_visit_ids) {
+    dat_i <- prepped[NACCID == mid]
+
+    npsych_class_map <- unlist(dat_i[,
+      lapply(.SD, \(x) S7::S7_class(x)@name),
+      .SDcols = ntrs::is_npsych_scores
+    ])
+
+    std_subclass_map <- unlist(dat_i[,
+      lapply(.SD, \(x) x@scores_subclass),
+      .SDcols = \(x) S7::S7_inherits(x, ntrs::std_npsych_scores)
+    ])
+
+    for (pair in crosswalk_pairs) {
+      if (all(pair %in% std_subclass_map)) {
+        # Check that at least one row has a non-NA value for each member
+        cols_for_pair <- names(std_subclass_map)[std_subclass_map %in% pair]
+        has_vals <- vapply(cols_for_pair, \(col) any(!is.na(dat_i[[col]])), logical(1))
+        if (all(has_vals)) {
+          found <- TRUE
+          test_data <- dat_i
+          break
+        }
+      }
+    }
+    if (found) break
+  }
+
+  skip_if(!found, "No crosswalk pairs with non-NA data found in demo data")
+
+  result <- assessment_longitudinal_table(
+    dat = test_data,
+    methods = methods
+  )
+
+  # If crosswalk pairs are merged, the combined label uses " /" separator
+  # and includes <u><i> markup for the legacy score
+  result_str <- paste(as.character(result), collapse = "")
+  expect_true(
+    grepl("<u><i>", result_str, fixed = TRUE),
+    label = "Expected crosswalk pair label with underline/italic markup"
+  )
+})
+
+test_that("assessment_longitudinal_table source note with methods", {
+  prepped <- get_prepared_demo_data()
+  methods <- get_default_methods()
+
+  ids <- prepped$NACCID
+  id_counts <- table(ids)
+  multi_visit_id <- names(id_counts[id_counts > 1])[1]
+
+  skip_if(
+    is.na(multi_visit_id),
+    "No individual with multiple visits in demo data"
+  )
+
+  multi_visit_data <- prepped[NACCID == multi_visit_id]
+
+  result <- assessment_longitudinal_table(
+    dat = multi_visit_data,
+    methods = methods
+  )
+
+  result_str <- as.character(result)
+  expect_true(
+    grepl("Standardization Methods", result_str),
+    label = "Expected source note with standardization methods tooltip"
+  )
+})

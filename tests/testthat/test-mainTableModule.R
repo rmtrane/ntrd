@@ -1,3 +1,11 @@
+# --- UI tests ---
+
+test_that("mainTableUI returns expected structure", {
+  ui <- mainTableUI("test")
+  ui_html <- as.character(ui)
+  expect_true(grepl("test-mainTable", ui_html))
+})
+
 # --- Helper function tests ---
 
 test_that("make_pdf_filename produces correct format", {
@@ -65,16 +73,15 @@ test_that("mainTable gt HTML output is stable", {
   )
 })
 
-test_that("mainTableApp download flow produces a download button", {
+test_that("mainTableApp download flow produces a download button and downloads a PDF", {
   skip_on_cran()
+  skip_on_ci()
   skip_if_not_installed("shinytest2")
   skip_if_not_installed("pagedown")
   skip_if(
     !nzchar(tryCatch(pagedown::find_chrome(), error = function(e) "")),
     "Chrome/Chromium not available"
   )
-
-  skip("mainTableApp download flow test requires Chrome")
 
   prepped <- get_prepared_demo_data()
   single_row <- prepped[1, ]
@@ -88,13 +95,44 @@ test_that("mainTableApp download flow produces a download button", {
 
   app$wait_for_idle()
 
-  # Click "Generate PDF for Download"
+  # The genPDF button should be visible
+  gen_btn <- app$get_html("#main_table-genPDF")
+  expect_match(gen_btn, "Generate PDF")
+
+  # Click "Generate PDF for Download" and wait for async chrome_print
+
   app$click(selector = "#main_table-genPDF")
-  app$wait_for_idle(timeout = 30000)
+  app$wait_for_idle(timeout = 60000)
 
   # The downloadTable UI should now contain a download button
   download_btn <- app$get_html("#main_table-downloadPDF")
   expect_match(download_btn, "Download PDF")
+
+  # Actually download the file and verify it's a valid PDF
+  download_path <- app$get_download("main_table-downloadPDF")
+  expect_true(file.exists(download_path))
+  expect_gt(file.size(download_path), 0)
+
+  # Check PDF magic bytes (%PDF)
+  raw_header <- readBin(download_path, "raw", n = 4)
+  expect_equal(rawToChar(raw_header), "%PDF")
+
+  # Verify PDF content contains expected table elements
+  skip_if_not_installed("pdftools")
+  pdf_text <- pdftools::pdf_text(download_path)
+  full_text <- paste(pdf_text, collapse = " ")
+
+  # Caption should include the visit date
+  expect_match(full_text, as.character(single_row$VISITDATE[1]))
+
+  # Table should contain cognitive domain group labels
+  expect_match(full_text, "General Cognition")
+  expect_match(full_text, "Memory")
+  expect_match(full_text, "Language")
+
+  # Table should contain column headers
+  expect_match(full_text, "Percentile")
+  expect_match(full_text, "Description")
 })
 
 # --- Server logic tests ---
@@ -173,6 +211,42 @@ test_that("mainTableServer table updates when dat changes", {
 
       second_table <- mainTable()
       expect_s3_class(second_table, "gt_tbl")
+    }
+  )
+})
+
+test_that("mainTableServer wraps non-reactive table_font_size", {
+  prepped <- get_prepared_demo_data()
+  single_row <- prepped[1, ]
+
+  # Pass plain numeric (not reactive) — should be auto-wrapped
+  shiny::testServer(
+    mainTableServer,
+    args = list(
+      dat = shiny::reactive(single_row),
+      table_font_size = 80
+    ),
+    {
+      session$flushReact()
+      expect_s3_class(mainTable(), "gt_tbl")
+    }
+  )
+})
+
+test_that("mainTableServer handles print_updating = TRUE", {
+  prepped <- get_prepared_demo_data()
+  single_row <- prepped[1, ]
+
+  shiny::testServer(
+    mainTableServer,
+    args = list(
+      dat = shiny::reactive(single_row),
+      table_font_size = shiny::reactiveVal(100),
+      print_updating = TRUE
+    ),
+    {
+      session$flushReact()
+      expect_s3_class(mainTable(), "gt_tbl")
     }
   )
 })

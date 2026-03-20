@@ -15,6 +15,7 @@ LazyData: true
 Suggests:
     httr2,
     pagedown,
+    pdftools,
     quarto,
     shinytest2,
     withr,
@@ -67,6 +68,7 @@ Config/Needs/website:
 Collate: 
     'appServer.R'
     'appUI.R'
+    'apply_extension_defaults.R'
     'assessment_longitudinal_table.R'
     'assessment_summary_table.R'
     'birth_vars.R'

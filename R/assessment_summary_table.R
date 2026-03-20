@@ -267,6 +267,8 @@ assessment_summary_data <- function(
     cli::cli_abort("{.arg dat} must be of class {.cls data.table}.")
   }
 
+  dat <- data.table::copy(dat)
+
   if (!is.character(id) || !id %in% colnames(dat)) {
     cli::cli_abort(
       "{.arg id} must be a character string specifying a column in {.arg dat}."

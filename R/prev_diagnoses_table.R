@@ -14,7 +14,7 @@ prev_diagnoses_table <- function(dat, table_font_size = 100) {
     cli::cli_abort("The {.var dat} object must be a {.cls data.table}.")
   }
 
-  diagnosis_table <- dat[,
+  diagnosis_table <- data.table::copy(dat[,
     .SD,
     .SDcol = unlist(data.table::patterns(
       paste(
@@ -31,7 +31,7 @@ prev_diagnoses_table <- function(dat, table_font_size = 100) {
       ),
       cols = colnames(dat)
     ))
-  ]
+  ])
 
   diagnosis_table[,
     names(.SD) := lapply(.SD, as.character),
