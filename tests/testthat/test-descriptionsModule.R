@@ -1,3 +1,14 @@
+test_that("descriptionsUI returns a tagList with expected elements", {
+  ui <- descriptionsUI("test")
+  expect_s3_class(ui, "shiny.tag.list")
+
+  # Should contain a DT output and action buttons
+  ui_html <- as.character(ui)
+  expect_true(grepl("test-descriptions", ui_html))
+  expect_true(grepl("test-add_row", ui_html))
+  expect_true(grepl("test-reset", ui_html))
+})
+
 test_that("descriptionsServer returns fill_values and descriptions reactives", {
   shiny::testServer(descriptionsServer, {
     session$flushReact()

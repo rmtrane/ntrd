@@ -26,6 +26,8 @@ demographics_table <- function(
     )
   }
 
+  dat <- data.table::copy(dat)
+
   for (cur_var in c("SEX", "RACE", "HANDED")) {
     dat[[cur_var]] <- unlist(lapply(dat[[cur_var]], \(x) {
       if (is.numeric(x)) {

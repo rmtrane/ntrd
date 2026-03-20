@@ -24,6 +24,8 @@ data_nacc <- S7::new_class(
       setter = function(self, value) {
         if (!data.table::is.data.table(value)) {
           value <- data.table::as.data.table(value)
+        } else {
+          value <- data.table::copy(value)
         }
 
         if (!"VISITDATE" %in% colnames(value)) {

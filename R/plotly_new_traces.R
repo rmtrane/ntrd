@@ -24,9 +24,9 @@ plotly_new_traces <- function(
   legend_names,
   vars_colors
 ) {
-  new_dat <- new_dat[,
+  new_dat <- data.table::copy(new_dat[,
     lapply(.SD, \(x) if (any(!is.na(x))) x)
-  ]
+  ])
 
   ## Check if any standardized values
   any_left <- sum(grepl(pattern = "^std_", x = colnames(new_dat)))
@@ -43,12 +43,6 @@ plotly_new_traces <- function(
 
   for (col in t_score_cols) {
     new_dat[[col]] <- (new_dat[[col]] - 50) / 10
-  }
-
-  ## If nothing left, abort.
-  if (any_left == 0) {
-    # cli::cli_alert_danger("{.var any_left} is {any_left}")
-    return()
   }
 
   ## Due to NSE notes in R CMD check:
