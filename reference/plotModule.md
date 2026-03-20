@@ -22,7 +22,8 @@ plotServer(
   fill_values = calc_fill_colors(n = 7),
   print_updating = T,
   shade_descriptions = TRUE,
-  new_id = NULL
+  new_id = NULL,
+  var_groups = nacc_var_groups
 )
 
 plotApp(dat_input = prepare_data(demo_data), studyids = NULL, testing = FALSE)
@@ -72,6 +73,11 @@ plotApp(dat_input = prepare_data(demo_data), studyids = NULL, testing = FALSE)
 
   Optional. String to be used for table ID. If `NULL` (default), random
   string assigned.
+
+- var_groups:
+
+  A named character vector mapping variable names to domain groups. Can
+  be a reactive. Defaults to `nacc_var_groups`.
 
 - dat_input:
 

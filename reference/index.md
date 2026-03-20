@@ -42,7 +42,7 @@ Shiny modules used for the main Shiny application
 - [`methodSelectUI()`](https://rmtrane.github.io/ntrd/reference/methodSelectModule.md)
   [`methodSelectServer()`](https://rmtrane.github.io/ntrd/reference/methodSelectModule.md)
   [`methodSelectApp()`](https://rmtrane.github.io/ntrd/reference/methodSelectModule.md)
-  : Shiny Module for Selecting Columns
+  : Shiny Module for Selecting Domains and Standardization Methods
 - [`descriptionsUI()`](https://rmtrane.github.io/ntrd/reference/descriptionsModule.md)
   [`descriptionsServer()`](https://rmtrane.github.io/ntrd/reference/descriptionsModule.md)
   [`descriptionsApp()`](https://rmtrane.github.io/ntrd/reference/descriptionsModule.md)

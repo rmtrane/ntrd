@@ -14,7 +14,6 @@ mainTableServer(
   descriptions = c(Impaired = 0.03, Borderline = 0.1, `Low Average` = 0.26, Average =
     0.76, `High Average` = 0.92, Superior = 0.97, `Very Superior` = 1),
   fill_values = NULL,
-  methods = "infer",
   table_font_size = 100,
   include_caption = F,
   print_updating = F
@@ -44,15 +43,6 @@ mainTableApp(dat, testing = FALSE)
   `descriptions` with hex color values to use. If `NULL`, no colorcoding
   used. By default, evenly spread out colors from red through yellow to
   green are used.
-
-- methods:
-
-  (optional) either list of named entries specifying which model was
-  used for standardizing cognitive scores, or the character string
-  "infer". For the latter, methods are infered from the `dat` object
-  using
-  [`ntrs::methods_from_std_data`](https://rmtrane.github.io/ntrs/reference/methods_from_std_data.html).
-  If specified, footnotes are added to indicate the methods used.
 
 - table_font_size:
 

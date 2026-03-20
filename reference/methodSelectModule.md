@@ -1,23 +1,17 @@
-# Shiny Module for Selecting Columns
+# Shiny Module for Selecting Domains and Standardization Methods
 
-This shiny module gives the user the option to manually map column names
-to NACC variable names.
-
-A short description...
+This shiny module displays npsych_scores variables from the loaded data
+and lets the user assign cognitive domains and standardization methods
+using dropdown menus in an HTML table.
 
 ## Usage
 
 ``` r
 methodSelectUI(id)
 
-methodSelectServer(
-  id,
-  dat_obj,
-  default_methods,
-  col_selection = c("enable", "disable", "hide")
-)
+methodSelectServer(id, dat_obj, default_methods)
 
-methodSelectApp(col_selection = "enable", testing = FALSE)
+methodSelectApp(testing = FALSE)
 ```
 
 ## Arguments
@@ -33,16 +27,9 @@ methodSelectApp(col_selection = "enable", testing = FALSE)
 - default_methods:
 
   named list. Each entry should be named after a variable. The entry
-  should be a named character vector with to elements: one named
-  'method' to indicate the standardization method to use, and one name
+  should be a named character vector with two elements: one named
+  'method' to indicate the standardization method to use, and one named
   'version' to indicate the version to use for standardization.
-
-- col_selection:
-
-  string; one of 'enable', 'disable', or 'hide'. If 'enable', allow user
-  to select which columns should be used for each variable. If
-  'disable', show columns used, but without the option to select. If
-  'hide', hide the column.
 
 - testing:
 
