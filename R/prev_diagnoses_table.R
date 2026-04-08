@@ -94,10 +94,8 @@ prev_diagnoses_table <- function(dat, table_font_size = 100) {
     )
   )
 
-  diagnosis_table$cdr <- with(
-    diagnosis_table,
-    paste0(CDRGLOB, " (", CDRSUM, ")")
-  )
+  diagnosis_table$cdr <-
+    paste0(diagnosis_table$CDRGLOB, " (", diagnosis_table$CDRSUM, ")")
 
   # fmt: skip
   for (x in intersect(c("raw_MOCATOTS", "raw_NACCMMSE"), colnames(diagnosis_table))) {
