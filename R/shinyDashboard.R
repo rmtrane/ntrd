@@ -17,6 +17,10 @@ shinyDashboard <- function(
     shiny.autoload.r = FALSE
   )
 
+  if (!isNamespaceLoaded("ntrs")) {
+    loadNamespace("ntrs")
+  }
+
   ## Add resources
   shinyAddResources(development = testing)
 
