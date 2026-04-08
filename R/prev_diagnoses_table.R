@@ -72,30 +72,51 @@ prev_diagnoses_table <- function(dat, table_font_size = 100) {
     order(NACCID, VISITDATE)
   )]
 
-  diagnosis_table$contribution_character <- c(
-    "1" = "Primary",
-    "2" = "Contributing",
-    "3" = "Non-contributing"
-  )[diagnosis_table$contribution]
-
-  diagnosis_table$disease <- with(
-    diag_contr_pairs,
-    setNames(disease, presump_etio_diag)
-  )[
-    diagnosis_table$nacc_name
-  ]
-
-  diagnosis_table$disease <- with(
-    diagnosis_table,
-    ifelse(
+  diagnosis_table[,
+    `:=`(
+      contribution_character = c(
+        "1" = "Primary",
+        "2" = "Contributing",
+        "3" = "Non-contributing"
+      )[contribution],
+      disease = setNames(
+        diag_contr_pairs$disease,
+        diag_contr_pairs$presump_etio_diag
+      )[nacc_name],
+      cdr = paste0(CDRGLOB, " (", CDRSUM, ")")
+    )
+  ][,
+    disease := ifelse(
       grepl(pattern = "^Other", x = disease),
       paste0(disease, ": ", etiology),
       disease
     )
-  )
+  ]
 
-  diagnosis_table$cdr <-
-    paste0(diagnosis_table$CDRGLOB, " (", diagnosis_table$CDRSUM, ")")
+  # diagnosis_table$contribution_character <- c(
+  #   "1" = "Primary",
+  #   "2" = "Contributing",
+  #   "3" = "Non-contributing"
+  # )[diagnosis_table$contribution]
+
+  # diagnosis_table$disease <- with(
+  #   diag_contr_pairs,
+  #   setNames(disease, presump_etio_diag)
+  # )[
+  #   diagnosis_table$nacc_name
+  # ]
+
+  # diagnosis_table$disease <- with(
+  #   diagnosis_table,
+  #   ifelse(
+  #     grepl(pattern = "^Other", x = disease),
+  #     paste0(disease, ": ", etiology),
+  #     disease
+  #   )
+  # )
+
+  # diagnosis_table$cdr <-
+  #   paste0(diagnosis_table$CDRGLOB, " (", diagnosis_table$CDRSUM, ")")
 
   # fmt: skip
   for (x in intersect(c("raw_MOCATOTS", "raw_NACCMMSE"), colnames(diagnosis_table))) {
