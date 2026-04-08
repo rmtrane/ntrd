@@ -6,6 +6,9 @@
 #'
 #' @export
 appServer <- function(input, output, session) {
+  session$onSessionEnded(function() {
+    shiny::stopApp()
+  })
   ## Hide 'Participant Data' on startup
   bslib::nav_hide(id = "main_navbar", target = "colSelect")
   bslib::nav_hide(id = "main_navbar", target = "tables-and-figures")
