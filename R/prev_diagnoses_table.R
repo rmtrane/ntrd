@@ -83,7 +83,7 @@ prev_diagnoses_table <- function(dat, table_font_size = 100) {
         diag_contr_pairs$disease,
         diag_contr_pairs$presump_etio_diag
       )[nacc_name],
-      cdr = paste0(CDRGLOB, " (", CDRSUM, ")")
+      cdr = paste0(diagnosis_table$CDRGLOB, " (", diagnosis_table$CDRSUM, ")")
     )
   ][,
     disease := ifelse(
