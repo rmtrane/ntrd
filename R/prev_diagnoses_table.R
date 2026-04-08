@@ -82,8 +82,7 @@ prev_diagnoses_table <- function(dat, table_font_size = 100) {
       disease = setNames(
         diag_contr_pairs$disease,
         diag_contr_pairs$presump_etio_diag
-      )[nacc_name],
-      cdr = paste0(diagnosis_table$CDRGLOB, " (", diagnosis_table$CDRSUM, ")")
+      )[nacc_name]
     )
   ][,
     disease := ifelse(
@@ -92,6 +91,13 @@ prev_diagnoses_table <- function(dat, table_font_size = 100) {
       disease
     )
   ]
+
+  diagnosis_table$cdr = paste0(
+    diagnosis_table$CDRGLOB,
+    " (",
+    diagnosis_table$CDRSUM,
+    ")"
+  )
 
   # diagnosis_table$contribution_character <- c(
   #   "1" = "Primary",
