@@ -32,3 +32,4 @@ old-tests/*
 ^vignettes/*_files$
 ^vignettes/\.quarto$
 ^vignettes/articles/*$
+R/_disable_autoload.R
