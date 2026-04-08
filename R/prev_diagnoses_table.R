@@ -160,14 +160,12 @@ prev_diagnoses_table <- function(dat, table_font_size = 100) {
   )] <- list(NA)
 
   ## Combine MOCATOTS and NACCMMSE
-  diagnosis_table$MOCATOTS <- with(
-    diagnosis_table,
+  diagnosis_table$MOCATOTS <-
     ifelse(
-      !is.na(MOCATOTS) & MOCATOTS > 0,
-      MOCATOTS,
-      NACCMMSE
+      !is.na(diagnosis_table$MOCATOTS) & diagnosis_table$MOCATOTS > 0,
+      diagnosis_table$MOCATOTS,
+      diagnosis_table$NACCMMSE
     )
-  )
 
   which_mmse <- diagnosis_table[
     !is.na(diagnosis_table$NACCMMSE) & diagnosis_table$NACCMMSE > 0

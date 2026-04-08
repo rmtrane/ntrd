@@ -66,6 +66,7 @@ Config/Needs/website:
     here,
     yaml
 Collate: 
+    '_disable_autoload.R'
     'appServer.R'
     'appUI.R'
     'apply_extension_defaults.R'
