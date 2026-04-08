@@ -18,7 +18,8 @@ plotServer(
   fill_values = calc_fill_colors(n = 7),
   print_updating = T,
   shade_descriptions = TRUE,
-  new_id = NULL
+  new_id = NULL,
+  var_groups = nacc_var_groups
 )
 
 plotApp(dat_input = prepare_data(demo_data), studyids = NULL, testing = FALSE)
@@ -41,6 +42,8 @@ plotApp(dat_input = prepare_data(demo_data), studyids = NULL, testing = FALSE)
 \item{shade_descriptions}{A logical value indicating if the plots should be shaded according to the regions given by \code{descriptions} with colors given by \code{fill_values}. Optional, defaults to \code{TRUE}.}
 
 \item{new_id}{Optional. String to be used for table ID. If \code{NULL} (default), random string assigned.}
+
+\item{var_groups}{A named character vector mapping variable names to domain groups. Can be a reactive. Defaults to \code{nacc_var_groups}.}
 
 \item{dat_input}{A data frame. Defaults to \code{prepare_data(demo_data)}.}
 

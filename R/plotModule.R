@@ -114,6 +114,7 @@ plotUI <- function(id) {
 #' @param print_updating A logical value. Optional, defaults to `TRUE`.
 #' @param shade_descriptions A logical value indicating if the plots should be shaded according to the regions given by `descriptions` with colors given by `fill_values`. Optional, defaults to `TRUE`.
 #' @param new_id Optional. String to be used for table ID. If `NULL` (default), random string assigned.
+#' @param var_groups A named character vector mapping variable names to domain groups. Can be a reactive. Defaults to `nacc_var_groups`.
 #'
 #' @returns
 #' No return value.
@@ -138,7 +139,8 @@ plotServer <- function(
   fill_values = calc_fill_colors(n = 7),
   print_updating = T,
   shade_descriptions = TRUE,
-  new_id = NULL
+  new_id = NULL,
+  var_groups = nacc_var_groups
 ) {
   if (!id %in% nacc_groups) {
     cli::cli_abort(
@@ -170,48 +172,59 @@ plotServer <- function(
     shade_descriptions <- shiny::reactiveVal(y_range)
   }
 
+  if (!shiny::is.reactive(var_groups)) {
+    var_groups <- shiny::reactiveVal(var_groups)
+  }
+
   ## Counter to include in cli_alert_info
   base_plot_drawing_counter <- shiny::reactiveVal(0)
 
-  ## Variables in this group
-  cur_vars <- names(nacc_var_groups[nacc_var_groups == id])
+  ## Variables in this group — reactive so it updates when domain assignments change
+  cur_vars <- shiny::reactive({
+    names(var_groups()[var_groups() == id])
+  })
 
   #### Colors to use for lines and markers.
   ## We give crosswalk pairs same color.
-  ## First, non-legacy scores.
-  non_crosswalks <- setdiff(cur_vars, names(crosswalk_translations))
-  cog_vars_colors <- setNames(
-    rep(
-      c(
-        "#A6CEE3",
-        "#1F78B4",
-        "#B2DF8A",
-        "#33A02C",
-        "#FB9A99",
-        # "#E31A1C",
-        "#FDBF6F",
-        "#FF7F00",
-        "#CAB2D6",
-        "#6A3D9A",
-        "#B15928"
-      ),
-      length.out = length(non_crosswalks)
-    ),
-    nm = non_crosswalks
+  color_palette <- c(
+    "#A6CEE3",
+    "#1F78B4",
+    "#B2DF8A",
+    "#33A02C",
+    "#FB9A99",
+    "#FDBF6F",
+    "#FF7F00",
+    "#CAB2D6",
+    "#6A3D9A",
+    "#B15928"
   )
 
-  ## Next, add in legacy scores such that colors match.
-  crosswalks <- intersect(cur_vars, names(crosswalk_translations))
-  cog_vars_colors <- c(
-    cog_vars_colors,
-    setNames(
-      cog_vars_colors[crosswalk_translations[crosswalks]],
-      nm = crosswalks
+  cog_vars_colors <- shiny::reactive({
+    cv <- cur_vars()
+    ## First, non-legacy scores.
+    non_crosswalks <- setdiff(cv, names(crosswalk_translations))
+    colors <- setNames(
+      rep(color_palette, length.out = length(non_crosswalks)),
+      nm = non_crosswalks
     )
-  )
+
+    ## Next, add in legacy scores such that colors match.
+    crosswalks <- intersect(cv, names(crosswalk_translations))
+    c(
+      colors,
+      setNames(
+        colors[crosswalk_translations[crosswalks]],
+        nm = crosswalks
+      )
+    )
+  })
 
   ## Legend names. Make reactive, since we might need to adjust if any crosswalk pairs are present
-  legend_names <- shiny::reactiveVal(nacc_var_labels[cur_vars])
+  legend_names <- shiny::reactiveVal(NULL)
+
+  shiny::observe({
+    legend_names(nacc_var_labels[cur_vars()])
+  })
 
   ## Create visibility vector indicating if the traces are visible or not
   visibility <- do.call(
@@ -238,9 +251,9 @@ plotServer <- function(
     ##
     ## Limit data to relevant columns. This could maybe help to not replot too frequently.
     cur_studyid_dat <- shiny::reactive({
-      cur_vars <- names(nacc_var_groups[nacc_var_groups == id])
+      cv <- cur_vars()
       cur_vars_in_dat <- intersect(
-        c(paste0("std_", cur_vars), paste0("raw_", cur_vars)),
+        c(paste0("std_", cv), paste0("raw_", cv)),
         colnames(dat())
       )
 
@@ -400,7 +413,7 @@ plotServer <- function(
         new_dat = cur_studyid_dat(),
         visibility = shiny::reactiveValuesToList(visibility),
         legend_names = legend_names(),
-        vars_colors = cog_vars_colors[cur_vars]
+        vars_colors = cog_vars_colors()[cur_vars()]
       )
 
       ## If no new traces...

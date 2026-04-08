@@ -12,7 +12,7 @@ appServer <- function(input, output, session) {
   ## Hide 'Participant Data' on startup
   bslib::nav_hide(id = "main_navbar", target = "colSelect")
   bslib::nav_hide(id = "main_navbar", target = "tables-and-figures")
-  # bslib::nav_hide(id = "long-trends", target = "biomarkers")
+  bslib::nav_hide(id = "long-trends", target = "biomarkers")
 
   ## Setup data select module
   dat_sel <- dataSelectServer("dataSelect")
@@ -35,7 +35,7 @@ appServer <- function(input, output, session) {
         dat_sel$extras()$extension_ui()
         # )
       })
-      # bslib::nav_show(id = "long-trends", target = "biomarkers")
+      bslib::nav_show(id = "long-trends", target = "biomarkers")
     }
   }) #()$panda_api_token)
 
@@ -52,33 +52,27 @@ appServer <- function(input, output, session) {
   #   dat_sel$default_methods()
   # })
 
-  ## Reactive values to hold selected columns, and methods
-  col_sel <- shiny::reactiveVal()
+  ## Reactive value to hold selected methods
   std_methods <- shiny::reactiveVal()
 
-  ## When dat_obj changes, flush selected columns and methods
+  ## When dat_obj changes, flush selected methods
   shiny::observe({
-    col_sel(NA)
     std_methods(NA)
   }) |>
     shiny::bindEvent(
       dat_sel$dat_obj()
     )
 
-  ## Select columns
-  # colSelectOutput <- colSelectServer(
+  ## Select columns and domains
   methodSelectOutput <- methodSelectServer(
     "colSelect",
-    # col_names = cols_avail,
     dat_obj = dat_sel$dat_obj,
-    default_methods = dat_sel$default_methods,
-    col_selection = "disable" # allow_col_selections()
+    default_methods = dat_sel$default_methods
   )
 
   shiny::observe({
     shiny::req(methodSelectOutput$std_methods())
 
-    col_sel(methodSelectOutput$var_cols())
     std_methods(methodSelectOutput$std_methods())
   })
 
@@ -101,66 +95,85 @@ appServer <- function(input, output, session) {
 
   ## Prepare data and get nacc_var_groups
   fin_dat <- shiny::reactiveVal()
-  nacc_var_groups <- shiny::reactiveVal()
+  nacc_var_groups <- shiny::reactiveVal(value = nacc_var_groups)
 
   shiny::observe({
-    if (!all(is.na(std_methods())) & !all(is.na(col_sel()))) {
-      fin_dat(
-        prepare_data(
-          dat_sel$dat_obj(),
-          methods = std_methods()
-        )
+    shiny::req(dat_sel$dat_obj())
+    shiny::req(!all(is.na(std_methods())))
+    domain_asgn <- methodSelectOutput$domain_assignments()
+    shiny::req(domain_asgn)
+
+    dat_prepped <-
+      prepare_data(
+        dat_sel$dat_obj(),
+        methods = std_methods()
       )
 
-      ## Extract "domain" from all npsych_scores
-      nacc_var_groups(
-        unlist(
-          lapply(
-            setNames(ntrs::list_npsych_scores(), ntrs::list_npsych_scores()),
-            \(x) {
-              # match.fun(x)()@domain
-              ntrs::get_npsych_scores(x)()@domain
-            }
-          )
-        )
-      )
+    npsych_subclass_map <- lapply(
+      dat_prepped[, .SD, .SDcols = ntrs::is_npsych_scores],
+      \(x) S7::S7_class(x)@name
+    )
+
+    for (x in names(domain_asgn)) {
+      wh <- names(which(npsych_subclass_map == x))
+      dat_prepped[[wh]]@domain <- domain_asgn[[x]]
     }
+
+    fin_dat(dat_prepped)
   }) |>
     shiny::bindEvent(
-      col_sel(),
       std_methods(),
       ignoreNULL = T,
       ignoreInit = T
     )
 
   shiny::observe({
+    shiny::req(fin_dat())
+
+    domain_asgn <- methodSelectOutput$domain_assignments()
+    shiny::req(domain_asgn)
+
+    dat_prepped <- fin_dat()
+
+    npsych_subclass_map <- lapply(
+      dat_prepped[, .SD, .SDcols = ntrs::is_npsych_scores],
+      \(x) S7::S7_class(x)@name
+    )
+
+    for (x in names(domain_asgn)) {
+      wh <- names(which(npsych_subclass_map == x))
+      dat_prepped[[wh]]@domain <- domain_asgn[[x]]
+    }
+
+    fin_dat(dat_prepped)
+
+    ## Use domain_assignments from the method select module
+    nacc_var_groups(domain_asgn[!is.na(domain_asgn)])
+  }) |>
+    shiny::bindEvent(
+      methodSelectOutput$domain_assignments(),
+      ignoreNULL = T,
+      ignoreInit = T
+    )
+
+  ## Show notification when defaults were auto-applied and main view is ready
+  shiny::observe({
+    shiny::req(fin_dat())
+    shiny::req(methodSelectOutput$auto_applied())
+
     bslib::nav_show(
       id = "main_navbar",
       target = "tables-and-figures",
       select = T
     )
 
-    shiny::showModal(
-      shiny::modalDialog(
-        title = "Columns Recognized",
-        easy_close = TRUE,
-        "Enough NACC columns were recognized automatically. To make
-                custom selections, go to the 'Setup' tab.",
-        footer = bslib::layout_columns(
-          cols_widths = c(4, -4, 4),
-          shiny::actionButton("goToColSelect", label = "Setup"),
-          shiny::modalButton("Dismiss")
-        )
-      )
+    shiny::showNotification(
+      "Default methods applied. To customize, go to the Setup tab.",
+      type = "message",
+      duration = 8
     )
   }) |>
-    shiny::bindEvent(input$moveToTables)
-
-  shiny::observe({
-    shiny::removeModal()
-    bslib::nav_select(id = "main_navbar", selected = "colSelect")
-  }) |>
-    shiny::bindEvent(input$goToColSelect)
+    shiny::bindEvent(fin_dat(), once = TRUE)
 
   ## Once data has been readied the first time, move to 'Participant Data'
   ## and update options for study ID dropdown.
@@ -330,7 +343,6 @@ appServer <- function(input, output, session) {
     table_font_size = table_font_size,
     descriptions = descriptions,
     fill_values = fill_values,
-    methods = std_methods,
     include_caption = T,
     print_updating = F
   )
@@ -407,7 +419,8 @@ appServer <- function(input, output, session) {
         fill_values = fill_values,
         print_updating = T,
         shade_descriptions = shade_descriptions,
-        new_id = x
+        new_id = x,
+        var_groups = nacc_var_groups
       )
     })
   })

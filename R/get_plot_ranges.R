@@ -30,13 +30,7 @@ get_y_range <- function(dat) {
   most_extreme_val <- dat[,
     setNames(
       nm = names(.SD),
-      object = lapply(.SD, \(x) {
-        if (all(is.na(x))) {
-          return(NA)
-        }
-
-        max(abs(x), na.rm = T)
-      })
+      object = lapply(.SD, \(x) max(abs(x), na.rm = T))
     )
   ]
 

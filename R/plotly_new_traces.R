@@ -24,14 +24,14 @@ plotly_new_traces <- function(
   legend_names,
   vars_colors
 ) {
-  new_dat <- new_dat[,
+  new_dat <- data.table::copy(new_dat[,
     lapply(.SD, \(x) if (any(!is.na(x))) x)
-  ]
+  ])
 
   ## Check if any standardized values
   any_left <- sum(grepl(pattern = "^std_", x = colnames(new_dat)))
 
-  if (is.null(any_left)) {
+  if (is.null(any_left) || any_left == 0) {
     return()
   }
 
@@ -45,14 +45,12 @@ plotly_new_traces <- function(
     new_dat[[col]] <- (new_dat[[col]] - 50) / 10
   }
 
-  ## If nothing left, abort.
-  if (any_left == 0) {
-    # cli::cli_alert_danger("{.var any_left} is {any_left}")
-    return()
-  }
-
   ## Due to NSE notes in R CMD check:
   name <- value.name <- NULL
+
+  new_dat[, names(.SD) := lapply(.SD, as.numeric), .SDcols = \(x) {
+    S7::S7_inherits(x, ntrs::std_npsych_scores)
+  }]
 
   new_dat <- data.table::melt(
     new_dat,

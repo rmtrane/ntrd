@@ -263,19 +263,9 @@ dataSelectServer <- function(id) {
 
       ## Get current source, and server results
       source <- sources[[input$data_source]]
-      ext_pkg <- source@package
 
       ## Set defaults for the active extension
-      if (ext_pkg != "ntrd") {
-        set_defaults <- get0(
-          ".set_defaults",
-          envir = asNamespace(ext_pkg)
-        )
-
-        if (is.function(set_defaults)) {
-          set_defaults()
-        }
-      }
+      apply_extension_defaults(source@package)
 
       lapply(
         setNames(ntrs::list_npsych_scores(), ntrs::list_npsych_scores()),
@@ -353,6 +343,8 @@ dataSelectApp <- function(testing = FALSE) {
       dat_obj(data_input$dat_obj())
     }) |>
       shiny::bindEvent(data_input$dat_obj())
+
+    shiny::exportTestValues(dat_obj = dat_obj())
   }
 
   shiny::shinyApp(ui, server, options = list(test.mode = testing))

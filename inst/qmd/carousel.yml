@@ -1,17 +1,14 @@
-- caption: "Data Selection. Data can be imported straight from REDCap or from a .csv file."
-  image: "../../tests/testthat/_snaps/mac-4.5/screenshots_for_intro/shinyApp-001.png"
-  
-- caption: "Data Selection. A demo data set is included for users to explore the program's capabilities."  
-  image: "../../tests/testthat/_snaps/mac-4.5/screenshots_for_intro/shinyApp-002.png"
+- caption: "Data Selection. CSV file and Demo Data included by default, but extensions can be written to allow import from other sources, for example REDCap. See https://www.github.com/rmtrane/ntrdWisconsin for a complete example."
+  image: "../../man/figures/data-selection.png"
   
 - caption: "Scoring Tables and Figures. The main table shows scores from single visit, while plots include longitudinal (standardized) scores across all available visits."
-  image: "../../tests/testthat/_snaps/mac-4.5/screenshots_for_intro/shinyApp-003.png"
+  image: "../../man/figures/main-view.png"
 
 - caption: "Scoring Tables and Figures. Switching between participants is as easy as selecting the ID from the dropdown menu."
-  image: "../../tests/testthat/_snaps/mac-4.5/screenshots_for_intro/shinyApp-004.png"
+  image: "../../man/figures/main-view-alt.png"
 
 - caption: "Scoring Tables and Figures. The longitudinal (standardized) scores are also available in the form of a color coded table."
-  image: "../../tests/testthat/_snaps/mac-4.5/screenshots_for_intro/shinyApp-005.png"
+  image: "../../man/figures/longitudinal-table.png"
 
 - caption: "Scoring Tables and Figures. Diagnoses from previous visits are also made available."
-  image: "../../tests/testthat/_snaps/mac-4.5/screenshots_for_intro/shinyApp-006.png"
+  image: "../../man/figures/diagnoses.png"

@@ -37,3 +37,28 @@ test_that("prev_diagnoses_table shows no-diagnoses message for NACCUDSD = 1", {
   result <- prev_diagnoses_table(single_id)
   expect_true(!is.null(result))
 })
+
+test_that("prevDiagnosesServer works with print_updating = TRUE", {
+  prepped <- get_prepared_demo_data()
+  single_id <- prepped[NACCID == prepped$NACCID[1]]
+
+  shiny::testServer(
+    prevDiagnosesServer,
+    args = list(
+      dat = shiny::reactive(single_id),
+      table_font_size = shiny::reactive(100),
+      print_updating = TRUE
+    ),
+    {
+      session$flushReact()
+
+      result <- output$prev_diagnoses_table
+      expect_true(!is.null(result))
+    }
+  )
+})
+
+test_that("prevDiagnosesUI returns a tagList", {
+  ui <- prevDiagnosesUI("test")
+  expect_s3_class(ui, "shiny.tag.list")
+})

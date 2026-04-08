@@ -1,7 +1,7 @@
 Package: ntrd
 Type: Package
 Title: Neuropsychological Test Results Dashboard
-Version: 0.3.2.9000
+Version: 0.0.0.9000
 Description: Building on the ntrs package,
     this package includes a Shiny application that makes 
     it easy to present test scores in a way useful
@@ -14,8 +14,8 @@ Encoding: UTF-8
 LazyData: true
 Suggests:
     httr2,
-    jsonlite,
     pagedown,
+    pdftools,
     quarto,
     shinytest2,
     withr,
@@ -27,7 +27,7 @@ Suggests:
 Config/testthat/edition: 3
 Config/testthat/load-all: list(export_all = TRUE, helpers = TRUE)
 RoxygenNote: 7.3.3
-Imports: 
+Imports:
     bslib,
     data.table (>= 1.9.8),
     DT,
@@ -68,6 +68,7 @@ Config/Needs/website:
 Collate: 
     'appServer.R'
     'appUI.R'
+    'apply_extension_defaults.R'
     'assessment_longitudinal_table.R'
     'assessment_summary_table.R'
     'birth_vars.R'
