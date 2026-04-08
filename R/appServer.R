@@ -12,7 +12,7 @@ appServer <- function(input, output, session) {
   ## Hide 'Participant Data' on startup
   bslib::nav_hide(id = "main_navbar", target = "colSelect")
   bslib::nav_hide(id = "main_navbar", target = "tables-and-figures")
-  bslib::nav_hide(id = "long-trends", target = "biomarkers")
+  # bslib::nav_hide(id = "long-trends", target = "biomarkers")
 
   ## Setup data select module
   dat_sel <- dataSelectServer("dataSelect")
@@ -28,16 +28,29 @@ appServer <- function(input, output, session) {
 
   shiny::observe({
     if (!is.null(dat_sel$extras()$extension_ui)) {
-      output$extension_ui <- shiny::renderUI({
-        #   bslib::nav_panel(
-        #     title = "Biomarkers",
-        #     value = "biomarkers",
-        dat_sel$extras()$extension_ui()
-        # )
-      })
-      bslib::nav_show(id = "long-trends", target = "biomarkers")
+      # output$extension_ui <- shiny::renderUI({
+      # bslib::nav_panel(
+      #   title = "Biomarkers",
+      #   value = "biomarkers",
+      #   dat_sel$extras()$extension_ui()
+      # )
+      # })
+
+      bslib::nav_insert(
+        id = "long-trends",
+        dat_sel$extras()$extension_ui(),
+        position = "after",
+        select = FALSE
+      )
+
+      # bslib::nav_show(id = "long-trends", target = "biomarkers")
     }
-  }) #()$panda_api_token)
+  }) |>
+    shiny::bindEvent(
+      dat_sel$extras(),
+      ignoreNULL = TRUE,
+      once = TRUE
+    )
 
   ## Reactive object with available columns to use to select from
   cols_avail <- shiny::reactive({

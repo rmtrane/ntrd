@@ -301,19 +301,15 @@ dataSelectServer <- function(id) {
         )
       }
 
+      if (
+        "extras" %in% names(dat_src_server) && !is.null(dat_src_server$extras)
+      ) {
+        data_source_extras(shiny::reactiveValuesToList(dat_src_server$extras))
+      }
+
       dat_obj(result)
     }) |>
       shiny::bindEvent(input$go)
-
-    # Proxy extras from active plugin
-    shiny::observe({
-      shiny::req(input$data_source)
-      srv <- data_source_servers[[input$data_source]]
-
-      if ("extras" %in% names(srv) && !is.null(srv$extras)) {
-        data_source_extras(shiny::reactiveValuesToList(srv$extras))
-      }
-    })
 
     return(list(
       dat_obj = dat_obj,

@@ -143,12 +143,12 @@ appUI <- function() {
               bslib::nav_panel(
                 title = "Diagnoses",
                 prevDiagnosesUI("prev_diagnoses_table")
-              ),
-              bslib::nav_panel(
-                title = "Biomarkers",
-                value = "biomarkers",
-                shiny::uiOutput("extension_ui")
-              )
+              ) #,
+              # bslib::nav_panel(
+              #   title = "Biomarkers",
+              #   value = "biomarkers",
+              #   shiny::uiOutput("extension_ui")
+              # )
               # shiny::uiOutput("extension_ui")
             )
           )

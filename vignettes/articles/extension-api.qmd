@@ -315,10 +315,11 @@ extras <- shiny::reactiveValues(
 )
 ```
 
+The result of the `extension_ui` function **must be a `bslib::nav_panel`**.
+
 The `ntrd` app will:
 
-1. Call `extras$extension_ui()` to render additional UI (currently in the
-   "Biomarkers" tab)
+1. Call `extras$extension_ui()` to render additional UI 
 2. Call `extras$extension_server(ptid, extras)` with the selected participant ID
 
 You can also pass arbitrary data through `extras` (e.g., API tokens, cached
