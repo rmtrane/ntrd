@@ -183,15 +183,11 @@ methodSelectServer <- function(
       std_methods_tmp <- list()
       defaults <- default_methods()
 
-      print(defaults[["DIGFORCT"]])
-
       for (x in all_vars) {
         if (!is.null(defaults) && x %in% names(defaults)) {
           std_methods_tmp[[x]] <- as.list(defaults[[x]])
         }
       }
-
-      print(std_methods_tmp[["DIGFORCT"]])
 
       if (length(std_methods_tmp) > 0) {
         auto_applied(TRUE)
