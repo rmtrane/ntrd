@@ -272,7 +272,7 @@ dataSelectServer <- function(id) {
       ## Set defaults for the active extension
       apply_extension_defaults(source@package)
 
-      lapply(
+      tmp_def_meths <- lapply(
         setNames(
           ntrs::list_npsych_scores(),
           ntrs::list_npsych_scores()
@@ -280,11 +280,20 @@ dataSelectServer <- function(id) {
         \(x) {
           ntrs::get_std_defaults(ntrs::get_npsych_scores(x)())
         }
-      ) |>
+      )
+
+      print(ntrs::get_std_defaults(ntrs::DIGFORCT()))
+      print(tmp_def_meths[["DIGFORCT"]])
+
+      tmp_def_meths |>
+        purrr::discard(is.null) |>
+        # default_methods()
+        purrr::pluck("DIGFORCT")
+
+      tmp_def_meths |>
         purrr::discard(is.null) |>
         default_methods()
 
-      print(ntrs::get_std_defaults(ntrs::DIGFORCT()))
       print(default_methods()[["DIGFORCT"]])
 
       dat_src_server <- data_source_servers[[input$data_source]]
