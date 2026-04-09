@@ -272,13 +272,13 @@ dataSelectServer <- function(id) {
       ## Set defaults for the active extension
       apply_extension_defaults(source@package)
 
-      tmp_def_meths <- lapply(
+      tmp_def_meths <- purrr::imap(
         setNames(
           ntrs::list_npsych_scores(),
           ntrs::list_npsych_scores()
         ),
-        \(x) {
-          ntrs::get_std_defaults(ntrs::get_npsych_scores(x)())
+        \(x, idx) {
+          ntrs::get_std_defaults(ntrs::get_npsych_scores(idx)())
         }
       )
 
