@@ -129,7 +129,17 @@ prev_diagnoses_table <- function(dat, table_font_size = 100) {
   ][
     is.na(NACCUDSD) | (NACCUDSD == 1),
     etiologies := list(NA)
-  ][,
+  ]
+
+  if (!"MOCATOTS" %in% colnames(diagnosis_table)) {
+    diagnosis_table$MOCATOTS <- NA
+  }
+
+  if (!"NACCMMSE" %in% colnames(diagnosis_table)) {
+    diagnosis_table$NACCMMSE <- NA
+  }
+
+  diagnosis_table[,
     MOCATOTS := data.table::fcoalesce(MOCATOTS, NACCMMSE)
   ]
 
