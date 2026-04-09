@@ -260,7 +260,7 @@ methodSelectApp <- function(testing = FALSE) {
   default_methods <- lapply(
     setNames(ntrs::list_npsych_scores(), ntrs::list_npsych_scores()),
     \(x) {
-      get_std_defaults(get_npsych_scores(x)())
+      ntrs::get_std_defaults(ntrs::get_npsych_scores(x)())
     }
   ) |>
     purrr::discard(is.null)

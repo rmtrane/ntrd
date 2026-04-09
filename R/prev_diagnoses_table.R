@@ -6,7 +6,7 @@
 #' @export
 prev_diagnoses_table <- function(dat, table_font_size = 100) {
   # due to NSE notes in R CMD check:
-  var <- val <- for_tab <- contribution <- disease <- etiology <- nacc_name <- NACCID <- NACCUDSD <- VISITDATE <- contribution_character <- etiologies <- variable <- NULL
+  var <- val <- for_tab <- contribution <- disease <- etiology <- nacc_name <- NACCID <- NACCUDSD <- VISITDATE <- CDRGLOB <- CDRSUM <- MOCATOTS <- NACCMMSE <- contribution_character <- etiologies <- variable <- NULL
 
   if (!data.table::is.data.table(dat)) {
     cli::cli_abort("The {.var dat} object must be a {.cls data.table}.")

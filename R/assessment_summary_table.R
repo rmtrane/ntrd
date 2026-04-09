@@ -261,7 +261,7 @@ assessment_summary_data <- function(
   include_caption = TRUE
 ) {
   # To avoid R CMD check NOTE:
-  value.name <- name <- for_percentile <- group <- NULL
+  value.name <- name <- for_percentile <- group <- std <- NULL
 
   if (!data.table::is.data.table(dat)) {
     cli::cli_abort("{.arg dat} must be of class {.cls data.table}.")
