@@ -269,11 +269,18 @@ dataSelectServer <- function(id) {
         loadNamespace("ntrs")
       }
 
+      print(ntrs::get_std_defaults(ntrs::DIGFORCT()))
+
       ## Set defaults for the active extension
       apply_extension_defaults(source@package)
 
+      print(ntrs::get_std_defaults(ntrs::DIGFORCT()))
+
       lapply(
-        setNames(ntrs::list_npsych_scores(), ntrs::list_npsych_scores()),
+        setNames(
+          ntrs::list_npsych_scores(),
+          ntrs::list_npsych_scores()
+        ),
         \(x) {
           ntrs::get_std_defaults(ntrs::get_npsych_scores(x)())
         }
