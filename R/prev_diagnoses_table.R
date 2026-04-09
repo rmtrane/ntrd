@@ -132,11 +132,11 @@ prev_diagnoses_table <- function(dat, table_font_size = 100) {
   ]
 
   if (!"MOCATOTS" %in% colnames(diagnosis_table)) {
-    diagnosis_table$MOCATOTS <- NA
+    diagnosis_table$MOCATOTS <- NA_real_
   }
 
   if (!"NACCMMSE" %in% colnames(diagnosis_table)) {
-    diagnosis_table$NACCMMSE <- NA
+    diagnosis_table$NACCMMSE <- NA_real_
   }
 
   diagnosis_table[,
