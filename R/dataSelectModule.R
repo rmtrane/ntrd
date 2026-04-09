@@ -269,6 +269,8 @@ dataSelectServer <- function(id) {
         loadNamespace("ntrs")
       }
 
+      print(ntrs::get_std_defaults(ntrs::DIGFORCT()))
+
       ## Set defaults for the active extension
       apply_extension_defaults(source@package)
 
