@@ -43,10 +43,10 @@ Imports:
     safer,
     stats,
     mirai,
-    ntrs,
     S7
 Depends: 
-    R (>= 4.2.0)
+    R (>= 4.2.0),
+    ntrs
 Remotes: 
     rmtrane/ntrs
 VignetteBuilder: quarto
