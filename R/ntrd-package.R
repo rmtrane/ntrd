@@ -13,5 +13,7 @@
 #' @importFrom stats setNames
 #' @importFrom utils head
 #' @importFrom utils tail
+# importing from ntrs to force .onLoad()
+#' @importFrom ntrs remove_error_codes
 ## usethis namespace: end
 NULL

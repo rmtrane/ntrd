@@ -29,22 +29,12 @@ appServer <- function(input, output, session) {
 
   shiny::observe({
     if (!is.null(dat_sel$extras()$extension_ui)) {
-      # output$extension_ui <- shiny::renderUI({
-      # bslib::nav_panel(
-      #   title = "Biomarkers",
-      #   value = "biomarkers",
-      #   dat_sel$extras()$extension_ui()
-      # )
-      # })
-
       bslib::nav_insert(
         id = "long-trends",
         dat_sel$extras()$extension_ui(),
         position = "after",
         select = FALSE
       )
-
-      # bslib::nav_show(id = "long-trends", target = "biomarkers")
     }
   }) |>
     shiny::bindEvent(
