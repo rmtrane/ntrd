@@ -282,7 +282,7 @@ dataSelectServer <- function(id) {
         }
       )
 
-      str(tmp_def_meths[grep("DIG", names(tmp))])
+      str(tmp_def_meths[grep("DIG", names(tmp_def_meths))])
 
       browser()
 
