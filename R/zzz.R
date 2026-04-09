@@ -1,6 +1,6 @@
 .datatable.aware <- TRUE
 
 .onLoad <- function(libname, pkgname) {
-  requireNamespace("ntrs", quietly = FALSE)
+  loadNamespace("ntrs")
   S7::methods_register()
 }
