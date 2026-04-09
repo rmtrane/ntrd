@@ -264,6 +264,11 @@ dataSelectServer <- function(id) {
       ## Get current source, and server results
       source <- sources[[input$data_source]]
 
+      ## If ntrs not loaded yet, load it so defaults are set.
+      if (!isNamespaceLoaded("ntrs")) {
+        loadNamespace("ntrs")
+      }
+
       ## Set defaults for the active extension
       apply_extension_defaults(source@package)
 
