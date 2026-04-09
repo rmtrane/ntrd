@@ -272,7 +272,7 @@ dataSelectServer <- function(id) {
       ## Set defaults for the active extension
       apply_extension_defaults(source@package)
 
-      tmp_def_meths <- purrr::imap(
+      purrr::imap(
         setNames(
           ntrs::list_npsych_scores(),
           ntrs::list_npsych_scores()
@@ -280,13 +280,7 @@ dataSelectServer <- function(id) {
         \(x, idx) {
           ntrs::get_std_defaults(ntrs::get_npsych_scores(idx)())
         }
-      )
-
-      str(tmp_def_meths[grep("DIG", names(tmp_def_meths))])
-
-      browser()
-
-      tmp_def_meths |>
+      ) |>
         purrr::discard(is.null) |>
         default_methods()
 
