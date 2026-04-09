@@ -278,23 +278,17 @@ dataSelectServer <- function(id) {
           ntrs::list_npsych_scores()
         ),
         \(x) {
-          if (x == "DIGFORCT") {
-            browser()
-          }
           ntrs::get_std_defaults(ntrs::get_npsych_scores(x)())
         }
       )
 
-      tmp_def_meths |>
-        purrr::discard(is.null) |>
-        # default_methods()
-        purrr::pluck("DIGFORCT")
+      str(tmp_def_meths[grep("DIG", names(tmp))])
+
+      browser()
 
       tmp_def_meths |>
         purrr::discard(is.null) |>
         default_methods()
-
-      print(default_methods()[["DIGFORCT"]])
 
       dat_src_server <- data_source_servers[[input$data_source]]
 
