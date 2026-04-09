@@ -269,12 +269,8 @@ dataSelectServer <- function(id) {
         loadNamespace("ntrs")
       }
 
-      print(ntrs::get_std_defaults(ntrs::DIGFORCT()))
-
       ## Set defaults for the active extension
       apply_extension_defaults(source@package)
-
-      print(ntrs::get_std_defaults(ntrs::DIGFORCT()))
 
       lapply(
         setNames(
@@ -288,7 +284,8 @@ dataSelectServer <- function(id) {
         purrr::discard(is.null) |>
         default_methods()
 
-      print(default_methods()["DIGFORCT"])
+      print(ntrs::get_std_defaults(ntrs::DIGFORCT()))
+      print(default_methods()[["DIGFORCT"]])
 
       dat_src_server <- data_source_servers[[input$data_source]]
 
