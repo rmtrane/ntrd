@@ -312,7 +312,7 @@ dataSelectServer <- function(id) {
       if (
         "extras" %in% names(dat_src_server) && !is.null(dat_src_server$extras)
       ) {
-        data_source_extras(shiny::reactiveValuesToList(dat_src_server$extras))
+        data_source_extras(dat_src_server$extras)
       }
 
       dat_obj(result)

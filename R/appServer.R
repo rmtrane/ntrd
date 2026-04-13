@@ -493,15 +493,19 @@ appServer <- function(input, output, session) {
   #   all_values = shiny::reactive(dat_sel$extras()$all_values)
   # )
 
+  extension_server_initialized <- shiny::reactiveVal(FALSE)
+
   shiny::observe({
     shiny::req(dat_sel$extras())
-    shiny::req(input$current_studyid)
+    shiny::req(!extension_server_initialized())
 
     if (!is.null(dat_sel$extras()$extension_server)) {
       dat_sel$extras()$extension_server(
         ptid = shiny::reactive(input$current_studyid),
         extras = dat_sel$extras
       )
+
+      extension_server_initialized(TRUE)
     }
   })
 
