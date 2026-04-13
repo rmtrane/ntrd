@@ -1,6 +1,6 @@
 # data_source
 
-A short description...
+S7 class used to create data sources
 
 ## Usage
 
@@ -12,13 +12,12 @@ data_source(name = character(0), id = character(0), package = character(0))
 
 - name:
 
-  A character string for the display name.
+  Character. Human-readable display name shown in the UI dropdown.
 
 - id:
 
-  A character string for the unique identifier.
+  Character. Unique identifier used internally as a key.
 
 - package:
 
-  A character string. Must match the name of the package the data source
-  lives in.
+  Character. The name of the package defining this data source.
