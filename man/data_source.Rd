@@ -7,12 +7,12 @@
 data_source(name = character(0), id = character(0), package = character(0))
 }
 \arguments{
-\item{name}{A character string for the display name.}
+\item{name}{Character. Human-readable display name shown in the UI dropdown.}
 
-\item{id}{A character string for the unique identifier.}
+\item{id}{Character. Unique identifier used internally as a key.}
 
-\item{package}{A character string. Must match the name of the package the data source lives in.}
+\item{package}{Character. The name of the package defining this data source.}
 }
 \description{
-A short description...
+S7 class used to create data sources
 }

@@ -1,6 +1,10 @@
 # Helper: create prepared demo data for module tests that need it.
 # This is loaded automatically by testthat before tests run.
-get_prepared_demo_data <- function() {
+get_prepared_demo_data <- function(id = NULL) {
+  if (!is.null(id)) {
+    demo_data <- demo_data[NACCID %in% id]
+  }
+
   tmp <- data.table::copy(demo_data)
 
   tmp[,
@@ -15,8 +19,16 @@ get_prepared_demo_data <- function() {
       ntrs::calc_REYTOTAL(REY1REC, REY2REC, REY3REC, REY4REC, REY5REC),
       ntrs::calc_REYAREC(REYTCOR, REYFPOS),
       ntrs::calc_FAS(
-        BILLS, TAXES, SHOPPING, GAMES, STOVE,
-        MEALPREP, EVENTS, PAYATTN, REMDATES, TRAVEL
+        BILLS,
+        TAXES,
+        SHOPPING,
+        GAMES,
+        STOVE,
+        MEALPREP,
+        EVENTS,
+        PAYATTN,
+        REMDATES,
+        TRAVEL
       ),
       ntrs::calc_MOCACLOCK(MOCACLOC, MOCACLON, MOCACLOH)
     )
