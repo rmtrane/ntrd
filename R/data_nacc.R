@@ -135,12 +135,12 @@ data_nacc <- S7::new_class(
     # --- Value checks (only if column exists and is correct type) ---
 
     if ("SEX" %in% present && is.numeric(d$SEX)) {
-      bad_rows <- which(!d$SEX %in% c(1, 2, NA))
+      bad_rows <- which(!d$SEX %in% c(1, 2, 8, 9, NA))
       if (length(bad_rows) > 0) {
         problems <- c(
           problems,
           cli::format_inline(
-            "{.field SEX} must be 1, 2, or {.val {NA}}. {length(bad_rows)} invalid row{?s}: {fmt_rows(bad_rows)}"
+            "{.field SEX} must be 1, 2, 8, 9, or {.val {NA}}. {length(bad_rows)} invalid row{?s}: {fmt_rows(bad_rows)}"
           )
         )
       }

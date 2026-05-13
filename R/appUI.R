@@ -47,7 +47,8 @@ appUI <- function() {
               options = list(
                 create = FALSE,
                 maxOptions = 100,
-                closeAfterSelect = TRUE
+                closeAfterSelect = TRUE,
+                allowEmptyOption = FALSE
               )
             ),
             gt::gt_output("demographics_table_output")
@@ -142,7 +143,8 @@ appUI <- function() {
               ),
               bslib::nav_panel(
                 title = "Diagnoses",
-                prevDiagnosesUI("prev_diagnoses_table")
+                prevDiagnosesUI("prev_diagnoses_table"),
+                value = "prev_diagnoses_table"
               ) #,
               # bslib::nav_panel(
               #   title = "Biomarkers",

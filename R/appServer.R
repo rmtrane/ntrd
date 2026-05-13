@@ -29,12 +29,21 @@ appServer <- function(input, output, session) {
 
   shiny::observe({
     if (!is.null(dat_sel$extras()$extension_ui)) {
-      bslib::nav_insert(
-        id = "long-trends",
-        dat_sel$extras()$extension_ui(),
-        position = "after",
-        select = FALSE
-      )
+      ext_ui <- dat_sel$extras()$extension_ui(id = "ext-module")
+
+      if (inherits(ext_ui, "shiny.tag")) {
+        ext_ui <- list(ext_ui)
+      }
+
+      for (nav_pan in rev(ext_ui)) {
+        bslib::nav_insert(
+          id = "long-trends",
+          nav_pan,
+          position = "after",
+          target = "prev_diagnoses_table",
+          select = FALSE
+        )
+      }
     }
   }) |>
     shiny::bindEvent(
@@ -184,17 +193,22 @@ appServer <- function(input, output, session) {
   study_id_choices <- shiny::reactiveVal()
 
   shiny::observe({
+    ## Move to tab
     bslib::nav_show(
       id = "main_navbar",
       target = "tables-and-figures",
       select = T
     )
 
+    ## Get all NACCIDs
     new_choices <- unique(fin_dat()$NACCID)
 
     if (
+      ## If no id choices...
       is.null(study_id_choices()) |
+        # ... or any new_choices not already in study_id_choices
         any(!new_choices %in% study_id_choices()) |
+        # ... or in devmode and study_id_choices without names.
         (!is.null(devmode()) &&
           (devmode() & is.null(names(study_id_choices()))))
     ) {
@@ -202,16 +216,22 @@ appServer <- function(input, output, session) {
 
       cur_choices <- study_id_choices()
 
+      ## If in devmode...
       if (!is.null(devmode()) && devmode()) {
+        ## ... add number of visits to names of study id choices
         n_visits <- table(fin_dat()$NACCID)[cur_choices]
         names(cur_choices) <- paste0(names(n_visits), " (", n_visits, ")")
       }
 
+      ## If this is triggered after being initialized and a study id is already chosen...
+      ## (this would happen if devmode is toggled in app)
       if (
         !is.null(input$current_studyid) & input$current_studyid %in% cur_choices
       ) {
+        ## ... save the current choice
         cur_select <- input$current_studyid
       } else {
+        ## Else select first choice
         cur_select <- cur_choices[1]
       }
 
@@ -231,20 +251,29 @@ appServer <- function(input, output, session) {
       ignoreNULL = TRUE
     )
 
+  ## Create gated current_studyid
+  current_studyid <- shiny::reactive({
+    shiny::req(
+      input$current_studyid %in% fin_dat()$NACCID
+    )
+
+    input$current_studyid
+  })
+
   ## Create demographics table
   output$demographics_table_output <- gt::render_gt({
-    shiny::req(input$current_studyid)
+    shiny::req(current_studyid())
 
-    if (input$current_studyid %in% fin_dat()$NACCID) {
-      demographics_table(
-        subset(fin_dat(), fin_dat()$NACCID == input$current_studyid)
-      )
-    }
+    demographics_table(
+      subset(fin_dat(), fin_dat()$NACCID == current_studyid())
+    )
   })
 
   ## Update dropdown menu with visit dates when new study ID selected
   shiny::observe({
-    dates <- fin_dat()$VISITDATE[fin_dat()$NACCID == input$current_studyid]
+    shiny::req(current_studyid())
+
+    dates <- fin_dat()$VISITDATE[fin_dat()$NACCID == current_studyid()]
 
     sel_date <- NULL
 
@@ -262,9 +291,9 @@ appServer <- function(input, output, session) {
     selected_date(NULL)
   }) |>
     shiny::bindEvent(
-      input$current_studyid,
+      current_studyid(),
       ignoreNULL = T,
-      ignoreInit = T
+      ignoreInit = F
     )
 
   ## When marker on one of the figures is clicked, input$update_date is set using session$sendCustomMessage (see plotVarModule.R)
@@ -336,7 +365,7 @@ appServer <- function(input, output, session) {
     # Note: use data.table since `[[` doesn't preserve attributes, which we need
     # to infer std. methods. Can be replaced by using data.table.
     fin_dat()[
-      fin_dat()$NACCID == input$current_studyid &
+      fin_dat()$NACCID == current_studyid() &
         fin_dat()$VISITDATE == input$current_date
     ]
   })
@@ -352,14 +381,14 @@ appServer <- function(input, output, session) {
   )
 
   #### Longitudinal Trends
-  ## Subset full data to the data specific to input$current_studyid
+  ## Subset full data to the data specific to current_studyid()
   current_studyid_dat <- shiny::reactive({
-    shiny::req(input$current_studyid)
+    shiny::req(current_studyid())
 
     # Note: use data.table since `[[` doesn't preserve attributes, which we need
     # to infer std. methods. Can be replaced by using data.table.
     fin_dat()[
-      fin_dat()$NACCID == input$current_studyid
+      fin_dat()$NACCID == current_studyid()
     ]
   })
 
@@ -448,60 +477,19 @@ appServer <- function(input, output, session) {
     print_updating = F
   )
 
-  ## Biomarkers
-  # To avoid R CMD check warnings:
-  m <- NULL
-
-  # base_query_file <- system.file(
-  #   "json/panda_template.json",
-  #   package = "ntrd"
-  # )
-
-  # all_values_et <- shiny::ExtendedTask$new(
-  #   \(api) {
-  #     m <<- mirai::mirai(
-  #       {
-  #         get_all_values(
-  #           api_key = api,
-  #           base_query_file = base_query_file #"inst/json/panda_template.json"
-  #         )
-  #       },
-  #       .args = list(
-  #         get_all_values = get_all_values,
-  #         api = api,
-  #         base_query_file = base_query_file
-  #       )
-  #     )
-
-  #     m
-  #   }
-  # )
-
-  # shiny::observe({
-  #   shiny::req(biomarker_api())
-  #   all_values_et$invoke(
-  #     api = biomarker_api()
-  #   )
-  # })
-
-  # biomarkerServer(
-  #   "biomarker-tables",
-  #   adrc_ptid = shiny::reactive(input$current_studyid),
-  #   biomarker_api = shiny::reactive(
-  #     dat_sel$extras()$biomarker_api
-  #   ),
-  #   all_values = shiny::reactive(dat_sel$extras()$all_values)
-  # )
-
+  ## Extension
   extension_server_initialized <- shiny::reactiveVal(FALSE)
 
   shiny::observe({
     shiny::req(dat_sel$extras())
     shiny::req(!extension_server_initialized())
+    shiny::req(fin_dat())
 
     if (!is.null(dat_sel$extras()$extension_server)) {
       dat_sel$extras()$extension_server(
-        ptid = shiny::reactive(input$current_studyid),
+        id = "ext-module",
+        ptid = current_studyid, #shiny::reactive(input$current_studyid),
+        dat = fin_dat,
         extras = dat_sel$extras
       )
 
@@ -564,7 +552,7 @@ appServer <- function(input, output, session) {
       "setInputValue",
       list(
         inputId = "current_studyid",
-        inputValue = input$current_studyid,
+        inputValue = current_studyid(),
         priority = "event"
       )
     )
