@@ -9,6 +9,7 @@ You can install the development version of ntrd from
 [GitHub](https://github.com/) with:
 
 ``` r
+
 # install.packages("pak")
 pak::pak("rmtrane/ntrd")
 ```
@@ -16,6 +17,7 @@ pak::pak("rmtrane/ntrd")
 or
 
 ``` r
+
 # install.packages("remotes")
 remotes::install_github("rmtrane/ntrd")
 ```
@@ -27,12 +29,14 @@ able to pull data straight from REDCap. To install the packages needed
 to enable all features, use
 
 ``` r
+
 pak::pak("rmtrane/ntrd", dependencies = TRUE)
 ```
 
 or
 
 ``` r
+
 remotes::install_github("rmtrane/ntrd", dependencies = TRUE)
 ```
 
@@ -41,6 +45,7 @@ remotes::install_github("rmtrane/ntrd", dependencies = TRUE)
 You can start the application as follows:
 
 ``` r
+
 library(ntrd)
 shinyDashboard()
 ```

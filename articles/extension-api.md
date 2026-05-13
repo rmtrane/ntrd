@@ -92,6 +92,7 @@ in `.onLoad()` so that your S7 method implementations are registered
 when the namespace is loaded:
 
 ``` r
+
 # R/zzz.R
 .onLoad <- function(...) {
   S7::methods_register()
@@ -115,6 +116,7 @@ You provide three arguments:
 - **`package`**: The name of the package defining this data source
 
 ``` r
+
 # R/my_source.R
 my_source <- ntrd::new_data_source(
   name = "My Data Source",
@@ -129,6 +131,7 @@ produces an instance with the `name` and `id` properties set.
 For reference, here is how `ntrdWisconsin` defines its source class:
 
 ``` r
+
 # ntrdWisconsin/R/wadrc_source.R
 wadrc_source <- ntrd::new_data_source(
   name = "Wisconsin ADRC",
@@ -151,6 +154,7 @@ Your extension must provide S7 methods for three generics exported by
 [`S7::new_external_generic()`](https://rconsortium.github.io/S7/reference/new_external_generic.html):
 
 ``` r
+
 data_source_ui <- S7::new_external_generic("ntrd", "data_source_ui", "source")
 data_source_server <- S7::new_external_generic("ntrd", "data_source_server", "source")
 data_load <- S7::new_external_generic("ntrd", "data_load", "source")
@@ -163,6 +167,7 @@ user selects your data source. The `ns` argument is a namespace function
 — use it to wrap all input IDs.
 
 ``` r
+
 S7::method(data_source_ui, my_source) <- function(source, ns) {
   shiny::tagList(
     shiny::passwordInput(
@@ -179,14 +184,15 @@ Returns a Shiny module server (via
 [`shiny::moduleServer()`](https://rdrr.io/pkg/shiny/man/moduleServer.html))
 that must return a **list** with the following elements:
 
-| Element   | Required | Description                                                                                                                                                                                                                                                                                                                                       |
-|-----------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `params`  | Yes      | A [`shiny::reactive()`](https://rdrr.io/pkg/shiny/man/reactive.html) returning a named list of parameters. These are passed as arguments to [`data_load()`](https://rmtrane.github.io/ntrd/reference/data_load.md) when the user clicks “Go”. Use [`shiny::req()`](https://rdrr.io/pkg/shiny/man/req.html) to ensure required inputs are present. |
-| `session` | Yes      | The Shiny session object.                                                                                                                                                                                                                                                                                                                         |
-| `restore` | No       | A function that accepts a `params` list and restores input values (for configuration persistence).                                                                                                                                                                                                                                                |
-| `extras`  | No       | A [`shiny::reactiveValues()`](https://rdrr.io/pkg/shiny/man/reactiveValues.html) object for passing additional data/UI to the main app (see [Extension UI](#optional-extension-ui-via-extras)).                                                                                                                                                   |
+| Element | Required | Description |
+|----|----|----|
+| `params` | Yes | A [`shiny::reactive()`](https://rdrr.io/pkg/shiny/man/reactive.html) returning a named list of parameters. These are passed as arguments to [`data_load()`](https://rmtrane.github.io/ntrd/reference/data_load.md) when the user clicks “Go”. Use [`shiny::req()`](https://rdrr.io/pkg/shiny/man/req.html) to ensure required inputs are present. |
+| `session` | Yes | The Shiny session object. |
+| `restore` | No | A function that accepts a `params` list and restores input values (for configuration persistence). |
+| `extras` | No | A [`shiny::reactiveValues()`](https://rdrr.io/pkg/shiny/man/reactiveValues.html) object for passing additional data/UI to the main app (see [Extension UI](#optional-extension-ui-via-extras)). |
 
 ``` r
+
 S7::method(data_source_server, my_source) <- function(source, id) {
   shiny::moduleServer(id, function(input, output, session) {
     params <- shiny::reactive({
@@ -215,6 +221,7 @@ the data source object and the parameters from `$params()` (unpacked via
 a `data_nacc` object.
 
 ``` r
+
 S7::method(data_load, my_source) <- function(source, api_token, ...) {
   # Fetch data using your API
   raw_data <- fetch_from_my_api(api_token)
@@ -238,6 +245,7 @@ this pattern:
 - **`data_load`** takes only `source` (no extra arguments)
 
 ``` r
+
 S7::method(data_source_ui, my_source) <- function(source, ns) {
   shiny::p("Click 'Go' to load data. No configuration needed.")
 }
@@ -312,6 +320,7 @@ The `$restore` function receives the same named list that `$params()`
 returns and should update the Shiny inputs accordingly:
 
 ``` r
+
 restore <- function(params) {
   shiny::updateTextInput(session, "api_token", value = params$api_token)
 }
@@ -328,6 +337,7 @@ To provide extension UI, include `extension_ui` and `extension_server`
 in your `extras` reactive values:
 
 ``` r
+
 extras <- shiny::reactiveValues(
   extension_ui = function() my_extension_ui(id = "my-module"),
   extension_server = function(ptid, extras) {
@@ -352,6 +362,7 @@ In `ntrdWisconsin`, this mechanism is used to display biomarker data
 fetched from the Panda API:
 
 ``` r
+
 extras <- shiny::reactiveValues(
   all_values = NULL,
   panda_api_token = NULL,
@@ -373,6 +384,7 @@ scores.
 Define this function in your package (it does not need to be exported):
 
 ``` r
+
 # R/zzz.R
 .set_defaults <- function() {
   ntrs::set_std_defaults(ntrs::WAIS(), "tscores", overwrite = TRUE)
@@ -401,15 +413,15 @@ authors should use shared generics from a common dependency (e.g.,
 Here is a summary of the key files in the `ntrdWisconsin` package and
 how they map to the extension API:
 
-| File                     | Purpose                                                                                                                                                 |
-|--------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `DESCRIPTION`            | Declares `Config/ntrd/extension: true` and imports `ntrd`, `S7`                                                                                         |
-| `R/zzz.R`                | `.onLoad()` calls [`S7::methods_register()`](https://rconsortium.github.io/S7/reference/methods_register.html); `.set_defaults()` sets T-score defaults |
-| `R/wadrc_source.R`       | Defines `wadrc_source` class (extends [`ntrd::data_source`](https://rmtrane.github.io/ntrd/reference/data_source.md))                                   |
-| `R/data_source_ui.R`     | Implements `data_source_ui` for `wadrc_source` — REDCap token inputs                                                                                    |
-| `R/data_source_server.R` | Implements `data_source_server` for `wadrc_source` — collects tokens, provides `$restore` and `$extras`                                                 |
-| `R/data_load.R`          | Implements `data_load` for `wadrc_source` — pulls from REDCap, returns `data_nacc`                                                                      |
-| `R/extensionModule.R`    | Defines `extension_ui()` / `extension_server()` for biomarker display (passed via `$extras`)                                                            |
+| File | Purpose |
+|----|----|
+| `DESCRIPTION` | Declares `Config/ntrd/extension: true` and imports `ntrd`, `S7` |
+| `R/zzz.R` | `.onLoad()` calls [`S7::methods_register()`](https://rconsortium.github.io/S7/reference/methods_register.html); `.set_defaults()` sets T-score defaults |
+| `R/wadrc_source.R` | Defines `wadrc_source` class (extends [`ntrd::data_source`](https://rmtrane.github.io/ntrd/reference/data_source.md)) |
+| `R/data_source_ui.R` | Implements `data_source_ui` for `wadrc_source` — REDCap token inputs |
+| `R/data_source_server.R` | Implements `data_source_server` for `wadrc_source` — collects tokens, provides `$restore` and `$extras` |
+| `R/data_load.R` | Implements `data_load` for `wadrc_source` — pulls from REDCap, returns `data_nacc` |
+| `R/extensionModule.R` | Defines `extension_ui()` / `extension_server()` for biomarker display (passed via `$extras`) |
 
 ### Minimal skeleton
 
@@ -418,12 +430,14 @@ To create a new extension from scratch, you need at minimum four files:
 **`R/my_source.R`**
 
 ``` r
+
 my_source <- ntrd::new_data_source(name = "My Source", id = "my_source", package = "myExtension")
 ```
 
 **`R/data_source_ui.R`**
 
 ``` r
+
 data_source_ui <- S7::new_external_generic("ntrd", "data_source_ui", "source")
 
 S7::method(data_source_ui, my_source) <- function(source, ns) {
@@ -436,6 +450,7 @@ S7::method(data_source_ui, my_source) <- function(source, ns) {
 **`R/data_source_server.R`**
 
 ``` r
+
 data_source_server <- S7::new_external_generic("ntrd", "data_source_server", "source")
 
 S7::method(data_source_server, my_source) <- function(source, id) {
@@ -456,6 +471,7 @@ S7::method(data_source_server, my_source) <- function(source, id) {
 **`R/data_load.R`**
 
 ``` r
+
 #' @include my_source.R
 data_load <- S7::new_external_generic("ntrd", "data_load", "source")
 
@@ -468,6 +484,7 @@ S7::method(data_load, my_source) <- function(source, token, ...) {
 **`R/zzz.R`**
 
 ``` r
+
 .onLoad <- function(...) {
   S7::methods_register()
 }

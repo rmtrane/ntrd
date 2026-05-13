@@ -24,25 +24,3 @@ demographics_table(demo_data[1, ])
 
 Study ID:
 ```
-
-NACC074283
-
-Education (years):
-
-18
-
-Year of Birth:
-
-1927
-
-Gender:
-
-Female
-
-Handedness:
-
-Right-handed
-
-Race:
-
-White
