@@ -29,7 +29,7 @@ appServer <- function(input, output, session) {
 
   shiny::observe({
     if (!is.null(dat_sel$extras()$extension_ui)) {
-      ext_ui <- dat_sel$extras()$extension_ui(id = "ext-module")
+      ext_ui <- dat_sel$extras()$extension_ui() #id = "ext-module")
 
       if (inherits(ext_ui, "shiny.tag")) {
         ext_ui <- list(ext_ui)
@@ -487,9 +487,9 @@ appServer <- function(input, output, session) {
 
     if (!is.null(dat_sel$extras()$extension_server)) {
       dat_sel$extras()$extension_server(
-        id = "ext-module",
+        # id = "ext-module",
         ptid = current_studyid, #shiny::reactive(input$current_studyid),
-        dat = fin_dat,
+        # dat = fin_dat,
         extras = dat_sel$extras
       )
 
