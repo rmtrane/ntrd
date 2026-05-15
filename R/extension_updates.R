@@ -300,7 +300,10 @@ build_update_restart_command <- function(package) {
 #'
 #' @export
 try_update <- function(pkg) {
-  update_fun <- utils::getFromNamespace("ntrd_update_extension", ns = pkg)
+  update_fun <- utils::getFromNamespace(
+    "ntrd_update_extension",
+    ns = pkg
+  )
 
   ok <- tryCatch(
     expr = {
