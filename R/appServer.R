@@ -18,6 +18,121 @@ appServer <- function(input, output, session) {
   ## Setup data select module
   dat_sel <- dataSelectServer("dataSelect")
 
+  ## Check for updates
+  output$update_banner <- shiny::renderUI({
+    shiny::req(dat_sel$update_info())
+
+    update_info <- dat_sel$update_info()
+
+    render_update_banner(
+      result = update_info$result,
+      package = update_info$package,
+      action = shiny::actionButton(
+        inputId = "do_update",
+        label = "Update",
+        class = "btn-sm btn-primary update-banner-action"
+      )
+    )
+  })
+
+  shiny::observe({
+    info <- dat_sel$update_info()
+
+    # Defensive: the button shouldn't render unless info has what we need,
+    # but be safe — a stale click after a source switch is conceivable.
+    if (!info$result@available || is.na(info$package)) {
+      return()
+    }
+
+    pkg <- info$package
+
+    shiny::showModal(shiny::modalDialog(
+      title = "Update extension",
+      shiny::tagList(
+        shiny::tags$p(sprintf(
+          "This will install version %s of %s, replacing the currently installed version %s.",
+          info$result@latest,
+          pkg,
+          info$result@current
+        )),
+        shiny::tags$p(
+          "The dashboard will close, R will restart twice (first to perform the update, ",
+          "then to relaunch the dashboard), and the app will reopen automatically. ",
+          "This typically takes 10\u201330 seconds."
+        ),
+        if (!is.na(info$result@news_url)) {
+          shiny::tags$p(
+            "Review the ",
+            shiny::tags$a(
+              "release notes",
+              href = info$result@news_url,
+              target = "_blank",
+              rel = "noopener noreferrer"
+            ),
+            " before continuing."
+          )
+        }
+      ),
+      footer = shiny::tagList(
+        shiny::modalButton("Cancel"),
+        shiny::actionButton(
+          "confirm_update",
+          "Update now",
+          class = "btn-primary"
+        )
+      ),
+      easyClose = TRUE
+    ))
+  }) |>
+    shiny::bindEvent(input$do_update)
+
+  shiny::observe({
+    info <- dat_sel$update_info()
+    pkg <- info$package
+
+    if (is.na(pkg)) {
+      shiny::removeModal()
+      return()
+    }
+
+    if (!rstudioapi::isAvailable()) {
+      shiny::removeModal()
+      shiny::showModal(shiny::modalDialog(
+        title = "Cannot update automatically",
+        shiny::tags$p(
+          "Automatic updates require RStudio. Please close the app and run ",
+          "the following in your R console:"
+        ),
+        shiny::tags$pre(sprintf(
+          'remotes::install_github("rmtrane/%s", upgrade = "always", dependencies = TRUE)',
+          pkg
+        )),
+        easyClose = TRUE
+      ))
+      return()
+    }
+
+    shiny::removeModal()
+    shiny::showNotification(
+      sprintf(
+        "Updating %s and restarting\u2026 your dashboard will reopen shortly.",
+        pkg
+      ),
+      duration = NULL,
+      type = "message",
+      closeButton = FALSE
+    )
+
+    cmd <- build_update_restart_command(pkg)
+
+    session$onSessionEnded(function() {
+      rstudioapi::restartSession(command = cmd)
+    })
+
+    shiny::stopApp()
+  }) |>
+    shiny::bindEvent(input$confirm_update)
+
   ## Reactive values to store data object, selected data source, and data type,
   ## all assigned from dataSelect module. Also, reactive value to indicate if
   ## user should be allowed to select columns for variables. We only allow this

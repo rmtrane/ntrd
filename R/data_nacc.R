@@ -61,7 +61,9 @@ data_nacc <- S7::new_class(
           )
         }
 
-        value$SEX[value$SEX %in% c(8, 9)] <- NA_real_
+        if ("SEX" %in% colnames(value)) {
+          value$SEX[value$SEX %in% c(8, 9)] <- NA_real_
+        }
 
         value[,
           names(.SD) := lapply(.SD, as.numeric),

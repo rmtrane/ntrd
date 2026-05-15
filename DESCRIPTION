@@ -29,6 +29,7 @@ Config/testthat/load-all: list(export_all = TRUE, helpers = TRUE)
 RoxygenNote: 7.3.3
 Imports:
     bslib,
+    bsicons,
     data.table (>= 1.9.8),
     DT,
     gt,
@@ -38,6 +39,8 @@ Imports:
     shiny,
     rlang,
     methods,
+    remotes,
+    rstudioapi,
     utils,
     cli,
     safer,
@@ -80,12 +83,14 @@ Collate:
     'csv_source.R'
     'dataSelectModule.R'
     'data_nacc.R'
+    'default_update_functions.R'
     'demo_data.R'
     'demo_source.R'
     'demographics_table.R'
     'descriptionsModule.R'
     'diag_contr_pairs.R'
     'discover_data_sources.R'
+    'extension_updates.R'
     'from_gtExtras_for_my_gt_blt_bar_pct.R'
     'get_plot_ranges.R'
     'load_extensions.R'
@@ -107,9 +112,13 @@ Collate:
     'prevDiagnosesModule.R'
     'prev_diagnoses_table.R'
     'rdd.R'
+    'render_update_banner.R'
     'shinyAddResources.R'
     'shinyApp_header.R'
     'shinyDashboard.R'
+    'updateBannerModule.R'
+    'update_messages.R'
+    'update_result.R'
     'var_labels.R'
     'visibility_defaults.R'
     'visit_vars.R'
