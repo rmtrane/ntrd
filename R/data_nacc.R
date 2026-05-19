@@ -50,15 +50,18 @@ data_nacc <- S7::new_class(
         # value$VISITYR <- value$VISITMO <- value$VISITDAY <- NULL
 
         if (!"NACCAGE" %in% colnames(value)) {
-          value$NACCAGE <- lubridate::time_length(
-            value$VISITDATE -
-              as.Date(ifelse(
-                test = is.na(value$BIRTHYR) | is.na(value$BIRTHMO),
-                yes = NA,
-                no = paste(value$BIRTHYR, value$BIRTHMO, 15, sep = "-")
-              )),
-            unit = "years"
-          )
+          value$NACCAGE <- # lubridate::time_length(
+            as.numeric(
+              value$VISITDATE -
+                as.Date(ifelse(
+                  test = is.na(value$BIRTHYR) | is.na(value$BIRTHMO),
+                  yes = NA,
+                  no = paste(value$BIRTHYR, value$BIRTHMO, 15, sep = "-")
+                ))
+            ) /
+            365.25 #,
+          #   unit = "years"
+          # )
         }
 
         if ("SEX" %in% colnames(value)) {

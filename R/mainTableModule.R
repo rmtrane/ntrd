@@ -11,7 +11,7 @@
 mainTableUI <- function(id) {
   bslib::card(bslib::card_body(
     shiny::uiOutput(shiny::NS(id, "mainTable")),
-    if (rlang::is_installed("pagedown")) {
+    if (requireNamespace("pagedown", quietly = TRUE)) {
       shiny::tagList(
         shiny::actionButton(
           shiny::NS(id, "genPDF"),
@@ -50,15 +50,15 @@ mainTableServer <- function(
   include_caption = F,
   print_updating = F
 ) {
-  if (!shiny::is.reactive(fill_values)) {
-    if (is.null(fill_values)) {
-      fill_values <- calc_fill_colors(n = length(descriptions))
-    }
-    fill_values <- shiny::reactiveVal(fill_values)
-  }
-
   if (!shiny::is.reactive(descriptions)) {
-    descriptions <- shiny::reactive(descriptions)
+    if (!shiny::is.reactive(fill_values)) {
+      if (is.null(fill_values)) {
+        fill_values <- calc_fill_colors(n = length(descriptions))
+        names(fill_values) <- names(descriptions)
+      }
+      fill_values <- shiny::reactiveVal(fill_values)
+    }
+    descriptions <- shiny::reactiveVal(descriptions)
   }
 
   if (!shiny::is.reactive(table_font_size)) {
@@ -73,7 +73,7 @@ mainTableServer <- function(
     mainTable <- shiny::reactiveVal()
 
     shiny::observe({
-      shiny::req(descriptions, fill_values)
+      shiny::req(descriptions(), fill_values())
 
       for_table <- dat()
 
@@ -102,7 +102,8 @@ mainTableServer <- function(
       summary_dat <- assessment_summary_data(
         dat = for_table,
         id = "NACCID",
-        include_caption = include_caption
+        include_caption = include_caption,
+        descriptions = descriptions()
       )
 
       mainTable(

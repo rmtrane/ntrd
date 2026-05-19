@@ -156,6 +156,10 @@ gt_index <- function(gt_object, column, as_vector = TRUE) {
     `'gt_object' must be a 'gt_tbl', have you accidentally passed raw data?` = "gt_tbl" %in%
       class(gt_object)
   )
+  stopifnot(
+    `'column' must be a single string` = is.character(column) &&
+      length(column) == 1L
+  )
   stopifnot(`'as_vector' must be a TRUE or FALSE` = is.logical(as_vector))
   if (length(gt_object[["_row_groups"]]) >= 1) {
     gt_row_grps <- gt_object[["_row_groups"]]
@@ -168,7 +172,7 @@ gt_index <- function(gt_object, column, as_vector = TRUE) {
     df_ordered <- gt_object[["_data"]]
   }
   if (isTRUE(as_vector)) {
-    df_ordered[[rlang::as_name(column)]]
+    df_ordered[[column]]
   } else {
     df_ordered
   }

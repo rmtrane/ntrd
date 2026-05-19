@@ -93,8 +93,8 @@ update_banner_server <- function(id, update_info) {
 #' @returns A `shiny::shinyApp` object.
 #' @keywords internal
 #' @export
-update_banner_app <- function(fake_update = NULL) {
-  shinyAddResources(development = TRUE)
+update_banner_app <- function(fake_update = NULL, testing = TRUE) {
+  shinyAddResources(development = testing)
 
   ui <- bslib::page_navbar(
     header = shiny::tagList(shinyApp_header(), update_banner_ui("banner")),

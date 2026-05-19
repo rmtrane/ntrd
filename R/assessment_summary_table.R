@@ -416,15 +416,8 @@ assessment_summary_data <- function(
 
   ## Add additional columns.
   for_main_table[,
-    c(
-      "group",
-      "labels",
-      "for_percentile",
-      "raw_suffix",
-      "units",
-      "is_error"
-    ) := list(
-      if (length(name) == 0) {
+    `:=`(
+      group = if (length(name) == 0) {
         return(character())
       } else {
         factor(
@@ -432,7 +425,7 @@ assessment_summary_data <- function(
           levels = unique(c(nacc_groups, na.omit(domain_map)))
         )
       },
-      factor(
+      labels = factor(
         all_labels[name],
         levels = all_labels[order(match(
           names(all_labels),
@@ -440,58 +433,85 @@ assessment_summary_data <- function(
           nomatch = 99
         ))]
       ),
-      as.numeric(ifelse(name %in% t_scores, (std - 50) / 10, std)),
-      purrr::map2_chr(name, raw, \(x, y) {
-        if (is.na(y)) {
-          return("")
-        }
+      for_percentile = as.numeric(ifelse(
+        name %in% t_scores,
+        (std - 50) / 10,
+        std
+      )),
+      # purrr::map2_chr(
+      raw_suffix = vapply(
+        seq_along(name),
+        FUN = \(i) {
+          y <- raw[[i]]
+          x <- name[[i]]
 
-        if (x %in% ntrs::list_npsych_scores()) {
-          x <- ntrs::get_npsych_scores(x)()
-        } else {
-          return("")
-        }
+          if (is.na(y)) {
+            return("")
+          }
 
-        if (is.null(x@range)) {
-          return("")
-        }
+          if (x %in% ntrs::list_npsych_scores()) {
+            x <- ntrs::get_npsych_scores(x)()
+          } else {
+            return("")
+          }
 
-        if (y %in% x@codes) {
-          return("")
-        }
+          if (is.null(x@range)) {
+            return("")
+          }
 
-        paste0("/", x@range[2])
-      }),
-      purrr::map2_chr(name, raw, \(x, y) {
-        if (is.na(y)) {
-          return("")
-        }
+          if (y %in% x@codes) {
+            return("")
+          }
 
-        base::ifelse(
-          x %in% c("TRAILA", "TRAILB", "OTRAILA", "OTRAILB"),
-          "&nbspsec",
-          ""
-        )
-      }),
-      purrr::map2_lgl(name, raw, \(x, y) {
-        if (is.na(y)) {
-          return(FALSE)
-        }
+          paste0("/", x@range[2])
+        },
+        character(1)
+      ),
+      #purrr::map2_chr(name, raw, \(x, y) {
+      units = vapply(
+        seq_along(name),
+        FUN = \(i) {
+          x <- name[[i]]
+          y <- raw[[i]]
+          if (is.na(y)) {
+            return("")
+          }
 
-        if (x %in% ntrs::list_npsych_scores()) {
-          x <- ntrs::get_npsych_scores(x)()
-        } else {
-          return(FALSE)
-        }
+          base::ifelse(
+            x %in% c("TRAILA", "TRAILB", "OTRAILA", "OTRAILB"),
+            "&nbspsec",
+            ""
+          )
+        },
+        character(1)
+      ),
+      is_error = vapply(
+        seq_along(name),
+        FUN = \(i) {
+          x <- name[[i]]
+          y <- raw[[i]]
+          if (is.na(y)) {
+            return(FALSE)
+          }
 
-        if (y %in% x@codes & y > x@range[2]) {
-          return(TRUE)
-        }
+          if (x %in% ntrs::list_npsych_scores()) {
+            x <- ntrs::get_npsych_scores(x)()
+          } else {
+            return(FALSE)
+          }
 
-        FALSE
-      })
+          if (y %in% x@codes & y > x@range[2]) {
+            return(TRUE)
+          }
+
+          FALSE
+        },
+        logical(1)
+      )
     )
-  ][,
+  ]
+
+  for_main_table[,
     c("Percentile", "Description") := list(
       stats::pnorm(as.numeric(for_percentile)) * 100, # for some reason, for_main_table$for_percentile is character if nrow(for_main_table) == 0.
       names(descriptions)[
@@ -525,7 +545,8 @@ assessment_summary_data <- function(
   ]
 
   for_main_table[,
-    raw := purrr::map2_chr(name, raw, \(x, y) {
+    # raw := purrr::map2_chr(name, raw, \(x, y) {
+    raw := Map(name, raw, f = \(x, y) {
       if (x == "CDRGLOB") {
         return(sprintf("%.1f", y))
       }
@@ -545,37 +566,6 @@ assessment_summary_data <- function(
       sprintf("%.0f", y)
     })
   ]
-
-  # for_main_table$is_error <- with(
-  #   for_main_table,
-  #   purrr::map2_lgl(name, raw, \(x, y) {
-  #     codes <- rdd[[x]]$codes
-
-  #     if (y %in% codes & y > 10) {
-  #       return(TRUE)
-  #     }
-
-  #     FALSE
-  #   })
-  # )
-
-  # for_main_table$raw <- with(
-  #   for_main_table,
-  #   purrr::map2_chr(name, raw, \(x, y) {
-  #     # purrr::map2(name, raw, \(x, y) {
-  #     if (x == "CDRGLOB") {
-  #       return(sprintf("%.1f", y))
-  #     }
-
-  #     codes <- rdd[[x]]$codes
-
-  #     if (y %in% codes) {
-  #       return(as.character(bslib::tooltip(y, names(codes)[which(codes == y)])))
-  #     }
-
-  #     sprintf("%.0f", y)
-  #   })
-  # )
 
   out <- list(
     for_main_table = for_main_table,

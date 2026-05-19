@@ -18,9 +18,11 @@ S7::method(data_load, demo_source) <- function(source, params) {
   tmp <- data.table::copy(demo_data)
 
   tmp[,
-    names(.SD) := purrr::imap(.SD, \(x, idx) {
-      ntrs::get_npsych_scores(idx)(x)
-    }),
+    names(.SD) := Map(
+      .SD,
+      names(.SD),
+      f = \(x, idx) ntrs::get_npsych_scores(idx)(x)
+    ),
     .SDcols = intersect(colnames(tmp), ntrs::list_npsych_scores())
   ]
 

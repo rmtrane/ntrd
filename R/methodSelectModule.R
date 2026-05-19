@@ -264,7 +264,8 @@ methodSelectApp <- function(testing = FALSE) {
       ntrs::get_std_defaults(ntrs::get_npsych_scores(x)())
     }
   ) |>
-    purrr::discard(is.null)
+    # purrr::discard(is.null)
+    Filter(f = Negate(is.null))
 
   ui <- bslib::page_fluid(
     shinyApp_header(),

@@ -612,29 +612,6 @@ appServer <- function(input, output, session) {
     }
   })
 
-  # } else {
-  #   # If mirai is not installed, use simple reactiveValues
-  #   biomarker_dat <- shiny::reactiveVal()
-  #   biomarker_status <- shiny::reactiveVal("initiated")
-
-  #   shiny::observe({
-  #     biomarker_dat(
-  #       get_biomarker_data(
-  #         adrc_ptid = input$current_studyid,
-  #         api_key = biomarker_api()
-  #       )
-  #     )
-
-  #     biomarker_status("done")
-  #   })
-
-  #   biomarkerServer(
-  #     "biomarker-tables",
-  #     biomarker_data = biomarker_dat,
-  #     biomarker_status = biomarker_status
-  #   )
-  # }
-
   ## Update reactiveVals for values chosen in Options pane.
   shiny::observe({
     bslib::accordion_panel_close(id = "options", values = TRUE)
@@ -672,7 +649,5 @@ appServer <- function(input, output, session) {
       )
     )
   }) |>
-    shiny::bindEvent(
-      input$update_colors
-    )
+    shiny::bindEvent(input$update_colors)
 }

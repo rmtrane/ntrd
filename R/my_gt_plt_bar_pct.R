@@ -22,6 +22,10 @@ my_gt_plt_bar_pct <- function(
   font_size = "10px"
 ) {
   stopifnot(
+    `'column' must be a single string` = is.character(column) &&
+      length(column) == 1L
+  )
+  stopifnot(
     `'gt_object' must be a 'gt_tbl', have you accidentally passed raw data?` = "gt_tbl" %in%
       class(gt_object)
   )
@@ -36,10 +40,9 @@ my_gt_plt_bar_pct <- function(
   )
 
   ## Get underlying data from gt_object
-  all_cols <- # gtExtras::
-    gt_index(gt_object, column = {{ column }}, as_vector = FALSE)
+  all_cols <- gt_index(gt_object, column = column, as_vector = FALSE)
 
-  col_name <- rlang::quo_name(column)
+  col_name <- column
   data_in <- all_cols[[col_name]]
 
   col_to_widen <- stats::formula(paste0(
@@ -211,9 +214,9 @@ my_gt_plt_bar_pct <- function(
     gt_object |>
       gt::cols_width(col_to_widen) |>
       gt::text_transform(
-        locations = gt::cells_body(columns = {{ column }}),
+        locations = gt::cells_body(columns = gt::all_of(column)),
         fn = bar_plt_html
       ) |>
-      gt::cols_align(align = "left", columns = {{ column }})
+      gt::cols_align(align = "left", columns = gt::all_of(column))
   )
 }

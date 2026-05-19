@@ -369,7 +369,8 @@ prev_diagnoses_table <- function(dat, table_font_size = 100) {
         if (length(which_mmse) > 0) "or <u><i>MMSE</u></i>"
       )),
       locations = gt::cells_stub(
-        rows = grepl("Cognition", .data$var)
+        rows = grepl("Cognition", for_out$var)
+        # rows = gt::matches("Cognition")
       )
     )
 

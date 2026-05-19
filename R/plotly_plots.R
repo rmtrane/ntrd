@@ -149,13 +149,15 @@ date_range <- function(dates) {
   dates <- as.Date(dates)
 
   c(
-    lubridate::floor_date(
-      min(dates, na.rm = T) - months(3),
-      unit = "quarter"
+    #lubridate::floor_date(
+    quarter_floor(
+      min(dates, na.rm = T) - 90 # months(3),
+      # unit = "quarter"
     ),
-    lubridate::ceiling_date(
-      max(dates, na.rm = T) + months(3),
-      unit = "quarter"
+    #lubridate::ceiling_date(
+    quarter_ceiling(
+      max(dates, na.rm = T) + 90 # months(3),
+      # unit = "quarter"
     )
   )
 }

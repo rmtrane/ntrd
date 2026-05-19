@@ -4,7 +4,7 @@
 \alias{update_banner_app}
 \title{Self-contained Shiny app for testing the update banner module}
 \usage{
-update_banner_app(fake_update = NULL)
+update_banner_app(fake_update = NULL, testing = TRUE)
 }
 \arguments{
 \item{fake_update}{Optional override for the \code{update_info} reactive.

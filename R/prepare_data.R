@@ -28,8 +28,12 @@ prepare_data <- function(
   if (is.null(methods)) {
     # Get defaults by examining the npsych_scores objects
     methods <- dat[0, .SD, .SDcols = ntrs::is_npsych_scores] |>
-      purrr::map(\(x) suppressMessages(ntrs::get_std_defaults(x))) |>
-      purrr::discard(purrr::is_null)
+      #purrr::map(
+      lapply(
+        \(x) suppressMessages(ntrs::get_std_defaults(x))
+      ) |>
+      Filter(f = Negate(is.null))
+    # purrr::discard(purrr::is_null)
   }
 
   ## Remove 'empty' rows, i.e. rows with no NACCID, VISIT*, BIRTH* available. This is an edge case, that shouldn't really happen.
