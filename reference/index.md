@@ -19,6 +19,12 @@ Functions that enables third parties to implement new data sources.
   : Load data
 - [`data_nacc()`](https://rmtrane.github.io/ntrd/reference/data_nacc.md)
   : NACC data class
+- [`default_github_update_available()`](https://rmtrane.github.io/ntrd/reference/default_github_update.md)
+  [`default_github_update_extension()`](https://rmtrane.github.io/ntrd/reference/default_github_update.md)
+  : Default update-check and install functions for GitHub-hosted
+  extensions
+- [`extension_updates`](https://rmtrane.github.io/ntrd/reference/extension_updates.md)
+  : Framework machinery for extension update checks
 
 ## Tables
 
@@ -52,6 +58,9 @@ Shiny modules used for the main Shiny application
   [`mainTableApp()`](https://rmtrane.github.io/ntrd/reference/mainTableModule.md)
   : Shiny Module to Display NACC T-Cog Neuropsychological Assessment
   Summary Table
+- [`update_banner_ui()`](https://rmtrane.github.io/ntrd/reference/update_banner_module.md)
+  [`update_banner_server()`](https://rmtrane.github.io/ntrd/reference/update_banner_module.md)
+  : Shiny module for the in-app update banner and flow
 - [`plotUI()`](https://rmtrane.github.io/ntrd/reference/plotModule.md)
   [`plotServer()`](https://rmtrane.github.io/ntrd/reference/plotModule.md)
   [`plotApp()`](https://rmtrane.github.io/ntrd/reference/plotModule.md)
@@ -127,3 +136,25 @@ Vectors/lists used to map variable names to/from NACC variable names
 
 - [`prepare_data()`](https://rmtrane.github.io/ntrd/reference/prepare_data.md)
   : Wrapper to prepare raw data
+
+- [`update_intro_message()`](https://rmtrane.github.io/ntrd/reference/update_messages.md)
+  [`update_success_message()`](https://rmtrane.github.io/ntrd/reference/update_messages.md)
+  [`update_failure_message()`](https://rmtrane.github.io/ntrd/reference/update_messages.md)
+  : Print formatted messages for the extension update flow
+
+- [`clear_update_cache()`](https://rmtrane.github.io/ntrd/reference/clear_update_cache.md)
+  : Clear the update-check cache
+
+- [`try_update()`](https://rmtrane.github.io/ntrd/reference/try_update.md)
+  : Try update extension
+
+- [`update_result()`](https://rmtrane.github.io/ntrd/reference/update_result.md)
+  : Result of an extension update check
+
+- [`validate_update_check_result()`](https://rmtrane.github.io/ntrd/reference/validate_update_check_result.md)
+  :
+
+  Validate (or coerce) the result of an `ntrd_update_available()` call
+
+- [`check_extension_update()`](https://rmtrane.github.io/ntrd/reference/check_extension_update.md)
+  : Check whether an update is available for an extension package
