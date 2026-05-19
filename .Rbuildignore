@@ -27,8 +27,7 @@ old_NEWS.md
 _\.new\.png$
 NOTES
 tests/testthat/helper-secrets.R
-tests/testthat/_snaps/query-panda.md
-tests/testthat/_snaps/*/dataSelectMod-shinytest2/*
+tests/testthat/_snaps/*
 update_codecov.R
 old-tests/*
 ^vignettes/*_files$

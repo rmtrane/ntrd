@@ -13,6 +13,8 @@ reference:
   - data_source_ui
   - data_load
   - data_nacc
+  - default_github_update
+  - extension_updates
 - title: Tables
   desc: |
     Functions to create tables
@@ -25,6 +27,7 @@ reference:
   - starts_with("methodSelect")
   - starts_with("descriptions")
   - starts_with("mainTable")
+  - update_banner_module
   - plotServer
   - plotUI
   - plotApp
@@ -57,4 +60,10 @@ reference:
   - onRender
   - plotly_new_traces
   - prepare_data
+  - update_messages
+  - clear_update_cache
+  - try_update
+  - update_result
+  - validate_update_check_result
+  - check_extension_update
 

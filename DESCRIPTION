@@ -86,7 +86,6 @@ Collate:
     'extension_updates.R'
     'from_gtExtras_for_my_gt_blt_bar_pct.R'
     'get_plot_ranges.R'
-    'html_table.R'
     'load_extensions.R'
     'longTableModule.R'
     'mainTableModule.R'
