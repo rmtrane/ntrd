@@ -20,7 +20,7 @@ Suggests:
     purrr,
     quarto,
     shinytest2,
-    testthat (>= 3.0.0),
+    testthat (>= 3.1.10),
     withr
 Config/testthat/edition: 3
 Config/testthat/load-all: list(export_all = TRUE, helpers = TRUE)
@@ -42,7 +42,7 @@ Imports:
     stats,
     utils
 Depends: 
-    R (>= 4.2.0)
+    R (>= 4.4.0)
 Remotes: 
     rmtrane/ntrs
 VignetteBuilder: quarto

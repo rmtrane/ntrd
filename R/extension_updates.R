@@ -32,6 +32,22 @@ NULL
 # is unloaded.
 .update_cache <- new.env(parent = emptyenv())
 
+# Internal seam: indirection over base::getNamespace() so that tests
+# can mock namespace lookup via testthat::local_mocked_bindings().
+get_pkg_namespace <- function(package) {
+  getNamespace(package)
+}
+
+# Internal seams over utils:: and rstudioapi:: calls so tests can mock them
+# via testthat::local_mocked_bindings().
+get_from_namespace <- function(name, ns) {
+  utils::getFromNamespace(name, ns = ns)
+}
+
+restart_session <- function(command) {
+  rstudioapi::restartSession(command = command)
+}
+
 
 #' Check whether an extension package opts in to in-app updates
 #'
@@ -50,7 +66,7 @@ extension_supports_updates <- function(package) {
     return(FALSE)
   }
 
-  ns <- tryCatch(getNamespace(package), error = function(e) NULL)
+  ns <- tryCatch(get_pkg_namespace(package), error = function(e) NULL)
   if (is.null(ns)) {
     return(FALSE)
   }
@@ -181,7 +197,7 @@ check_extension_update <- function(package, force = FALSE, ttl = 3600) {
     }
   }
 
-  ns <- getNamespace(package)
+  ns <- get_pkg_namespace(package)
   raw <- tryCatch(
     ns$ntrd_update_available(),
     error = function(e) {
@@ -300,10 +316,7 @@ build_update_restart_command <- function(package) {
 #'
 #' @export
 try_update <- function(pkg) {
-  update_fun <- utils::getFromNamespace(
-    "ntrd_update_extension",
-    ns = pkg
-  )
+  update_fun <- get_from_namespace("ntrd_update_extension", ns = pkg)
 
   ok <- tryCatch(
     expr = {
@@ -317,12 +330,8 @@ try_update <- function(pkg) {
   )
 
   if (ok) {
-    rstudioapi::restartSession(
-      command = sprintf("ntrd::update_finalize(TRUE, \"%s\")", pkg)
-    )
+    restart_session(sprintf("ntrd::update_finalize(TRUE, \"%s\")", pkg))
   } else {
-    rstudioapi::restartSession(
-      command = sprintf("ntrd::update_finalize(FALSE, \"%s\")", pkg)
-    )
+    restart_session(sprintf("ntrd::update_finalize(FALSE, \"%s\")", pkg))
   }
 }

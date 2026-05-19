@@ -14,7 +14,7 @@ render_update_banner <- function(result, package, action = NULL) {
   # Only render when we have both a package label and a click target —
   # showing "update available" with no way to act on it is a worse UX
   # than showing nothing.
-  if (is.null(package) || is.null(action)) {
+  if (is.null(package) || is.na(package) || is.null(action)) {
     return(NULL)
   }
 
