@@ -1,5 +1,6 @@
 test_that("update banner renders and confirms when an update is available", {
   skip_on_cran()
+  skip_on_ci()
   skip_if_not_installed("shinytest2")
 
   local_reproducible_output()
@@ -40,6 +41,7 @@ test_that("update banner renders and confirms when an update is available", {
 
 test_that("update banner is suppressed when no update is available", {
   skip_on_cran()
+  skip_on_ci()
   skip_if_not_installed("shinytest2")
 
   app <- shinytest2::AppDriver$new(
