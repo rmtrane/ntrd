@@ -17,8 +17,5 @@ scratch/*
 *_.new.png
 NOTES
 tests/testthat/helper-secrets.R
-tests/testthat/_snaps/query-panda.md
-tests/testthat/_snaps/*/dataSelectMod-shinytest2/*
-tests/testthat/_snaps/dataSelectMod-shinytest2.md
-tests/testthat/_snaps/mac-4.5/bioMarkerMod-shinytest2/*
+tests/testthat/_snaps/mac-*/*
 update_codecov.R
