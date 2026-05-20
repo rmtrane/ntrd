@@ -7,7 +7,7 @@
 
 [![R-CMD-check](https://github.com/rmtrane/ntrd/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/rmtrane/ntrd/actions/workflows/R-CMD-check.yaml)
 [![pkgdown](https://github.com/rmtrane/ntrd/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/rmtrane/ntrd/actions/workflows/pkgdown.yaml)
-[![codecov](https://codecov.io/gh/rmtrane/ntrd/graph/badge.svg?token=PEDPEBJ6MC)](https://codecov.io/gh/rmtrane/ntrd)
+[![codecov](https://codecov.io/gh/rmtrane/ntrd/branch/main/graph/badge.svg?token=PEDPEBJ6MC)](https://codecov.io/gh/rmtrane/ntrd)
 <!-- badges: end -->
 
 This package provides a [Shiny](https://shiny.posit.co) application used
