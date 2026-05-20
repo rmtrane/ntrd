@@ -80,6 +80,12 @@
 <li>Optionally provide additional UI, configuration persistence, and scoring defaults</li>
 </ol>
 <p>The <a href="https://github.com/rmtrane/ntrdWisconsin" class="external-link"><code>ntrdWisconsin</code></a> package is a full working example and is referenced throughout this guide.</p>
+<div>
+<blockquote>
+<p><strong>Custom Scores</strong></p>
+<p>One can also define custom neuropsychological score classes in an extension package. The <code>ntrs</code> package provides the <code>new_npsych_scores()</code> function for this purpose, and the <code>ntrd</code> app picks up any S7 classes that inherit from <code><a href="https://rmtrane.github.io/ntrs/reference/npsych_scores.html" class="external-link">ntrs::npsych_scores</a></code> automatically via namespace scanning. For more information, see the <a href="https://rmtrane.github.io/ntrs/articles/extending-scores-and-versions.html" class="external-link">Extending Scores and Versions</a> vignette in the <code>ntrs</code> package for details, and the <code>ntrdWisconsin</code> package for a concrete example of defining a custom <a href="https://github.com/rmtrane/ntrdWisconsin/blob/d3e758d35b0dec2d6c6f619aed49c617fa8f6886/R/npsych_scores-CESDTOTAL.R" class="external-link"><code>CESDTOTAL</code> score class</a>.</p>
+</blockquote>
+</div>
 </section><section class="level2"><h2 id="how-extensions-are-discovered">How extensions are discovered<a class="anchor" aria-label="anchor" href="#how-extensions-are-discovered"></a>
 </h2>
 <p>When the <code>ntrd</code> Shiny app starts, it calls <code><a href="../reference/discover_data_sources.html">discover_data_sources()</a></code>, which triggers the following sequence:</p>
@@ -122,9 +128,15 @@
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="at">    S7,</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="at">    ntrd,</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="at">    ntrs,</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="at">    shiny,</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="at">    ...</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="fu">Config/ntrd/extension</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span></code></pre></div>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="at">    ntrsTscores,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="at">    shiny,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="at">    ...</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="fu">Remotes</span><span class="kw">:</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="at">    rmtrane/ntrd,</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="at">    rmtrane/ntrs,</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="at">    rmtrane/ntrsTscores</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="fu">Config/ntrd/extension</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span></code></pre></div>
+<p>Note that <code>ntrdWisconsin</code> also imports <code>ntrs</code> and <code>ntrsTscores</code> because it defines a custom score class and sets T-score defaults. Your extension only needs to import what it uses. Also, note that the <code>Remotes</code> field is necessary for dependencies that are not on CRAN (which none of these packages are yet).</p>
 </section><section class="level3"><h3 id="onload-hook">.onLoad hook<a class="anchor" aria-label="anchor" href="#onload-hook"></a>
 </h3>
 <p>Your package <strong>must</strong> call <code><a href="https://rconsortium.github.io/S7/reference/methods_register.html" class="external-link">S7::methods_register()</a></code> in <code>.onLoad()</code> so that your S7 method implementations are registered when the namespace is loaded:</p>
@@ -284,6 +296,11 @@
 <section class="level3"><h3 id="required-columns">Required columns<a class="anchor" aria-label="anchor" href="#required-columns"></a>
 </h3>
 <table class="table caption-top">
+<colgroup>
+<col style="width: 29%">
+<col style="width: 22%">
+<col style="width: 48%">
+</colgroup>
 <thead><tr class="header">
 <th>Column</th>
 <th>Type</th>
@@ -298,7 +315,7 @@
 <tr class="even">
 <td><code>SEX</code></td>
 <td>numeric</td>
-<td>1 = Male, 2 = Female, or <code>NA</code>
+<td>1 = Male, 2 = Female, 8 = Prefer not to answer, 9 = Don’t know, or <code>NA</code>
 </td>
 </tr>
 <tr class="odd">
@@ -311,8 +328,15 @@
 <td>numeric</td>
 <td>Year of birth</td>
 </tr>
+<tr class="odd">
+<td><code>BIRTHMO</code></td>
+<td>numeric</td>
+<td>Month of birth (1–12)</td>
+</tr>
 </tbody>
-</table></section><section class="level3"><h3 id="date-fields">Date fields<a class="anchor" aria-label="anchor" href="#date-fields"></a>
+</table>
+<p>Any additional columns are passed through. Logical columns are coerced to numeric.</p>
+</section><section class="level3"><h3 id="date-fields">Date fields<a class="anchor" aria-label="anchor" href="#date-fields"></a>
 </h3>
 <p>Either provide:</p>
 <ul>
@@ -354,7 +378,7 @@
 <span>    <span class="fu">my_extension_server</span><span class="op">(</span>id <span class="op">=</span> <span class="st">"my-module"</span>, <span class="va">ptid</span>, <span class="va">extras</span><span class="op">)</span></span>
 <span>  <span class="op">}</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>The result of the <code>extension_ui</code> function <strong>must be a <code><a href="https://rstudio.github.io/bslib/reference/nav-items.html" class="external-link">bslib::nav_panel</a></code></strong>.</p>
+<p>The result of the <code>extension_ui</code> function <strong>must be a <code><a href="https://rstudio.github.io/bslib/reference/nav-items.html" class="external-link">bslib::nav_panel</a></code></strong> or a list thereof.</p>
 <p>The <code>ntrd</code> app will:</p>
 <ol type="1">
 <li>Call <code>extras$extension_ui()</code> to render additional UI</li>
@@ -373,7 +397,7 @@
 <span><span class="op">)</span></span></code></pre></div>
 </section><section class="level2"><h2 id="set-defaults">Optional: Setting scoring defaults<a class="anchor" aria-label="anchor" href="#set-defaults"></a>
 </h2>
-<p>When a data source is selected and the user clicks “Go”, <code>ntrd</code> uses the <code>package</code> property of the data source to identify the extension package and checks whether it defines a <code>.set_defaults()</code> function. If it does, it is called to set standardization method defaults for neuropsych scores.</p>
+<p>When a data source is selected and the user clicks “Go”, <code>ntrd</code> uses the <code>package</code> property of the data source to identify the extension package and checks whether it defines a <code>.set_defaults()</code> function. If it does, it is called to set standardization method defaults.</p>
 <p>Define this function in your package (it does not need to be exported):</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># R/zzz.R</span></span>
@@ -388,7 +412,134 @@
 <p>In <code>ntrdWisconsin</code>, <code>.set_defaults()</code> is also called from <code>.onAttach()</code> so that defaults are set both when the package is attached directly and when the <code>ntrd</code> app activates the extension. Also, note that the T-scores referenced by <code>ntrdWisconsin</code> are found in the <code>ntrsTscores</code> package.</p>
 </blockquote>
 </div>
-</section><section class="level2"><h2 id="conflict-detection">Conflict detection<a class="anchor" aria-label="anchor" href="#conflict-detection"></a>
+</section><section class="level2"><h2 id="in-app-updates">Optional: In-app updates<a class="anchor" aria-label="anchor" href="#in-app-updates"></a>
+</h2>
+<p>You can opt in to <code>ntrd</code>’s in-app update mechanism. When a user selects your data source, <code>ntrd</code> checks whether a newer version of your package is available and, if so, shows an update banner in the header with an “Update” button and an optional a “What’s new?” link.</p>
+<section class="level3"><h3 id="opt-in-two-exported-functions">Opt-in: two exported functions<a class="anchor" aria-label="anchor" href="#opt-in-two-exported-functions"></a>
+</h3>
+<p>To opt in, export two functions from your package’s namespace, with these exact names:</p>
+<ul>
+<li>
+<code>ntrd_update_available()</code> — returns an <code>update_result</code> describing whether an update is available.</li>
+<li>
+<code>ntrd_update_extension()</code> — performs the install. Runs in a restarted R session; your extension’s namespace is <strong>not</strong> loaded when it runs.</li>
+</ul>
+<p>If only one of the two is exported, <code>ntrd</code> emits a one-time warning per session and disables in-app updates for the extension.</p>
+</section><section class="level3"><h3 id="the-easy-path-github-hosted-extensions">The easy path: GitHub-hosted extensions<a class="anchor" aria-label="anchor" href="#the-easy-path-github-hosted-extensions"></a>
+</h3>
+<p>If your extension is hosted on GitHub, <code>ntrd</code> provides two factory functions that produce ready-to-use implementations. The entire opt-in is then four lines:</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># R/updates.R</span></span>
+<span></span>
+<span><span class="co">#' @export</span></span>
+<span><span class="va">ntrd_update_available</span> <span class="op">&lt;-</span> <span class="fu">ntrd</span><span class="fu">::</span><span class="fu"><a href="../reference/default_github_update.html">default_github_update_available</a></span><span class="op">(</span></span>
+<span>  <span class="st">"yourname/myExtension"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">#' @export</span></span>
+<span><span class="va">ntrd_update_extension</span> <span class="op">&lt;-</span> <span class="fu">ntrd</span><span class="fu">::</span><span class="fu"><a href="../reference/default_github_update.html">default_github_update_extension</a></span><span class="op">(</span></span>
+<span>  <span class="st">"yourname/myExtension"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>The factories:</p>
+<ul>
+<li>Compare the locally installed version against the <code>Version:</code> field in the <code>DESCRIPTION</code> on the repo’s default branch (or a pinned ref — see below).</li>
+<li>Construct an <code>update_result</code> whose <code>news_url</code> points at <code>https://github.com/&lt;repo&gt;/blob/HEAD/NEWS.md</code>, so the update banner’s “What’s new?” link works automatically if you maintain a <code>NEWS.md</code>.</li>
+<li>Install with <code>remotes::install_github(..., upgrade = "always", dependencies = TRUE)</code>, so <code>ntrd</code> and other dependencies are also brought up to date.</li>
+</ul>
+<p>If your package name differs from the repo name, pass <code>package =</code> explicitly to <code><a href="../reference/default_github_update.html">default_github_update_available()</a></code>. You can also pin a specific ref with the <code>"user/repo@ref"</code> syntax.</p>
+<p><code>ntrdWisconsin/R/updates.R</code> uses this pattern verbatim.</p>
+</section><section class="level3"><h3 id="the-update_result-contract">The <code>update_result</code> contract<a class="anchor" aria-label="anchor" href="#the-update_result-contract"></a>
+</h3>
+<p>Both your custom and the factory-produced implementations of <code>ntrd_update_available()</code> must return an <code>update_result</code> S7 object:</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">ntrd</span><span class="fu">::</span><span class="fu"><a href="../reference/update_result.html">update_result</a></span><span class="op">(</span></span>
+<span>  available <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  current   <span class="op">=</span> <span class="st">"0.1.0"</span>,</span>
+<span>  latest    <span class="op">=</span> <span class="st">"0.2.0"</span>,</span>
+<span>  news_url  <span class="op">=</span> <span class="st">"https://github.com/user/repo/blob/HEAD/NEWS.md"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<table class="table caption-top">
+<colgroup>
+<col style="width: 29%">
+<col style="width: 17%">
+<col style="width: 26%">
+<col style="width: 26%">
+</colgroup>
+<thead><tr class="header">
+<th>Property</th>
+<th>Type</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>available</code></td>
+<td>logical scalar</td>
+<td><code>FALSE</code></td>
+<td>Whether a newer version exists. The safe <code>FALSE</code> default means a forgotten field never produces a spurious update prompt.</td>
+</tr>
+<tr class="even">
+<td><code>current</code></td>
+<td>character scalar</td>
+<td><code>NA_character_</code></td>
+<td>Installed version, or <code>NA</code> if it could not be determined.</td>
+</tr>
+<tr class="odd">
+<td><code>latest</code></td>
+<td>character scalar</td>
+<td><code>NA_character_</code></td>
+<td>Latest available version, or <code>NA</code> if it could not be determined.</td>
+</tr>
+<tr class="even">
+<td><code>news_url</code></td>
+<td>character scalar</td>
+<td><code>NA_character_</code></td>
+<td>Optional URL to a changelog. Use <code>NA_character_</code> (not <code>NULL</code> or <code>""</code>) for “absent”.</td>
+</tr>
+</tbody>
+</table>
+<p><code><a href="../reference/update_result.html">update_result()</a></code> with no arguments is a valid “no update available” object — use it as a safe fallback when your check can’t complete.</p>
+</section><section class="level3"><h3 id="writing-a-custom-update-check">Writing a custom update check<a class="anchor" aria-label="anchor" href="#writing-a-custom-update-check"></a>
+</h3>
+<p>If you’re not on GitHub (GitLab, an internal CRAN-like, etc.) you’ll write your own implementations. The contract is just the two functions and the <code>update_result</code> return type:</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">#' @export</span></span>
+<span><span class="va">ntrd_update_available</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">current</span> <span class="op">&lt;-</span> <span class="kw"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/packageDescription.html" class="external-link">packageVersion</a></span><span class="op">(</span><span class="st">"myExtension"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    error <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="cn">NA_character_</span></span>
+<span>  <span class="op">)</span></span>
+<span>  <span class="va">latest</span> <span class="op">&lt;-</span> <span class="kw"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch</a></span><span class="op">(</span></span>
+<span>    <span class="fu">fetch_latest_version_from_my_server</span><span class="op">(</span><span class="op">)</span>,  <span class="co"># your logic</span></span>
+<span>    error <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="cn">NA_character_</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span>  <span class="fu">ntrd</span><span class="fu">::</span><span class="fu"><a href="../reference/update_result.html">update_result</a></span><span class="op">(</span></span>
+<span>    available <span class="op">=</span> <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">current</span><span class="op">)</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">latest</span><span class="op">)</span> <span class="op">&amp;&amp;</span></span>
+<span>                <span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/compareVersion.html" class="external-link">compareVersion</a></span><span class="op">(</span><span class="va">latest</span>, <span class="va">current</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span>,</span>
+<span>    current   <span class="op">=</span> <span class="va">current</span>,</span>
+<span>    latest    <span class="op">=</span> <span class="va">latest</span>,</span>
+<span>    news_url  <span class="op">=</span> <span class="st">"https://example.com/myExtension/CHANGELOG.html"</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="co">#' @export</span></span>
+<span><span class="va">ntrd_update_extension</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"myExtension"</span>, repos <span class="op">=</span> <span class="st">"https://example.com/cran"</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/invisible.html" class="external-link">invisible</a></span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<p><code>ntrd_update_available()</code> is invoked from a Shiny reactive context; the framework wraps it in error handling so a thrown error becomes a warning plus the safe “no update” fallback, but it’s still good practice to wrap network calls in <code>tryCatch</code>. <code>ntrd_update_extension()</code> runs in a restarted session and its return value is interpreted as success/failure based on whether it threw an error.</p>
+</section><section class="level3"><h3 id="caching-and-forced-refresh">Caching and forced refresh<a class="anchor" aria-label="anchor" href="#caching-and-forced-refresh"></a>
+</h3>
+<p>Update checks are cached per package for one hour by default. The Shiny app calls <code>ntrd::check_extension_update(package)</code> internally. If you need to invalidate the cache (for example, in a “check again” affordance or during testing), use <code>ntrd::clear_update_cache(package)</code> or <code><a href="../reference/clear_update_cache.html">ntrd::clear_update_cache()</a></code> for everything.</p>
+</section><section class="level3"><h3 id="platform-support">Platform support<a class="anchor" aria-label="anchor" href="#platform-support"></a>
+</h3>
+<p>The two-stage restart cascade — install in one fresh R session, then relaunch in the next — depends on <code>rstudioapi::restartSession(command = ...)</code>. Only RStudio honors the <code>command</code> argument fully. In Positron, plain R, Rscript, and VS Code’s R extension, the update modal shows manual install instructions instead. Extensions don’t need to do anything different to support either path; the framework picks the right flow automatically.</p>
+</section><section class="level3"><h3 id="news-md-convention">
+<code>NEWS.md</code> convention<a class="anchor" aria-label="anchor" href="#news-md-convention"></a>
+</h3>
+<p>When using the GitHub factories, the default <code>news_url</code> points at <code>NEWS.md</code> on the repo’s default branch. Maintaining a <code>NEWS.md</code> gives your users a “What’s new?” link in the update banner. Standard <code># myExtension 0.2.0</code> / <code>## Section</code> Markdown is rendered by GitHub as-is.</p>
+</section></section><section class="level2"><h2 id="conflict-detection">Conflict detection<a class="anchor" aria-label="anchor" href="#conflict-detection"></a>
 </h2>
 <p>If multiple extension packages define S7 generics with the same <code>std_using_*</code> name, <code>ntrd</code> will emit a warning at startup. Extension authors should use shared generics from a common dependency (e.g., <code>ntrs</code>) rather than redefining them.</p>
 </section><section class="level2"><h2 id="complete-example-ntrdwisconsin">Complete example: <code>ntrdWisconsin</code>
@@ -396,10 +547,6 @@
 </h2>
 <p>Here is a summary of the key files in the <code>ntrdWisconsin</code> package and how they map to the extension API:</p>
 <table class="table caption-top">
-<colgroup>
-<col style="width: 40%">
-<col style="width: 60%">
-</colgroup>
 <thead><tr class="header">
 <th>File</th>
 <th>Purpose</th>
@@ -407,35 +554,44 @@
 <tbody>
 <tr class="odd">
 <td><code>DESCRIPTION</code></td>
-<td>Declares <code>Config/ntrd/extension: true</code> and imports <code>ntrd</code>, <code>S7</code>
-</td>
+<td>Declares <code>Config/ntrd/extension: true</code>; imports <code>ntrd</code>, <code>ntrs</code>, <code>ntrsTscores</code>, <code>S7</code>, …; uses <code>Remotes:</code> for the GitHub-hosted dependencies.</td>
 </tr>
 <tr class="even">
 <td><code>R/zzz.R</code></td>
 <td>
-<code>.onLoad()</code> calls <code><a href="https://rconsortium.github.io/S7/reference/methods_register.html" class="external-link">S7::methods_register()</a></code>; <code>.set_defaults()</code> sets T-score defaults</td>
+<code>.onLoad()</code> calls <code><a href="https://rconsortium.github.io/S7/reference/methods_register.html" class="external-link">S7::methods_register()</a></code>; <code>.onAttach()</code> calls <code>.set_defaults()</code> so T-score defaults apply when the package is attached directly (in addition to when the <code>ntrd</code> app activates the extension).</td>
 </tr>
 <tr class="odd">
 <td><code>R/wadrc_source.R</code></td>
-<td>Defines <code>wadrc_source</code> class (extends <code><a href="../reference/data_source.html">ntrd::data_source</a></code>)</td>
+<td>Defines <code>wadrc_source</code> class (extends <code><a href="../reference/data_source.html">ntrd::data_source</a></code>).</td>
 </tr>
 <tr class="even">
 <td><code>R/data_source_ui.R</code></td>
-<td>Implements <code>data_source_ui</code> for <code>wadrc_source</code> — REDCap token inputs</td>
+<td>Implements <code>data_source_ui</code> for <code>wadrc_source</code> — REDCap token inputs.</td>
 </tr>
 <tr class="odd">
 <td><code>R/data_source_server.R</code></td>
-<td>Implements <code>data_source_server</code> for <code>wadrc_source</code> — collects tokens, provides <code>$restore</code> and <code>$extras</code>
-</td>
+<td>Implements <code>data_source_server</code> for <code>wadrc_source</code> — collects tokens; provides <code>$restore</code> and <code>$extras</code>.</td>
 </tr>
 <tr class="even">
 <td><code>R/data_load.R</code></td>
-<td>Implements <code>data_load</code> for <code>wadrc_source</code> — pulls from REDCap, returns <code>data_nacc</code>
-</td>
+<td>Implements <code>data_load</code> for <code>wadrc_source</code> — pulls from REDCap, returns <code>data_nacc</code>.</td>
 </tr>
 <tr class="odd">
 <td><code>R/extensionModule.R</code></td>
-<td>Defines <code>extension_ui()</code> / <code>extension_server()</code> for biomarker display (passed via <code>$extras</code>)</td>
+<td>Defines <code>extension_ui()</code> / <code>extension_server()</code> for biomarker display (passed via <code>$extras</code>).</td>
+</tr>
+<tr class="even">
+<td><code>R/updates.R</code></td>
+<td>Exports <code>ntrd_update_available()</code> and <code>ntrd_update_extension()</code> via the GitHub factories — opts the package in to in-app updates (see <a href="#in-app-updates">In-app updates</a>).</td>
+</tr>
+<tr class="odd">
+<td><code>R/npsych_scores-CESDTOTAL.R</code></td>
+<td>Defines a custom <code>CESDTOTAL</code> score subclass via <code><a href="https://rmtrane.github.io/ntrs/reference/new_npsych_scores.html" class="external-link">ntrs::new_npsych_scores()</a></code> — picked up automatically by <code>ntrs</code>’s namespace-scanning discovery.</td>
+</tr>
+<tr class="even">
+<td><code>R/ntrdWisconsin-package.R</code></td>
+<td>Package-level docs; <code>@import ntrsTscores</code> so T-score methods are attached when <code>ntrdWisconsin</code> is loaded.</td>
 </tr>
 </tbody>
 </table>
@@ -443,10 +599,10 @@
 </h3>
 <p>To create a new extension from scratch, you need at minimum four files:</p>
 <p><strong><code>R/my_source.R</code></strong></p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">my_source</span> <span class="op">&lt;-</span> <span class="fu">ntrd</span><span class="fu">::</span><span class="fu"><a href="../reference/new_data_source.html">new_data_source</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"My Source"</span>, id <span class="op">=</span> <span class="st">"my_source"</span>, package <span class="op">=</span> <span class="st">"myExtension"</span><span class="op">)</span></span></code></pre></div>
 <p><strong><code>R/data_source_ui.R</code></strong></p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data_source_ui</span> <span class="op">&lt;-</span> <span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/new_external_generic.html" class="external-link">new_external_generic</a></span><span class="op">(</span><span class="st">"ntrd"</span>, <span class="st">"data_source_ui"</span>, <span class="st">"source"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/method.html" class="external-link">method</a></span><span class="op">(</span><span class="va">data_source_ui</span>, <span class="va">my_source</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">source</span>, <span class="va">ns</span><span class="op">)</span> <span class="op">{</span></span>
@@ -455,7 +611,7 @@
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 <p><strong><code>R/data_source_server.R</code></strong></p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data_source_server</span> <span class="op">&lt;-</span> <span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/new_external_generic.html" class="external-link">new_external_generic</a></span><span class="op">(</span><span class="st">"ntrd"</span>, <span class="st">"data_source_server"</span>, <span class="st">"source"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/method.html" class="external-link">method</a></span><span class="op">(</span><span class="va">data_source_server</span>, <span class="va">my_source</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">source</span>, <span class="va">id</span><span class="op">)</span> <span class="op">{</span></span>
@@ -472,7 +628,7 @@
 <span>  <span class="op">}</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 <p><strong><code>R/data_load.R</code></strong></p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#' @include my_source.R</span></span>
 <span><span class="va">data_load</span> <span class="op">&lt;-</span> <span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/new_external_generic.html" class="external-link">new_external_generic</a></span><span class="op">(</span><span class="st">"ntrd"</span>, <span class="st">"data_load"</span>, <span class="st">"source"</span><span class="op">)</span></span>
 <span></span>
@@ -481,7 +637,7 @@
 <span>  <span class="fu">ntrd</span><span class="fu">::</span><span class="fu"><a href="../reference/data_nacc.html">data_nacc</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">raw</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 <p><strong><code>R/zzz.R</code></strong></p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">.onLoad</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/methods_register.html" class="external-link">methods_register</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>

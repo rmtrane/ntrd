@@ -23,6 +23,20 @@ Extensions are regular R packages that:
 The [`ntrdWisconsin`](https://github.com/rmtrane/ntrdWisconsin) package
 is a full working example and is referenced throughout this guide.
 
+> **Custom Scores**
+>
+> One can also define custom neuropsychological score classes in an
+> extension package. The `ntrs` package provides the
+> `new_npsych_scores()` function for this purpose, and the `ntrd` app
+> picks up any S7 classes that inherit from
+> [`ntrs::npsych_scores`](https://rmtrane.github.io/ntrs/reference/npsych_scores.html)
+> automatically via namespace scanning. For more information, see the
+> [Extending Scores and
+> Versions](https://rmtrane.github.io/ntrs/articles/extending-scores-and-versions.html)
+> vignette in the `ntrs` package for details, and the `ntrdWisconsin`
+> package for a concrete example of defining a custom [`CESDTOTAL` score
+> class](https://github.com/rmtrane/ntrdWisconsin/blob/d3e758d35b0dec2d6c6f619aed49c617fa8f6886/R/npsych_scores-CESDTOTAL.R).
+
 ## How extensions are discovered
 
 When the `ntrd` Shiny app starts, it calls
@@ -79,10 +93,21 @@ Imports:
     S7,
     ntrd,
     ntrs,
+    ntrsTscores,
     shiny,
     ...
+Remotes:
+    rmtrane/ntrd,
+    rmtrane/ntrs,
+    rmtrane/ntrsTscores
 Config/ntrd/extension: true
 ```
+
+Note that `ntrdWisconsin` also imports `ntrs` and `ntrsTscores` because
+it defines a custom score class and sets T-score defaults. Your
+extension only needs to import what it uses. Also, note that the
+`Remotes` field is necessary for dependencies that are not on CRAN
+(which none of these packages are yet).
 
 ### .onLoad hook
 
@@ -275,12 +300,16 @@ expected format.
 
 ### Required columns
 
-| Column    | Type      | Description                   |
-|-----------|-----------|-------------------------------|
-| `NACCID`  | character | Unique participant identifier |
-| `SEX`     | numeric   | 1 = Male, 2 = Female, or `NA` |
-| `EDUC`    | numeric   | Years of education            |
-| `BIRTHYR` | numeric   | Year of birth                 |
+| Column | Type | Description |
+|----|----|----|
+| `NACCID` | character | Unique participant identifier |
+| `SEX` | numeric | 1 = Male, 2 = Female, 8 = Prefer not to answer, 9 = Don’t know, or `NA` |
+| `EDUC` | numeric | Years of education |
+| `BIRTHYR` | numeric | Year of birth |
+| `BIRTHMO` | numeric | Month of birth (1–12) |
+
+Any additional columns are passed through. Logical columns are coerced
+to numeric.
 
 ### Date fields
 
@@ -347,7 +376,8 @@ extras <- shiny::reactiveValues(
 ```
 
 The result of the `extension_ui` function **must be a
-[`bslib::nav_panel`](https://rstudio.github.io/bslib/reference/nav-items.html)**.
+[`bslib::nav_panel`](https://rstudio.github.io/bslib/reference/nav-items.html)**
+or a list thereof.
 
 The `ntrd` app will:
 
@@ -378,8 +408,7 @@ extras <- shiny::reactiveValues(
 When a data source is selected and the user clicks “Go”, `ntrd` uses the
 `package` property of the data source to identify the extension package
 and checks whether it defines a `.set_defaults()` function. If it does,
-it is called to set standardization method defaults for neuropsych
-scores.
+it is called to set standardization method defaults.
 
 Define this function in your package (it does not need to be exported):
 
@@ -401,6 +430,161 @@ Define this function in your package (it does not need to be exported):
 > Also, note that the T-scores referenced by `ntrdWisconsin` are found
 > in the `ntrsTscores` package.
 
+## Optional: In-app updates
+
+You can opt in to `ntrd`’s in-app update mechanism. When a user selects
+your data source, `ntrd` checks whether a newer version of your package
+is available and, if so, shows an update banner in the header with an
+“Update” button and an optional a “What’s new?” link.
+
+### Opt-in: two exported functions
+
+To opt in, export two functions from your package’s namespace, with
+these exact names:
+
+- `ntrd_update_available()` — returns an `update_result` describing
+  whether an update is available.
+- `ntrd_update_extension()` — performs the install. Runs in a restarted
+  R session; your extension’s namespace is **not** loaded when it runs.
+
+If only one of the two is exported, `ntrd` emits a one-time warning per
+session and disables in-app updates for the extension.
+
+### The easy path: GitHub-hosted extensions
+
+If your extension is hosted on GitHub, `ntrd` provides two factory
+functions that produce ready-to-use implementations. The entire opt-in
+is then four lines:
+
+``` r
+
+# R/updates.R
+
+#' @export
+ntrd_update_available <- ntrd::default_github_update_available(
+  "yourname/myExtension"
+)
+
+#' @export
+ntrd_update_extension <- ntrd::default_github_update_extension(
+  "yourname/myExtension"
+)
+```
+
+The factories:
+
+- Compare the locally installed version against the `Version:` field in
+  the `DESCRIPTION` on the repo’s default branch (or a pinned ref — see
+  below).
+- Construct an `update_result` whose `news_url` points at
+  `https://github.com/<repo>/blob/HEAD/NEWS.md`, so the update banner’s
+  “What’s new?” link works automatically if you maintain a `NEWS.md`.
+- Install with
+  `remotes::install_github(..., upgrade = "always", dependencies = TRUE)`,
+  so `ntrd` and other dependencies are also brought up to date.
+
+If your package name differs from the repo name, pass `package =`
+explicitly to
+[`default_github_update_available()`](https://rmtrane.github.io/ntrd/reference/default_github_update.md).
+You can also pin a specific ref with the `"user/repo@ref"` syntax.
+
+`ntrdWisconsin/R/updates.R` uses this pattern verbatim.
+
+### The `update_result` contract
+
+Both your custom and the factory-produced implementations of
+`ntrd_update_available()` must return an `update_result` S7 object:
+
+``` r
+
+ntrd::update_result(
+  available = TRUE,
+  current   = "0.1.0",
+  latest    = "0.2.0",
+  news_url  = "https://github.com/user/repo/blob/HEAD/NEWS.md"
+)
+```
+
+| Property | Type | Default | Meaning |
+|----|----|----|----|
+| `available` | logical scalar | `FALSE` | Whether a newer version exists. The safe `FALSE` default means a forgotten field never produces a spurious update prompt. |
+| `current` | character scalar | `NA_character_` | Installed version, or `NA` if it could not be determined. |
+| `latest` | character scalar | `NA_character_` | Latest available version, or `NA` if it could not be determined. |
+| `news_url` | character scalar | `NA_character_` | Optional URL to a changelog. Use `NA_character_` (not `NULL` or `""`) for “absent”. |
+
+[`update_result()`](https://rmtrane.github.io/ntrd/reference/update_result.md)
+with no arguments is a valid “no update available” object — use it as a
+safe fallback when your check can’t complete.
+
+### Writing a custom update check
+
+If you’re not on GitHub (GitLab, an internal CRAN-like, etc.) you’ll
+write your own implementations. The contract is just the two functions
+and the `update_result` return type:
+
+``` r
+
+#' @export
+ntrd_update_available <- function() {
+  current <- tryCatch(
+    as.character(utils::packageVersion("myExtension")),
+    error = function(e) NA_character_
+  )
+  latest <- tryCatch(
+    fetch_latest_version_from_my_server(),  # your logic
+    error = function(e) NA_character_
+  )
+
+  ntrd::update_result(
+    available = !is.na(current) && !is.na(latest) &&
+                utils::compareVersion(latest, current) > 0,
+    current   = current,
+    latest    = latest,
+    news_url  = "https://example.com/myExtension/CHANGELOG.html"
+  )
+}
+
+#' @export
+ntrd_update_extension <- function() {
+  install.packages("myExtension", repos = "https://example.com/cran")
+  invisible(NULL)
+}
+```
+
+`ntrd_update_available()` is invoked from a Shiny reactive context; the
+framework wraps it in error handling so a thrown error becomes a warning
+plus the safe “no update” fallback, but it’s still good practice to wrap
+network calls in `tryCatch`. `ntrd_update_extension()` runs in a
+restarted session and its return value is interpreted as success/failure
+based on whether it threw an error.
+
+### Caching and forced refresh
+
+Update checks are cached per package for one hour by default. The Shiny
+app calls `ntrd::check_extension_update(package)` internally. If you
+need to invalidate the cache (for example, in a “check again” affordance
+or during testing), use `ntrd::clear_update_cache(package)` or
+[`ntrd::clear_update_cache()`](https://rmtrane.github.io/ntrd/reference/clear_update_cache.md)
+for everything.
+
+### Platform support
+
+The two-stage restart cascade — install in one fresh R session, then
+relaunch in the next — depends on
+`rstudioapi::restartSession(command = ...)`. Only RStudio honors the
+`command` argument fully. In Positron, plain R, Rscript, and VS Code’s R
+extension, the update modal shows manual install instructions instead.
+Extensions don’t need to do anything different to support either path;
+the framework picks the right flow automatically.
+
+### `NEWS.md` convention
+
+When using the GitHub factories, the default `news_url` points at
+`NEWS.md` on the repo’s default branch. Maintaining a `NEWS.md` gives
+your users a “What’s new?” link in the update banner. Standard
+`# myExtension 0.2.0` / `## Section` Markdown is rendered by GitHub
+as-is.
+
 ## Conflict detection
 
 If multiple extension packages define S7 generics with the same
@@ -415,13 +599,16 @@ how they map to the extension API:
 
 | File | Purpose |
 |----|----|
-| `DESCRIPTION` | Declares `Config/ntrd/extension: true` and imports `ntrd`, `S7` |
-| `R/zzz.R` | `.onLoad()` calls [`S7::methods_register()`](https://rconsortium.github.io/S7/reference/methods_register.html); `.set_defaults()` sets T-score defaults |
-| `R/wadrc_source.R` | Defines `wadrc_source` class (extends [`ntrd::data_source`](https://rmtrane.github.io/ntrd/reference/data_source.md)) |
-| `R/data_source_ui.R` | Implements `data_source_ui` for `wadrc_source` — REDCap token inputs |
-| `R/data_source_server.R` | Implements `data_source_server` for `wadrc_source` — collects tokens, provides `$restore` and `$extras` |
-| `R/data_load.R` | Implements `data_load` for `wadrc_source` — pulls from REDCap, returns `data_nacc` |
-| `R/extensionModule.R` | Defines `extension_ui()` / `extension_server()` for biomarker display (passed via `$extras`) |
+| `DESCRIPTION` | Declares `Config/ntrd/extension: true`; imports `ntrd`, `ntrs`, `ntrsTscores`, `S7`, …; uses `Remotes:` for the GitHub-hosted dependencies. |
+| `R/zzz.R` | `.onLoad()` calls [`S7::methods_register()`](https://rconsortium.github.io/S7/reference/methods_register.html); `.onAttach()` calls `.set_defaults()` so T-score defaults apply when the package is attached directly (in addition to when the `ntrd` app activates the extension). |
+| `R/wadrc_source.R` | Defines `wadrc_source` class (extends [`ntrd::data_source`](https://rmtrane.github.io/ntrd/reference/data_source.md)). |
+| `R/data_source_ui.R` | Implements `data_source_ui` for `wadrc_source` — REDCap token inputs. |
+| `R/data_source_server.R` | Implements `data_source_server` for `wadrc_source` — collects tokens; provides `$restore` and `$extras`. |
+| `R/data_load.R` | Implements `data_load` for `wadrc_source` — pulls from REDCap, returns `data_nacc`. |
+| `R/extensionModule.R` | Defines `extension_ui()` / `extension_server()` for biomarker display (passed via `$extras`). |
+| `R/updates.R` | Exports `ntrd_update_available()` and `ntrd_update_extension()` via the GitHub factories — opts the package in to in-app updates (see [In-app updates](#in-app-updates)). |
+| `R/npsych_scores-CESDTOTAL.R` | Defines a custom `CESDTOTAL` score subclass via [`ntrs::new_npsych_scores()`](https://rmtrane.github.io/ntrs/reference/new_npsych_scores.html) — picked up automatically by `ntrs`’s namespace-scanning discovery. |
+| `R/ntrdWisconsin-package.R` | Package-level docs; `@import ntrsTscores` so T-score methods are attached when `ntrdWisconsin` is loaded. |
 
 ### Minimal skeleton
 
