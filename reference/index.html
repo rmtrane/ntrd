@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">ntrd</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -127,6 +127,13 @@
 
         </dt>
         <dd>Assessment Longitudinal Table</dd>
+
+        <dt>
+
+          <code><a href="assessment_summary_table.html">assessment_summary_table()</a></code> <code><a href="assessment_summary_table.html">assessment_summary_data()</a></code>
+
+        </dt>
+        <dd>Create NACC T-Cog Neuropsychological Assessment Summary Table</dd>
 
         <dt>
 
@@ -325,6 +332,13 @@
 
         <dt>
 
+          <code><a href="ht_cells.html">ht_cells_body()</a></code> <code><a href="ht_cells.html">ht_cells_stub()</a></code> <code><a href="ht_cells.html">ht_cells_column_labels()</a></code> <code><a href="ht_cells.html">ht_cells_stubhead()</a></code> <code><a href="ht_cells.html">ht_cells_row_groups()</a></code> <code><a href="ht_cells.html">ht_cells_footnotes()</a></code>
+
+        </dt>
+        <dd>Locations for <code><a href="../reference/ht_tab_style.html">ht_tab_style()</a></code></dd>
+
+        <dt>
+
           <code><a href="nacc_var_labels.html">nacc_var_labels</a></code>
 
         </dt>
@@ -350,6 +364,113 @@
 
         </dt>
         <dd>Demo Data</dd>
+      </dl></div><div class="section level2">
+      <h2 id="custom-table-building-functions">Custom Table Building Functions<a class="anchor" aria-label="anchor" href="#custom-table-building-functions"></a></h2>
+
+      <div class="section-desc"><p>Set of functions to replicate the functionality of <a href="https://gt.rstudio.com" class="external-link">gt</a> needed. Light weight and very specific to the needs of this package.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="ht_table.html">ht_table()</a></code>
+
+        </dt>
+        <dd>Build an HTML table (first-cut: structure only)</dd>
+
+        <dt>
+
+          <code><a href="ht_add_css.html">ht_add_css()</a></code>
+
+        </dt>
+        <dd>Attach scoped CSS to a single table.</dd>
+
+        <dt>
+
+          <code><a href="ht_cell_fill.html">ht_cell_fill()</a></code>
+
+        </dt>
+        <dd>Build a fill-style (background-color) spec for <code><a href="../reference/ht_tab_style.html">ht_tab_style()</a></code>.</dd>
+
+        <dt>
+
+          <code><a href="ht_cell_text.html">ht_cell_text()</a></code>
+
+        </dt>
+        <dd>Build a text-style spec for use in <code><a href="../reference/ht_tab_style.html">ht_tab_style()</a></code>.</dd>
+
+        <dt>
+
+          <code><a href="ht_cells.html">ht_cells_body()</a></code> <code><a href="ht_cells.html">ht_cells_stub()</a></code> <code><a href="ht_cells.html">ht_cells_column_labels()</a></code> <code><a href="ht_cells.html">ht_cells_stubhead()</a></code> <code><a href="ht_cells.html">ht_cells_row_groups()</a></code> <code><a href="ht_cells.html">ht_cells_footnotes()</a></code>
+
+        </dt>
+        <dd>Locations for <code><a href="../reference/ht_tab_style.html">ht_tab_style()</a></code></dd>
+
+        <dt>
+
+          <code><a href="ht_cols_hide.html">ht_cols_hide()</a></code>
+
+        </dt>
+        <dd>Hide one or more columns.</dd>
+
+        <dt>
+
+          <code><a href="ht_cols_label.html">ht_cols_label()</a></code>
+
+        </dt>
+        <dd>Relabel one or more columns.</dd>
+
+        <dt>
+
+          <code><a href="ht_hide_header.html">ht_hide_header()</a></code>
+
+        </dt>
+        <dd>Suppress the entire <code>&lt;thead&gt;</code> (spanner row + column labels).</dd>
+
+        <dt>
+
+          <code><a href="ht_merge_cols_label.html">ht_merge_cols_label()</a></code>
+
+        </dt>
+        <dd>Merge column labels into one cell.</dd>
+
+        <dt>
+
+          <code><a href="ht_render.html">ht_render()</a></code>
+
+        </dt>
+        <dd>Render a <code>html_table</code> to <code><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">shiny::tags</a></code></dd>
+
+        <dt>
+
+          <code><a href="ht_tab_footnote.html">ht_tab_footnote()</a></code>
+
+        </dt>
+        <dd>Append a table-level footnote.</dd>
+
+        <dt>
+
+          <code><a href="ht_tab_spanner.html">ht_tab_spanner()</a></code>
+
+        </dt>
+        <dd>Add a column spanner across one or more columns.</dd>
+
+        <dt>
+
+          <code><a href="ht_tab_stubhead.html">ht_tab_stubhead()</a></code>
+
+        </dt>
+        <dd>Set the stubhead label (top-left cell, only shown when <code>rowname_col</code> is set).</dd>
+
+        <dt>
+
+          <code><a href="ht_tab_style.html">ht_tab_style()</a></code>
+
+        </dt>
+        <dd>Attach styles to specific cell locations.</dd>
       </dl></div><div class="section level2">
       <h2 id="misc-functions">Misc Functions<a class="anchor" aria-label="anchor" href="#misc-functions"></a></h2>
 

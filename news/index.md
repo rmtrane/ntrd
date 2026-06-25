@@ -1,24 +1,32 @@
 # Changelog
 
-## ntrd 0.0.1
+## ntrd 0.1.1
 
-Initial release of `ntrd`, the Neuropsychological Test Results
-Dashboard. The package provides a Shiny application — built on top of
-`ntrs` — for presenting neuropsychological test scores in a form useful
-for consensus diagnosis, plus an extension API for adding new data
-sources.
+### Bug Fixes
+
+- In some cases, the methods were assigned out of order resulting in
+  missing standardizations. Fixed.
+
+## ntrd 0.1.0
+
+Initial release of [ntrd](https://rmtrane.github.io/ntrd), the
+Neuropsychological Test Results Dashboard. The package provides a Shiny
+application — built on top of [ntrs](https://rmtrane.github.io/ntrs/) —
+for presenting neuropsychological test scores in a form useful for
+consensus diagnosis, plus an extension API for adding new data sources.
 
 ### Shiny dashboard
 
 - [`shinyDashboard()`](https://rmtrane.github.io/ntrd/reference/shinyDashboard.md)
   launches the application. Also available from the RStudio “Addins”
   menu as “Neuropsychological Test Result Dashboard”.
-- Multi-panel layout built with `bslib` and Bootstrap 5.
+- Multi-panel layout built with
+  [bslib](https://rstudio.github.io/bslib/) and Bootstrap 5.
 - Per-participant view with study ID selector, demographics table, and
   visit-date selector.
 - Asynchronous data loading for extension data (e.g. biomarkers) via
-  `mirai` daemons, so the UI stays responsive while extensions fetch
-  data in the background.
+  [mirai](https://mirai.r-lib.org) daemons, so the UI stays responsive
+  while extensions fetch data in the background.
 
 ### Data sources
 
@@ -55,27 +63,28 @@ sources.
 - Conflict detection warns when multiple extensions define `std_using_*`
   generics with the same name.
 - Full walkthrough available in the “Extension API” vignette, with
-  [`ntrdWisconsin`](https://github.com/rmtrane/ntrdWisconsin) as a
+  [`{ntrdWisconsin}`](https://github.com/rmtrane/ntrdWisconsin) as a
   complete worked example.
 
 ### Tables and visualizations
 
 - [`assessment_summary_table()`](https://rmtrane.github.io/ntrd/reference/assessment_summary_table.md)
   / `mainTableModule` — the main per-visit NACC T-Cog assessment summary
-  table, rendered with `gt`.
+  table, rendered with [gt](https://gt.rstudio.com).
 - [`assessment_longitudinal_table()`](https://rmtrane.github.io/ntrd/reference/assessment_longitudinal_table.md)
   / `longTableModule` — longitudinal table of scores across visits.
 - [`demographics_table()`](https://rmtrane.github.io/ntrd/reference/demographics_table.md)
-  — compact `gt` demographics summary with flagging for missing or
-  visit-to-visit-varying values.
+  — compact [gt](https://gt.rstudio.com) demographics summary with
+  flagging for missing or visit-to-visit-varying values.
 - [`prev_diagnoses_table()`](https://rmtrane.github.io/ntrd/reference/prev_diagnoses_table.md)
   / `prevDiagnosesModule` — prior diagnoses table.
 - `plotModule` — interactive `plotly` longitudinal trend plots, one
   accordion panel per cognitive domain, with crosswalk pairs colored
   consistently and trace-visibility state surfaced back to Shiny.
 - “Generate PDF for Download” button on the main table (requires
-  `pagedown`); falls back to a friendly install hint when `pagedown`
-  isn’t available.
+  [pagedown](https://github.com/rstudio/pagedown)); falls back to a
+  friendly install hint when
+  [pagedown](https://github.com/rstudio/pagedown) isn’t available.
 
 ### Customization
 
@@ -119,7 +128,9 @@ sources.
 - MIT licensed.
 - R (\>= 4.2.0).
 - CI on GitHub Actions: R-CMD-check on macOS, Windows, and Ubuntu (devel
-  / release / oldrel-1); `pkgdown` site build and deploy; Codecov
-  coverage upload.
-- `shinytest2`-based tests for the Shiny modules.
-- `pkgdown` site at <https://rmtrane.github.io/ntrd/>.
+  / release / oldrel-1); [pkgdown](https://pkgdown.r-lib.org/) site
+  build and deploy; Codecov coverage upload.
+- [shinytest2](https://rstudio.github.io/shinytest2/)-based tests for
+  the Shiny modules.
+- [pkgdown](https://pkgdown.r-lib.org/) site at
+  <https://rmtrane.github.io/ntrd/>.

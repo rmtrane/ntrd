@@ -32,6 +32,9 @@ Functions to create tables
 
 - [`assessment_longitudinal_table()`](https://rmtrane.github.io/ntrd/reference/assessment_longitudinal_table.md)
   : Assessment Longitudinal Table
+- [`assessment_summary_table()`](https://rmtrane.github.io/ntrd/reference/assessment_summary_table.md)
+  [`assessment_summary_data()`](https://rmtrane.github.io/ntrd/reference/assessment_summary_table.md)
+  : Create NACC T-Cog Neuropsychological Assessment Summary Table
 - [`demographics_table()`](https://rmtrane.github.io/ntrd/reference/demographics_table.md)
   : Summary Table with Demographic Information
 - [`prev_diagnoses_table()`](https://rmtrane.github.io/ntrd/reference/prev_diagnoses_table.md)
@@ -87,34 +90,129 @@ Vectors/lists used to map variable names to/from NACC variable names
 
 - [`birth_vars`](https://rmtrane.github.io/ntrd/reference/birth_vars.md)
   : Variables necessary for Birth Dates
+
 - [`critical_vars`](https://rmtrane.github.io/ntrd/reference/critical_vars.md)
   : Variables Necessary
+
 - [`optional_vars`](https://rmtrane.github.io/ntrd/reference/optional_vars.md)
   : Optional Variables
+
 - [`visit_vars`](https://rmtrane.github.io/ntrd/reference/visit_vars.md)
   : Variables necessary for Visit Dates
+
 - [`nacc_to_wls`](https://rmtrane.github.io/ntrd/reference/nacc_to_wls.md)
   : Translate NACC variable names to WLS variable names
+
 - [`wls_to_nacc`](https://rmtrane.github.io/ntrd/reference/wls_to_nacc.md)
   : Translate WLS variable names to NACC variable names
+
 - [`nacc_var_groups`](https://rmtrane.github.io/ntrd/reference/nacc_var_groups.md)
   : NACC Variable Groupings
+
 - [`nacc_groups`](https://rmtrane.github.io/ntrd/reference/nacc_groups.md)
   : NACC Variable Groups
+
 - [`rdd`](https://rmtrane.github.io/ntrd/reference/rdd.md) : Researchers
   Data Dictionary in List Form
+
 - [`visibility_defaults`](https://rmtrane.github.io/ntrd/reference/visibility_defaults.md)
   : Visibility Defaults
+
 - [`diag_contr_pairs`](https://rmtrane.github.io/ntrd/reference/diag_contr_pairs.md)
   : Etiology Specific Variables
+
+- [`ht_cells_body()`](https://rmtrane.github.io/ntrd/reference/ht_cells.md)
+  [`ht_cells_stub()`](https://rmtrane.github.io/ntrd/reference/ht_cells.md)
+  [`ht_cells_column_labels()`](https://rmtrane.github.io/ntrd/reference/ht_cells.md)
+  [`ht_cells_stubhead()`](https://rmtrane.github.io/ntrd/reference/ht_cells.md)
+  [`ht_cells_row_groups()`](https://rmtrane.github.io/ntrd/reference/ht_cells.md)
+  [`ht_cells_footnotes()`](https://rmtrane.github.io/ntrd/reference/ht_cells.md)
+  :
+
+  Locations for
+  [`ht_tab_style()`](https://rmtrane.github.io/ntrd/reference/ht_tab_style.md)
+
 - [`nacc_var_labels`](https://rmtrane.github.io/ntrd/reference/nacc_var_labels.md)
   : Variable Labels for NACC Variables
+
 - [`var_labels()`](https://rmtrane.github.io/ntrd/reference/var_labels.md)
   : Create Labels for Assessment Summary Table
+
 - [`crosswalk_translations`](https://rmtrane.github.io/ntrd/reference/crosswalk_translations.md)
   : Crosswalk Variables
+
 - [`demo_data`](https://rmtrane.github.io/ntrd/reference/demo_data.md) :
   Demo Data
+
+## Custom Table Building Functions
+
+Set of functions to replicate the functionality of
+[gt](https://gt.rstudio.com) needed. Light weight and very specific to
+the needs of this package.
+
+- [`ht_table()`](https://rmtrane.github.io/ntrd/reference/ht_table.md) :
+  Build an HTML table (first-cut: structure only)
+
+- [`ht_add_css()`](https://rmtrane.github.io/ntrd/reference/ht_add_css.md)
+  : Attach scoped CSS to a single table.
+
+- [`ht_cell_fill()`](https://rmtrane.github.io/ntrd/reference/ht_cell_fill.md)
+  :
+
+  Build a fill-style (background-color) spec for
+  [`ht_tab_style()`](https://rmtrane.github.io/ntrd/reference/ht_tab_style.md).
+
+- [`ht_cell_text()`](https://rmtrane.github.io/ntrd/reference/ht_cell_text.md)
+  :
+
+  Build a text-style spec for use in
+  [`ht_tab_style()`](https://rmtrane.github.io/ntrd/reference/ht_tab_style.md).
+
+- [`ht_cells_body()`](https://rmtrane.github.io/ntrd/reference/ht_cells.md)
+  [`ht_cells_stub()`](https://rmtrane.github.io/ntrd/reference/ht_cells.md)
+  [`ht_cells_column_labels()`](https://rmtrane.github.io/ntrd/reference/ht_cells.md)
+  [`ht_cells_stubhead()`](https://rmtrane.github.io/ntrd/reference/ht_cells.md)
+  [`ht_cells_row_groups()`](https://rmtrane.github.io/ntrd/reference/ht_cells.md)
+  [`ht_cells_footnotes()`](https://rmtrane.github.io/ntrd/reference/ht_cells.md)
+  :
+
+  Locations for
+  [`ht_tab_style()`](https://rmtrane.github.io/ntrd/reference/ht_tab_style.md)
+
+- [`ht_cols_hide()`](https://rmtrane.github.io/ntrd/reference/ht_cols_hide.md)
+  : Hide one or more columns.
+
+- [`ht_cols_label()`](https://rmtrane.github.io/ntrd/reference/ht_cols_label.md)
+  : Relabel one or more columns.
+
+- [`ht_hide_header()`](https://rmtrane.github.io/ntrd/reference/ht_hide_header.md)
+  :
+
+  Suppress the entire `<thead>` (spanner row + column labels).
+
+- [`ht_merge_cols_label()`](https://rmtrane.github.io/ntrd/reference/ht_merge_cols_label.md)
+  : Merge column labels into one cell.
+
+- [`ht_render()`](https://rmtrane.github.io/ntrd/reference/ht_render.md)
+  :
+
+  Render a `html_table` to
+  [`shiny::tags`](https://rstudio.github.io/htmltools/reference/builder.html)
+
+- [`ht_tab_footnote()`](https://rmtrane.github.io/ntrd/reference/ht_tab_footnote.md)
+  : Append a table-level footnote.
+
+- [`ht_tab_spanner()`](https://rmtrane.github.io/ntrd/reference/ht_tab_spanner.md)
+  : Add a column spanner across one or more columns.
+
+- [`ht_tab_stubhead()`](https://rmtrane.github.io/ntrd/reference/ht_tab_stubhead.md)
+  :
+
+  Set the stubhead label (top-left cell, only shown when `rowname_col`
+  is set).
+
+- [`ht_tab_style()`](https://rmtrane.github.io/ntrd/reference/ht_tab_style.md)
+  : Attach styles to specific cell locations.
 
 ## Misc Functions
 

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">ntrd</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,25 +37,32 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.0.1" id="ntrd-001">ntrd 0.0.1<a class="anchor" aria-label="anchor" href="#ntrd-001"></a></h2>
-<p>Initial release of <code>ntrd</code>, the Neuropsychological Test Results Dashboard. The package provides a Shiny application — built on top of <code>ntrs</code> — for presenting neuropsychological test scores in a form useful for consensus diagnosis, plus an extension API for adding new data sources.</p>
+<h2 class="pkg-version" data-toc-text="0.1.1" id="ntrd-011">ntrd 0.1.1<a class="anchor" aria-label="anchor" href="#ntrd-011"></a></h2>
 <div class="section level3">
-<h3 id="shiny-dashboard-0-0-1">Shiny dashboard<a class="anchor" aria-label="anchor" href="#shiny-dashboard-0-0-1"></a></h3>
+<h3 id="bug-fixes-0-1-1">Bug Fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-1-1"></a></h3>
+<ul><li>In some cases, the methods were assigned out of order resulting in missing standardizations. Fixed.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.1.0" id="ntrd-010">ntrd 0.1.0<a class="anchor" aria-label="anchor" href="#ntrd-010"></a></h2>
+<p>Initial release of <a href="https://rmtrane.github.io/ntrd">ntrd</a>, the Neuropsychological Test Results Dashboard. The package provides a Shiny application — built on top of <a href="https://rmtrane.github.io/ntrs/" class="external-link">ntrs</a> — for presenting neuropsychological test scores in a form useful for consensus diagnosis, plus an extension API for adding new data sources.</p>
+<div class="section level3">
+<h3 id="shiny-dashboard-0-1-0">Shiny dashboard<a class="anchor" aria-label="anchor" href="#shiny-dashboard-0-1-0"></a></h3>
 <ul><li>
 <code><a href="../reference/shinyDashboard.html">shinyDashboard()</a></code> launches the application. Also available from the RStudio “Addins” menu as “Neuropsychological Test Result Dashboard”.</li>
-<li>Multi-panel layout built with <code>bslib</code> and Bootstrap 5.</li>
+<li>Multi-panel layout built with <a href="https://rstudio.github.io/bslib/" class="external-link">bslib</a> and Bootstrap 5.</li>
 <li>Per-participant view with study ID selector, demographics table, and visit-date selector.</li>
-<li>Asynchronous data loading for extension data (e.g. biomarkers) via <code>mirai</code> daemons, so the UI stays responsive while extensions fetch data in the background.</li>
+<li>Asynchronous data loading for extension data (e.g. biomarkers) via <a href="https://mirai.r-lib.org" class="external-link">mirai</a> daemons, so the UI stays responsive while extensions fetch data in the background.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="data-sources-0-0-1">Data sources<a class="anchor" aria-label="anchor" href="#data-sources-0-0-1"></a></h3>
+<h3 id="data-sources-0-1-0">Data sources<a class="anchor" aria-label="anchor" href="#data-sources-0-1-0"></a></h3>
 <ul><li>Built-in <strong>CSV upload</strong> source (<code>csv_source</code>) for files in NACC format.</li>
 <li>Built-in <strong>Demo</strong> source (<code>demo_source</code>) that loads <code><a href="https://rmtrane.github.io/ntrs/reference/demo_data.html" class="external-link">ntrs::demo_data</a></code> with derived variables (<code>REYTOTAL</code>, <code>REYAREC</code>, <code>FAS</code>, <code>MOCACLOCK</code>) pre-computed — useful for trying the app without real data.</li>
 <li>
 <code>data_nacc</code> S7 class validates input data on construction: checks for required columns (<code>NACCID</code>, <code>SEX</code>, <code>EDUC</code>, <code>BIRTHYR</code>), enforces column types, validates <code>SEX</code> and visit-date values, and auto-derives <code>VISITDATE</code> and <code>NACCAGE</code> when their components are present.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="extension-api-0-0-1">Extension API<a class="anchor" aria-label="anchor" href="#extension-api-0-0-1"></a></h3>
+<h3 id="extension-api-0-1-0">Extension API<a class="anchor" aria-label="anchor" href="#extension-api-0-1-0"></a></h3>
 <ul><li>Third parties can register new data sources by declaring <code>Config/ntrd/extension: true</code> in <code>DESCRIPTION</code> and providing S7 methods for <code><a href="../reference/data_source_ui.html">data_source_ui()</a></code>, <code><a href="../reference/data_source_server.html">data_source_server()</a></code>, and <code><a href="../reference/data_load.html">data_load()</a></code>.</li>
 <li>
 <code><a href="../reference/new_data_source.html">new_data_source()</a></code> constructor for defining a class that inherits from <code>data_source</code>.</li>
@@ -64,24 +71,24 @@
 <li>Extensions can ship additional UI panels and reactive helpers via the <code>extras</code> channel returned from <code><a href="../reference/data_source_server.html">data_source_server()</a></code>.</li>
 <li>Extensions can optionally provide a <code>restore</code> function so previously entered configuration (e.g. API tokens) can be repopulated.</li>
 <li>Conflict detection warns when multiple extensions define <code>std_using_*</code> generics with the same name.</li>
-<li>Full walkthrough available in the “Extension API” vignette, with <a href="https://github.com/rmtrane/ntrdWisconsin" class="external-link"><code>ntrdWisconsin</code></a> as a complete worked example.</li>
+<li>Full walkthrough available in the “Extension API” vignette, with <a href="https://github.com/rmtrane/ntrdWisconsin" class="external-link"><code>{ntrdWisconsin}</code></a> as a complete worked example.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="tables-and-visualizations-0-0-1">Tables and visualizations<a class="anchor" aria-label="anchor" href="#tables-and-visualizations-0-0-1"></a></h3>
+<h3 id="tables-and-visualizations-0-1-0">Tables and visualizations<a class="anchor" aria-label="anchor" href="#tables-and-visualizations-0-1-0"></a></h3>
 <ul><li>
-<code><a href="../reference/assessment_summary_table.html">assessment_summary_table()</a></code> / <code>mainTableModule</code> — the main per-visit NACC T-Cog assessment summary table, rendered with <code>gt</code>.</li>
+<code><a href="../reference/assessment_summary_table.html">assessment_summary_table()</a></code> / <code>mainTableModule</code> — the main per-visit NACC T-Cog assessment summary table, rendered with <a href="https://gt.rstudio.com" class="external-link">gt</a>.</li>
 <li>
 <code><a href="../reference/assessment_longitudinal_table.html">assessment_longitudinal_table()</a></code> / <code>longTableModule</code> — longitudinal table of scores across visits.</li>
 <li>
-<code><a href="../reference/demographics_table.html">demographics_table()</a></code> — compact <code>gt</code> demographics summary with flagging for missing or visit-to-visit-varying values.</li>
+<code><a href="../reference/demographics_table.html">demographics_table()</a></code> — compact <a href="https://gt.rstudio.com" class="external-link">gt</a> demographics summary with flagging for missing or visit-to-visit-varying values.</li>
 <li>
 <code><a href="../reference/prev_diagnoses_table.html">prev_diagnoses_table()</a></code> / <code>prevDiagnosesModule</code> — prior diagnoses table.</li>
 <li>
 <code>plotModule</code> — interactive <code>plotly</code> longitudinal trend plots, one accordion panel per cognitive domain, with crosswalk pairs colored consistently and trace-visibility state surfaced back to Shiny.</li>
-<li>“Generate PDF for Download” button on the main table (requires <code>pagedown</code>); falls back to a friendly install hint when <code>pagedown</code> isn’t available.</li>
+<li>“Generate PDF for Download” button on the main table (requires <a href="https://github.com/rstudio/pagedown" class="external-link">pagedown</a>); falls back to a friendly install hint when <a href="https://github.com/rstudio/pagedown" class="external-link">pagedown</a> isn’t available.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="customization-0-0-1">Customization<a class="anchor" aria-label="anchor" href="#customization-0-0-1"></a></h3>
+<h3 id="customization-0-1-0">Customization<a class="anchor" aria-label="anchor" href="#customization-0-1-0"></a></h3>
 <ul><li>
 <code>descriptionsModule</code> — interactive table for editing score-region labels, upper-bound cutoffs, and fill colors. Rows can be added, edited, reordered (by upper bound), removed, or reset to defaults.</li>
 <li>Sidebar option to toggle shading of plots according to descriptions.</li>
@@ -89,7 +96,7 @@
 <li>“Setup” tab (<code>methodSelectModule</code>) for choosing standardization methods and assigning variables to cognitive domains; defaults are auto-applied when available, with a notification pointing to the Setup tab for customization.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="in-app-extension-updates-0-0-1">In-app extension updates<a class="anchor" aria-label="anchor" href="#in-app-extension-updates-0-0-1"></a></h3>
+<h3 id="in-app-extension-updates-0-1-0">In-app extension updates<a class="anchor" aria-label="anchor" href="#in-app-extension-updates-0-1-0"></a></h3>
 <ul><li>
 <code><a href="../reference/check_extension_update.html">check_extension_update()</a></code> calls an extension’s exported <code>ntrd_update_available()</code> (cached for one hour by default; configurable via <code>ttl</code>); <code><a href="../reference/clear_update_cache.html">clear_update_cache()</a></code> invalidates the cache.</li>
 <li>Update banner appears in the header when a newer version of the active extension is published, with a “What’s new?” link to the extension’s <code>NEWS.md</code> when provided.</li>
@@ -100,14 +107,14 @@
 <code><a href="../reference/default_github_update.html">default_github_update_available()</a></code> and <code><a href="../reference/default_github_update.html">default_github_update_extension()</a></code> factories provide ready-to-use implementations for GitHub-hosted extensions.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="infrastructure-0-0-1">Infrastructure<a class="anchor" aria-label="anchor" href="#infrastructure-0-0-1"></a></h3>
+<h3 id="infrastructure-0-1-0">Infrastructure<a class="anchor" aria-label="anchor" href="#infrastructure-0-1-0"></a></h3>
 <ul><li>MIT licensed.</li>
 <li>R (&gt;= 4.2.0).</li>
-<li>CI on GitHub Actions: R-CMD-check on macOS, Windows, and Ubuntu (devel / release / oldrel-1); <code>pkgdown</code> site build and deploy; Codecov coverage upload.</li>
+<li>CI on GitHub Actions: R-CMD-check on macOS, Windows, and Ubuntu (devel / release / oldrel-1); <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> site build and deploy; Codecov coverage upload.</li>
 <li>
-<code>shinytest2</code>-based tests for the Shiny modules.</li>
+<a href="https://rstudio.github.io/shinytest2/" class="external-link">shinytest2</a>-based tests for the Shiny modules.</li>
 <li>
-<code>pkgdown</code> site at <a href="https://rmtrane.github.io/ntrd/" class="uri">https://rmtrane.github.io/ntrd/</a>.</li>
+<a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> site at <a href="https://rmtrane.github.io/ntrd/" class="uri">https://rmtrane.github.io/ntrd/</a>.</li>
 </ul></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
