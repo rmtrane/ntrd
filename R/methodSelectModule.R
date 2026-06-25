@@ -167,8 +167,10 @@ methodSelectServer <- function(
 
     ## Auto-apply defaults on first load
     shiny::observe({
+      shiny::req(npsych_vars(), default_methods())
+
       all_vars <- npsych_vars()
-      shiny::req(all_vars)
+
       dat <- dat_obj()@data
 
       domain_tmp <- vapply(

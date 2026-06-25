@@ -284,15 +284,12 @@ dataSelectServer <- function(id) {
       ## Set defaults for the active extension
       apply_extension_defaults(source@package)
 
+      nm <- ntrs::list_npsych_scores()
+
       default_methods(
-        lapply(
-          setNames(
-            ntrs::list_npsych_scores(),
-            ntrs::list_npsych_scores()
-          ),
-          \(x) {
-            ntrs::get_std_defaults(ntrs::get_npsych_scores(x)())
-          }
+        setNames(
+          lapply(nm, \(x) ntrs::get_std_defaults(ntrs::get_npsych_scores(x)())),
+          nm
         ) |>
           Filter(f = Negate(is.null))
       )

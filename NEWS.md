@@ -2,9 +2,7 @@
 
 ## Bug Fixes
 
-* In some edge cases, `{ntrs}` is not probably loaded. Have not been able 
-to consistently trigger this behavior, but now manully load `{ntrs}` in 
-`appServer()` to avoid this. 
+* In some cases, the methods were assigned out of order resulting in missing standardizations. Fixed. 
 
 # ntrd 0.1.0
 
