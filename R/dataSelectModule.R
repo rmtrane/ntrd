@@ -281,26 +281,21 @@ dataSelectServer <- function(id) {
       ## Get current source, and server results
       source <- sources[[input$data_source]]
 
-      ## If ntrs not loaded yet, load it so defaults are set.
-      if (!isNamespaceLoaded("ntrs")) {
-        loadNamespace("ntrs")
-      }
-
       ## Set defaults for the active extension
       apply_extension_defaults(source@package)
 
-      # purrr::imap(
-      Map(
-        ntrs::list_npsych_scores(),
-        ntrs::list_npsych_scores(),
-        #),
-        f = \(x, idx) {
-          ntrs::get_std_defaults(ntrs::get_npsych_scores(idx)())
-        }
-      ) |>
-        # purrr::discard(is.null) |>
-        Filter(f = Negate(is.null)) |>
-        default_methods()
+      default_methods(
+        lapply(
+          setNames(
+            ntrs::list_npsych_scores(),
+            ntrs::list_npsych_scores()
+          ),
+          \(x) {
+            ntrs::get_std_defaults(ntrs::get_npsych_scores(x)())
+          }
+        ) |>
+          Filter(f = Negate(is.null))
+      )
 
       dat_src_server <- data_source_servers[[input$data_source]]
 
