@@ -7,7 +7,7 @@
 #' @export
 appServer <- function(input, output, session) {
   ## Check that ntrs was loaded. If not, load it!
-  if (isNamespaceLoaded("ntrs")) {
+  if (!isNamespaceLoaded("ntrs")) {
     cli::cli_inform("Loading {.pkg ntrs}")
     loadNamespace("ntrs")
   }
