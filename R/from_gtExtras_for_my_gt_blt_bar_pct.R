@@ -3,14 +3,14 @@
 #' @rdname from_gtExtras_for_my_gt_blt_bar_pct
 #' @keywords internal
 
-ideal_fgnd_color <- function(bgnd_color, light = "#FFFFFF", dark = "#000000") {
-  bgnd_color <- rgba_to_hex(colors = bgnd_color)
-  bgnd_color <- html_color(colors = bgnd_color, alpha = 1)
-  yiq_contrasted_threshold <- 128
-  colors <- grDevices::col2rgb(bgnd_color)
-  score <- colSums(colors * c(299, 587, 144)) / 1000
-  ifelse(score >= yiq_contrasted_threshold, dark, light)
-}
+# ideal_fgnd_color <- function(bgnd_color, light = "#FFFFFF", dark = "#000000") {
+#   bgnd_color <- rgba_to_hex(colors = bgnd_color)
+#   bgnd_color <- html_color(colors = bgnd_color, alpha = 1)
+#   yiq_contrasted_threshold <- 128
+#   colors <- grDevices::col2rgb(bgnd_color)
+#   score <- colSums(colors * c(299, 587, 144)) / 1000
+#   ifelse(score >= yiq_contrasted_threshold, dark, light)
+# }
 
 rgba_to_hex <- function(
   colors

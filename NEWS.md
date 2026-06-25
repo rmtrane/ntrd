@@ -1,7 +1,15 @@
-# ntrd 0.0.1
+# ntrd 0.1.1
 
-Initial release of `ntrd`, the Neuropsychological Test Results Dashboard.
-The package provides a Shiny application — built on top of `ntrs` — for
+## Bug Fixes
+
+* In some edge cases, `{ntrs}` is not probably loaded. Have not been able 
+to consistently trigger this behavior, but now manully load `{ntrs}` in 
+`appServer()` to avoid this. 
+
+# ntrd 0.1.0
+
+Initial release of `{ntrd}`, the Neuropsychological Test Results Dashboard.
+The package provides a Shiny application — built on top of `{ntrs}` — for
 presenting neuropsychological test scores in a form useful for consensus
 diagnosis, plus an extension API for adding new data sources.
 
@@ -9,11 +17,11 @@ diagnosis, plus an extension API for adding new data sources.
 
 * `shinyDashboard()` launches the application. Also available from the
   RStudio "Addins" menu as "Neuropsychological Test Result Dashboard".
-* Multi-panel layout built with `bslib` and Bootstrap 5.
+* Multi-panel layout built with `{bslib}` and Bootstrap 5.
 * Per-participant view with study ID selector, demographics table, and
   visit-date selector.
 * Asynchronous data loading for extension data (e.g. biomarkers) via
-  `mirai` daemons, so the UI stays responsive while extensions fetch
+  `{mirai}` daemons, so the UI stays responsive while extensions fetch
   data in the background.
 
 ## Data sources
@@ -43,16 +51,16 @@ diagnosis, plus an extension API for adding new data sources.
 * Conflict detection warns when multiple extensions define
   `std_using_*` generics with the same name.
 * Full walkthrough available in the "Extension API" vignette, with
-  [`ntrdWisconsin`](https://github.com/rmtrane/ntrdWisconsin) as a
+  [`{ntrdWisconsin}`](https://github.com/rmtrane/ntrdWisconsin) as a
   complete worked example.
 
 ## Tables and visualizations
 
 * `assessment_summary_table()` / `mainTableModule` — the main per-visit
-  NACC T-Cog assessment summary table, rendered with `gt`.
+  NACC T-Cog assessment summary table, rendered with `{gt}`.
 * `assessment_longitudinal_table()` / `longTableModule` — longitudinal
   table of scores across visits.
-* `demographics_table()` — compact `gt` demographics summary with
+* `demographics_table()` — compact `{gt}` demographics summary with
   flagging for missing or visit-to-visit-varying values.
 * `prev_diagnoses_table()` / `prevDiagnosesModule` — prior diagnoses
   table.
@@ -60,7 +68,7 @@ diagnosis, plus an extension API for adding new data sources.
   accordion panel per cognitive domain, with crosswalk pairs colored
   consistently and trace-visibility state surfaced back to Shiny.
 * "Generate PDF for Download" button on the main table (requires
-  `pagedown`); falls back to a friendly install hint when `pagedown`
+  `{pagedown}`); falls back to a friendly install hint when `{pagedown}`
   isn't available.
 
 ## Customization
@@ -100,7 +108,7 @@ diagnosis, plus an extension API for adding new data sources.
 * MIT licensed.
 * R (>= 4.2.0).
 * CI on GitHub Actions: R-CMD-check on macOS, Windows, and Ubuntu
-  (devel / release / oldrel-1); `pkgdown` site build and deploy;
+  (devel / release / oldrel-1); `{pkgdown}` site build and deploy;
   Codecov coverage upload.
-* `shinytest2`-based tests for the Shiny modules.
-* `pkgdown` site at <https://rmtrane.github.io/ntrd/>.
+* `{shinytest2}`-based tests for the Shiny modules.
+* `{pkgdown}` site at <https://rmtrane.github.io/ntrd/>.

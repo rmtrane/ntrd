@@ -6,6 +6,12 @@
 #'
 #' @export
 appServer <- function(input, output, session) {
+  ## Check that ntrs was loaded. If not, load it!
+  if (isNamespaceLoaded("ntrs")) {
+    cli::cli_inform("Loading {.pkg ntrs}")
+    loadNamespace("ntrs")
+  }
+
   session$onSessionEnded(function() {
     shiny::stopApp()
   })
@@ -604,7 +610,7 @@ appServer <- function(input, output, session) {
       dat_sel$extras()$extension_server(
         # id = "ext-module",
         ptid = current_studyid, #shiny::reactive(input$current_studyid),
-        # dat = fin_dat,
+        dat = fin_dat,
         extras = dat_sel$extras
       )
 
