@@ -1,11 +1,13 @@
-#' Print formatted messages for the extension update flow
+#' Print formatted messages after an extension update attempt
 #'
 #' @description
-#' These functions print user-facing messages during the in-app update
-#' flow's restarted-session steps. They are exported so that they can be
-#' invoked by fully qualified name from the strings built by
-#' [build_update_restart_command()], which run in restarted R sessions
-#' where `ntrd` is not attached.
+#' These functions print a user-facing success or failure message in the
+#' second restart of the in-app update flow (see
+#' [build_update_restart_command()]), which runs in a fresh R session where
+#' `ntrd` is not yet attached. The "installing..." message printed before
+#' the install itself is plain `cat()`, generated inline by
+#' [build_update_restart_command()], so that step doesn't need to load
+#' `ntrd` either.
 #'
 #' Each function takes the extension package name as its only argument and
 #' returns invisibly. [update_finalize()] dispatches to the appropriate
@@ -18,17 +20,6 @@
 #'
 #' @name update_messages
 NULL
-
-
-#' @rdname update_messages
-#' @export
-update_intro_message <- function(package) {
-  cli::cli_h1("Updating {.pkg {package}}")
-  cli::cli_alert_info(
-    "Installing the latest version. This may take a moment..."
-  )
-  invisible(NULL)
-}
 
 
 #' @rdname update_messages

@@ -404,8 +404,10 @@ exact names:
 
 - `ntrd_update_available()` --- returns an `update_result` describing
   whether an update is available.
-- `ntrd_update_extension()` --- performs the install. Runs in a restarted
-  R session; your extension's namespace is **not** loaded when it runs.
+- `ntrd_update_extension()` --- performs the install, in a restarted R
+  session (see [the GitHub factories](#the-easy-path-github-hosted-extensions)
+  and [custom install functions](#writing-a-custom-update-check) for what is
+  loaded while it runs).
 
 If only one of the two is exported, `ntrd` emits a one-time warning per
 session and disables in-app updates for the extension.
@@ -440,6 +442,16 @@ The factories:
   "What's new?" link works automatically if you maintain a `NEWS.md`.
 - Install with `remotes::install_github(..., upgrade = "always", dependencies = TRUE)`,
   so `ntrd` and other dependencies are also brought up to date.
+- Install without loading `ntrd` or your extension. `ntrd` reads the repo
+  recorded by `default_github_update_extension()` and runs
+  `remotes::install_github()` itself in the restarted session. Only
+  `remotes` and `rstudioapi`, which have no compiled code, are loaded while
+  packages are replaced. This matters on Windows, where a package whose
+  compiled code is loaded can't be overwritten.
+- Give up on the version check after 5 seconds (set
+  `options(ntrd.update_check_timeout = )` to change this), so an offline
+  user isn't left waiting. A failed check counts as "no update" and is
+  cached like any other result.
 
 If your package name differs from the repo name, pass `package =`
 explicitly to `default_github_update_available()`. You can also pin a
@@ -508,9 +520,17 @@ ntrd_update_extension <- function() {
 `ntrd_update_available()` is invoked from a Shiny reactive context; the
 framework wraps it in error handling so a thrown error becomes a warning
 plus the safe "no update" fallback, but it's still good practice to wrap
-network calls in `tryCatch`. `ntrd_update_extension()` runs in a restarted
-session and its return value is interpreted as success/failure based on
-whether it threw an error.
+network calls in `tryCatch`. The check runs synchronously, so give network
+calls a short timeout too: the data-select page waits until it returns.
+
+A custom `ntrd_update_extension()` runs in a restarted session. Finding it
+requires loading your extension's namespace, which also loads everything
+your extension imports --- `ntrd` itself is not loaded, so it's never one
+of the packages your install might replace, but your own dependencies are.
+If the install upgrades any of those, it may fail on Windows, where loaded
+compiled code can't be overwritten. Avoid upgrading your dependencies from
+this function if you can. Success or failure is decided by whether the
+function throws an error; its return value is ignored.
 
 ### Caching and forced refresh
 
@@ -523,7 +543,9 @@ during testing), use `ntrd::clear_update_cache(package)` or
 ### Platform support
 
 The two-stage restart cascade --- install in one fresh R session, then
-relaunch in the next --- depends on `rstudioapi::restartSession(command = ...)`.
+report the result in the next --- depends on
+`rstudioapi::restartSession(command = ...)`. The user relaunches the
+dashboard by hand afterwards; it does not reopen automatically.
 Only RStudio honors the `command` argument fully. In Positron, plain R,
 Rscript, and VS Code's R extension, the update modal shows manual install
 instructions instead. Extensions don't need to do anything different to

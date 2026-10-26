@@ -73,7 +73,6 @@ reference:
   - prepare_data
   - update_messages
   - clear_update_cache
-  - try_update
   - update_result
   - validate_update_check_result
   - check_extension_update

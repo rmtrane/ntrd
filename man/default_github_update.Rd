@@ -40,11 +40,17 @@ should provide their own implementations following the same contract.
 \code{DESCRIPTION} file from the GitHub repository's default branch, parses out
 the \verb{Version:} field, and compares it against the locally installed
 version. The result is wrapped in an \code{\link{update_result}} object.
+The download gives up after \code{getOption("ntrd.update_check_timeout", 5)}
+seconds, so an offline user isn't left waiting.
 
 \code{default_github_update_extension()} returns a function that calls
 \code{\link[remotes:install_github]{remotes::install_github()}} with \code{upgrade = "always"} and
 \code{dependencies = TRUE}, so dependencies (including \code{ntrd} itself) are also
-brought up to date.
+brought up to date. The function records \code{repo} in its
+\code{"ntrd_github_repo"} attribute. The in-app update flow reads that
+attribute and runs the install in a restarted session without loading
+\code{ntrd} or the extension. Only \code{remotes} and \code{rstudioapi}, which have no
+compiled code, are loaded while packages are replaced.
 
 Both factories call \code{force()} on their arguments so that captured values
 are safe to use even if the factory is ever called in a loop.

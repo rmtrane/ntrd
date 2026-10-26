@@ -9,8 +9,9 @@ Internal helpers and a small public surface (\code{check_extension_update()},
 Shiny app to discover whether an extension has opted in to in-app updates,
 fetch (and cache) the update-availability information, validate its shape,
 and build the restart command used by the "Update" button. See also
-\code{\link[=update_intro_message]{update_intro_message()}} and friends for the user-facing copy printed
-during the restart cascade.
+\code{\link[=update_success_message]{update_success_message()}}, \code{\link[=update_failure_message]{update_failure_message()}}, and the
+\code{\link[=update_finalize]{update_finalize()}} dispatcher for the user-facing copy printed during
+the restart cascade.
 
 Extensions opt in by exporting two functions:
 \itemize{
@@ -18,7 +19,12 @@ Extensions opt in by exporting two functions:
 \code{\link{update_result}} S7 object. A plain list with the same
 fields is also accepted as a backwards-compatibility courtesy.
 \item \code{ntrd_update_extension()} — performs the install. Runs in a
-restarted R session; the extension package is not loaded when it runs.
+restarted R session. Functions made by
+\code{\link{default_github_update_extension}} are not called at all:
+ntrd reads the repo they record and installs by package name. Any
+other function is looked up and called directly in that session,
+which loads the extension's namespace — but not \code{ntrd}'s, which
+isn't loaded until the install has finished.
 }
 
 See \code{\link{default_github_update_available}} and

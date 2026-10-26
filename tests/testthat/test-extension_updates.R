@@ -360,6 +360,9 @@ test_that("check_extension_update validates raw list returned by ntrd_update_ava
 # ===========================================================================
 
 test_that("build_update_restart_command errors on non-string input", {
+  local_mocked_bindings(
+    extension_install_repo = function(package) NULL
+  )
   expect_error(build_update_restart_command(NULL))
   expect_error(build_update_restart_command(1L))
   expect_error(build_update_restart_command(NA_character_))
@@ -368,25 +371,165 @@ test_that("build_update_restart_command errors on non-string input", {
 })
 
 test_that("build_update_restart_command returns a single string", {
-  result <- build_update_restart_command("mypkg")
+  result <- build_update_restart_command("mypkg", repo = "user/myrepo")
   expect_type(result, "character")
   expect_length(result, 1L)
 })
 
-test_that("build_update_restart_command output includes update_intro_message call", {
-  cmd <- build_update_restart_command("mypkg")
-  expect_match(cmd, "update_intro_message", fixed = TRUE)
-  expect_match(cmd, "mypkg", fixed = TRUE)
-})
-
-test_that("build_update_restart_command output includes try_update call", {
-  cmd <- build_update_restart_command("mypkg")
-  expect_match(cmd, "try_update", fixed = TRUE)
-})
-
 test_that("build_update_restart_command embeds unusual package names correctly", {
-  cmd <- build_update_restart_command("my.ext_pkg")
+  cmd <- build_update_restart_command("my.ext_pkg", repo = "user/myrepo")
   expect_match(cmd, "my.ext_pkg", fixed = TRUE)
+})
+
+
+# Evaluates a restart command with remotes::install_github(),
+# rstudioapi::restartSession(), and getNamespace() replaced by fakes. Any
+# other `::` or `:::` access (e.g. to ntrd) is an error, which proves
+# nothing else gets loaded.
+run_restart_command <- function(
+  cmd,
+  install = function(...) invisible(NULL),
+  get_namespace = function(name) stop("no such package '", name, "'")
+) {
+  calls <- new.env()
+  calls$installs <- list()
+  calls$namespaces_requested <- character()
+  calls$restart <- NULL
+
+  fake_colons <- function(pkg, name) {
+    pkg <- as.character(substitute(pkg))
+    name <- as.character(substitute(name))
+    if (pkg == "remotes" && name == "install_github") {
+      return(function(...) {
+        calls$installs <- c(calls$installs, list(list(...)))
+        install(...)
+      })
+    }
+    if (pkg == "rstudioapi" && name == "restartSession") {
+      return(function(command) calls$restart <- command)
+    }
+    stop("unexpected access to ", pkg, "::", name)
+  }
+
+  env <- new.env(parent = baseenv())
+  env$`::` <- fake_colons
+  env$`:::` <- fake_colons
+  env$getNamespace <- function(name) {
+    calls$namespaces_requested <- c(calls$namespaces_requested, name)
+    get_namespace(name)
+  }
+  utils::capture.output(
+    for (expr in parse(text = cmd)) eval(expr, env),
+    type = "output"
+  )
+  calls
+}
+
+test_that("build_update_restart_command installs a GitHub repo without loading ntrd", {
+  cmd <- build_update_restart_command("mypkg", repo = "user/myrepo")
+  calls <- run_restart_command(cmd)
+
+  expect_length(calls$installs, 1L)
+  install_args <- calls$installs[[1]]
+  expect_equal(install_args[[1]], "user/myrepo")
+  expect_equal(install_args$upgrade, "always")
+  expect_true(install_args$dependencies)
+  expect_length(calls$namespaces_requested, 0L)
+
+  expect_equal(calls$restart, 'ntrd::update_finalize(TRUE, "mypkg")')
+})
+
+test_that("build_update_restart_command finalizes with FALSE when the GitHub install fails", {
+  cmd <- build_update_restart_command("mypkg", repo = "user/myrepo")
+
+  expect_message(
+    calls <- run_restart_command(cmd, install = function(...) stop("boom")),
+    "Install error:.*boom"
+  )
+  expect_equal(calls$restart, 'ntrd::update_finalize(FALSE, "mypkg")')
+})
+
+test_that("build_update_restart_command keeps an @ref in the repo", {
+  cmd <- build_update_restart_command("mypkg", repo = "user/myrepo@v1.2")
+  calls <- run_restart_command(cmd)
+  expect_equal(calls$installs[[1]][[1]], "user/myrepo@v1.2")
+})
+
+test_that("build_update_restart_command reads the repo from the extension's install function", {
+  local_mocked_bindings(
+    get_from_namespace = function(name, ns) {
+      default_github_update_extension("user/myrepo")
+    }
+  )
+  cmd <- build_update_restart_command("mypkg")
+  expect_match(cmd, 'remotes::install_github("user/myrepo"', fixed = TRUE)
+  expect_no_match(cmd, "getNamespace", fixed = TRUE)
+})
+
+test_that("build_update_restart_command calls the extension's own install function without loading ntrd", {
+  local_mocked_bindings(
+    get_from_namespace = function(name, ns) function() invisible(NULL)
+  )
+  cmd <- build_update_restart_command("mypkg")
+  expect_match(cmd, 'getNamespace("mypkg")$ntrd_update_extension()', fixed = TRUE)
+  expect_no_match(cmd, "install_github", fixed = TRUE)
+
+  install_called <- FALSE
+  calls <- run_restart_command(
+    cmd,
+    get_namespace = function(name) {
+      expect_equal(name, "mypkg")
+      list2env(list(ntrd_update_extension = function() install_called <<- TRUE))
+    }
+  )
+  expect_true(install_called)
+  expect_equal(calls$restart, 'ntrd::update_finalize(TRUE, "mypkg")')
+})
+
+test_that("build_update_restart_command finalizes with FALSE when the custom install errors", {
+  local_mocked_bindings(
+    get_from_namespace = function(name, ns) function() invisible(NULL)
+  )
+  cmd <- build_update_restart_command("mypkg")
+
+  expect_message(
+    calls <- run_restart_command(
+      cmd,
+      get_namespace = function(name) {
+        list2env(list(ntrd_update_extension = function() stop("install boom")))
+      }
+    ),
+    "Install error:.*install boom"
+  )
+  expect_equal(calls$restart, 'ntrd::update_finalize(FALSE, "mypkg")')
+})
+
+
+# ===========================================================================
+# extension_install_repo()
+# ===========================================================================
+
+test_that("extension_install_repo returns the repo recorded by the factory", {
+  local_mocked_bindings(
+    get_from_namespace = function(name, ns) {
+      default_github_update_extension("user/myrepo@dev")
+    }
+  )
+  expect_equal(extension_install_repo("mypkg"), "user/myrepo@dev")
+})
+
+test_that("extension_install_repo returns NULL for custom install functions", {
+  local_mocked_bindings(
+    get_from_namespace = function(name, ns) function() invisible(NULL)
+  )
+  expect_null(extension_install_repo("mypkg"))
+})
+
+test_that("extension_install_repo returns NULL when the lookup fails", {
+  local_mocked_bindings(
+    get_from_namespace = function(name, ns) stop("no such namespace")
+  )
+  expect_null(extension_install_repo("mypkg"))
 })
 
 
@@ -406,71 +549,4 @@ test_that("supports_command_restart returns FALSE when RSTUDIO env var is unset"
     list(RSTUDIO = ""),
     expect_false(supports_command_restart())
   )
-})
-
-
-# ===========================================================================
-# try_update()
-# ===========================================================================
-
-test_that("try_update calls restart_session with update_finalize(TRUE, ...) on success", {
-  captured_command <- NULL
-  local_mocked_bindings(
-    get_from_namespace = function(name, ns) function() invisible(NULL),
-    restart_session = function(command) {
-      captured_command <<- command
-      invisible(NULL)
-    }
-  )
-
-  try_update("fakepkg")
-
-  expect_match(captured_command, "update_finalize(TRUE", fixed = TRUE)
-  expect_match(captured_command, "fakepkg", fixed = TRUE)
-})
-
-test_that("try_update calls restart_session with update_finalize(FALSE, ...) when update_fun errors", {
-  captured_command <- NULL
-  local_mocked_bindings(
-    get_from_namespace = function(name, ns) function() stop("install boom"),
-    restart_session = function(command) {
-      captured_command <<- command
-      invisible(NULL)
-    }
-  )
-
-  expect_message(
-    try_update("fakepkg"),
-    regexp = "Install error:.*install boom"
-  )
-
-  expect_match(captured_command, "update_finalize(FALSE", fixed = TRUE)
-  expect_match(captured_command, "fakepkg", fixed = TRUE)
-})
-
-test_that("try_update does not propagate errors from the install function", {
-  local_mocked_bindings(
-    get_from_namespace = function(name, ns) function() stop("install boom"),
-    restart_session = function(command) invisible(NULL)
-  )
-
-  expect_no_error(suppressMessages(try_update("fakepkg")))
-})
-
-test_that("try_update looks up ntrd_update_extension (not some other function)", {
-  captured_name <- NULL
-  captured_ns <- NULL
-  local_mocked_bindings(
-    get_from_namespace = function(name, ns) {
-      captured_name <<- name
-      captured_ns <<- ns
-      function() invisible(NULL)
-    },
-    restart_session = function(command) invisible(NULL)
-  )
-
-  try_update("fakepkg")
-
-  expect_equal(captured_name, "ntrd_update_extension")
-  expect_equal(captured_ns, "fakepkg")
 })
