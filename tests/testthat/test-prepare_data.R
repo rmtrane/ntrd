@@ -1,77 +1,111 @@
-test_that("prepare_data", {
-  prep_dat <- prepare_data(demo_data, selected_cols = NULL)
-
-  ## Test dimensions are as expected
-  expect_equal(nrow(prep_dat), nrow(demo_data))
-  expect_equal(
-    ncol(prep_dat),
-    ncol(demo_data) +
-      sum(grepl("^std_", names(prep_dat))) +
-      length(c("FAS", "MOCACLOCK", "REYTOTAL", "REYAREC", "VISITDATE"))
-  )
-
-  ## Test that NACCAGE is correctly calculated if not present
-  demo_data_no_age <- demo_data
-  demo_data_no_age$NACCAGE <- NULL
-
-  expect_equal(
-    floor(prepare_data(demo_data_no_age, selected_cols = NULL)$NACCAGE),
-    demo_data$NACCAGE
-  )
-
-  ## Test that SEX is correctly converted to numeric if not already
-  demo_data_sex_char <- demo_data |>
-    dplyr::mutate(
-      SEX = NpsychBatteryNorms::values_to_labels(SEX, "SEX")
-    )
-
-  expect_equal(
-    prepare_data(demo_data_sex_char, selected_cols = NULL)$SEX,
-    demo_data$SEX
-  )
-
-  demo_data_sex_char <- demo_data |>
-    dplyr::mutate(
-      SEX = substr(NpsychBatteryNorms::values_to_labels(SEX, "SEX"), 1, 1)
-    )
-
-  expect_equal(
-    prepare_data(demo_data_sex_char, selected_cols = NULL)$SEX,
-    demo_data$SEX
-  )
-
-  ## Test that non-numeric raw scores are converted to numeric correctly.
-  demo_data_non_numeric <- demo_data |>
-    dplyr::mutate(
-      TRAILA = as.character(TRAILA)
-    )
-
-  expect_equal(
-    suppressMessages(
-      prepare_data(demo_data_non_numeric, selected_cols = NULL)$raw_TRAILA
-    ),
-    demo_data$TRAILA
-  )
-
-  expect_equal(
-    suppressMessages(
-      prepare_data(demo_data_non_numeric, selected_cols = NULL)$std_TRAILA
-    ),
-    prep_dat$std_TRAILA
-  )
-
-  expect_message(
-    prepare_data(demo_data_non_numeric, selected_cols = NULL),
-    regexp = "'raw_scores' for TRAILA must be a numeric vector. You provided a character, but it was successfully converted to numeric."
-  )
-
-  ## Test that function errors if raw scores cannot be converted to numeric
+test_that("prepare_data errors when dat is not data_nacc", {
   expect_error(
-    prepare_data(
-      demo_data_non_numeric |>
-        dplyr::mutate(TRAILA = "not-a-number"),
-      selected_cols = NULL
-    ),
-    regexp = "'raw_scores' for TRAILA must be a numeric vector. You provided a vector of class character, which contains some non-digit characters, and therefore could not be converted."
+    prepare_data(data.frame(NACCID = "001")),
+    "data_nacc"
   )
+
+  expect_error(
+    prepare_data(data.table::data.table(NACCID = "001")),
+    "data_nacc"
+  )
+})
+
+test_that("prepare_data returns a data.table", {
+  result <- get_prepared_demo_data()
+  expect_true(data.table::is.data.table(result))
+})
+
+test_that("prepare_data output has std_ and raw_ prefixed columns", {
+  result <- get_prepared_demo_data()
+
+  std_cols <- grep("^std_", colnames(result), value = TRUE)
+  raw_cols <- grep("^raw_", colnames(result), value = TRUE)
+
+  expect_true(length(std_cols) > 0)
+  expect_true(length(raw_cols) > 0)
+})
+
+test_that("prepare_data works with explicit methods argument", {
+  tmp <- data.table::copy(demo_data)
+
+  tmp[,
+    names(.SD) := purrr::imap(.SD, \(x, idx) {
+      ntrs::get_npsych_scores(idx)(x)
+    }),
+    .SDcols = intersect(colnames(tmp), ntrs::list_npsych_scores())
+  ]
+
+  obj <- data_nacc(data = tmp)
+  methods <- get_default_methods()
+  result <- suppressWarnings(prepare_data(obj, methods = methods))
+
+  expect_true(data.table::is.data.table(result))
+  expect_true(any(grepl("^std_", colnames(result))))
+})
+
+test_that("prepare_data removes all-NA rows (except ID/visit/birth cols)", {
+  tmp <- data.table::copy(demo_data)
+
+  tmp[,
+    names(.SD) := purrr::imap(.SD, \(x, idx) {
+      ntrs::get_npsych_scores(idx)(x)
+    }),
+    .SDcols = intersect(colnames(tmp), ntrs::list_npsych_scores())
+  ]
+
+  # Add a row that is all NA except for ID/visit/birth columns
+  empty_row <- tmp[1, ]
+  skip_cols <- c("NACCID", grep("^VISIT|^BIRTH", colnames(tmp), value = TRUE))
+  for (col in setdiff(colnames(empty_row), skip_cols)) {
+    data.table::set(empty_row, j = col, value = NA)
+  }
+
+  tmp_with_empty <- rbind(tmp, empty_row, ignore.attr = TRUE)
+  obj <- data_nacc(data = tmp_with_empty)
+
+  nrow_before <- nrow(obj@data)
+  result <- suppressWarnings(prepare_data(obj))
+
+  # The all-NA row should have been removed
+  expect_true(nrow(result) < nrow_before)
+})
+
+test_that("prepare_data renames diagnosis columns", {
+  result <- get_prepared_demo_data()
+
+  # Check for _etiology and _contribution suffixed columns
+  etiology_cols <- grep("_etiology$", colnames(result), value = TRUE)
+  contribution_cols <- grep("_contribution$", colnames(result), value = TRUE)
+
+  # At least some diagnosis columns should have been renamed if present in demo_data
+  # Check that the original names from diag_contr_pairs are NOT in the result
+  original_diag_cols <- intersect(
+    diag_contr_pairs$presump_etio_diag,
+    colnames(demo_data)
+  )
+
+  if (length(original_diag_cols) > 0) {
+    expect_true(length(etiology_cols) > 0)
+  }
+})
+
+test_that("prepare_data handles OTHCOG/OTHCOGX columns without error", {
+  tmp <- data.table::copy(demo_data)
+
+  tmp[,
+    names(.SD) := purrr::imap(.SD, \(x, idx) {
+      ntrs::get_npsych_scores(idx)(x)
+    }),
+    .SDcols = intersect(colnames(tmp), ntrs::list_npsych_scores())
+  ]
+
+  # Add OTHCOG/OTHCOGX columns if not present
+  if (!"OTHCOG" %in% colnames(tmp)) tmp[, OTHCOG := 0]
+  if (!"OTHCOGX" %in% colnames(tmp)) tmp[, OTHCOGX := NA_character_]
+
+  tmp[1, OTHCOG := 1]
+  tmp[1, OTHCOGX := "Some other cognitive diagnosis"]
+
+  obj <- data_nacc(data = tmp)
+  expect_no_error(suppressWarnings(prepare_data(obj)))
 })

@@ -1,0 +1,52 @@
+---
+format: md
+title: ntrd
+---
+
+{{< include ../README.qmd >}}
+
+# Screenshots
+
+```{r}
+#| echo: false
+#| results: asis
+
+cat("<style>\n")
+cat(readLines(here::here("inst/qmd/style.css")), sep = "\n")
+cat("</style>\n")
+```
+
+```{r}
+#| classes: '.g-col-lg-6 .g-col-12 .g-col-md-12'
+#| warning: false
+#| echo: false
+#| eval: true
+
+source(here::here("inst/qmd/carousel.R"))
+source(here::here("inst/qmd/get_image_uri.R"))
+
+yaml_file <- yaml.load_file(here::here("inst/qmd/carousel.yml"))
+
+yaml_file <- lapply(
+  yaml_file,
+  \(x) {
+    if (file.exists(x$image)) {
+      return(x)
+    } else {
+      x$image <- here::here(gsub(
+        pattern = "\\.\\./\\.\\./",
+        replacement = "",
+        x$image
+      ))
+
+      x
+    }
+  }
+)
+
+carousel(
+  "gallery-carousel",
+  5000,
+  yaml_file
+)
+```

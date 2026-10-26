@@ -5,7 +5,7 @@
 \alias{rdd}
 \title{Researchers Data Dictionary in List Form}
 \format{
-An object of class \code{list} of length 776.
+An object of class \code{list} of length 777.
 }
 \usage{
 rdd

@@ -1,3 +1,6 @@
+old_NEWS.md
+\.DS_Store$
+^.Renviron$
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^data-raw$
@@ -9,10 +12,13 @@
 ^inst/qmd/*.mp4
 ^references.bib$
 ^scratch/*
+^scripts/*
 ^paper/*
 ^LICENSE\.md$
 ^\.github$
 ^README\.Rmd$
+^README\.qmd$
+^README_files/*
 ^[\.]?air\.toml$
 ^\.vscode$
 ^img/*
@@ -21,3 +27,8 @@ NOTES
 tests/testthat/helper-secrets.R
 tests/testthat/_snaps/query-panda.md
 tests/testthat/_snaps/*/dataSelectMod-shinytest2/*
+update_codecov.R
+old-tests/*
+^vignettes/*_files$
+^vignettes/\.quarto$
+^vignettes/articles/*$

@@ -1,0 +1,252 @@
+# --- UI tests ---
+
+test_that("mainTableUI returns expected structure", {
+  ui <- mainTableUI("test")
+  ui_html <- as.character(ui)
+  expect_true(grepl("test-mainTable", ui_html))
+})
+
+# --- Helper function tests ---
+
+test_that("make_pdf_filename produces correct format", {
+  fixed_time <- as.POSIXct(
+    "2025-06-15 02:30:00 PM",
+    format = "%Y-%m-%d %I:%M:%S %p"
+  )
+  result <- make_pdf_filename("A001", "2024-01-15", time = fixed_time)
+
+  expect_equal(result, "A001-2024-01-15_created-on-2025-06-15-at-02-30_pm.pdf")
+})
+
+test_that("make_pdf_filename ends with .pdf", {
+  result <- make_pdf_filename("X123", "2023-03-01")
+  expect_match(result, "\\.pdf$")
+})
+
+test_that("make_pdf_filename includes NACCID and VISITDATE", {
+  result <- make_pdf_filename("NACC999", "2022-12-25")
+  expect_match(result, "^NACC999-2022-12-25_created-on-")
+})
+
+test_that("make_table_caption formats correctly", {
+  result <- make_table_caption("A001", "2024-01-15")
+  expect_equal(result, "ID: A001 . Visit Date: 2024-01-15")
+})
+
+test_that("make_table_caption uniquifies duplicate IDs", {
+  result <- make_table_caption(c("A001", "A001"), c("2024-01-15", "2024-01-15"))
+  expect_equal(result, "ID: A001 . Visit Date: 2024-01-15")
+})
+
+test_that("chrome_extra_args returns --disable-gpu by default", {
+  result <- chrome_extra_args()
+  expect_equal(result, "--disable-gpu")
+})
+
+test_that("chrome_extra_args adds sandbox flags on shinyapps", {
+  withr::local_envvar(R_CONFIG_ACTIVE = "shinyapps")
+  result <- chrome_extra_args()
+  expect_true("--no-sandbox" %in% result)
+  expect_true("--disable-dev-shm-usage" %in% result)
+  expect_true("--disable-gpu" %in% result)
+})
+
+# --- Snapshot tests ---
+
+test_that("mainTable gt HTML output is stable", {
+  prepped <- get_prepared_demo_data()
+  single_row <- prepped[1, ]
+  shiny::testServer(
+    mainTableServer,
+    args = list(
+      dat = shiny::reactive(single_row),
+      table_font_size = shiny::reactiveVal(100)
+    ),
+    {
+      session$flushReact()
+
+      expect_snapshot(gt::as_raw_html(mainTable()), transform = function(x) {
+        # Remove whitespace and newlines for stable snapshot
+        gsub("width:[0-9]+\\.[0-9]+%|margin\\-left:[0-9]+\\.[0-9]+px;", "", x)
+      })
+    }
+  )
+})
+
+test_that("mainTableApp download flow produces a download button and downloads a PDF", {
+  skip_on_cran()
+  skip_on_ci()
+  skip_if_not_installed("shinytest2")
+  skip_if_not_installed("pagedown")
+  skip_if(
+    !nzchar(tryCatch(pagedown::find_chrome(), error = function(e) "")),
+    "Chrome/Chromium not available"
+  )
+
+  prepped <- get_prepared_demo_data()
+  single_row <- prepped[1, ]
+
+  app <- shinytest2::AppDriver$new(
+    mainTableApp(dat = single_row, testing = TRUE),
+    name = "mainTableApp-download",
+    timeout = 30000
+  )
+  on.exit(app$stop(), add = TRUE)
+
+  app$wait_for_idle()
+
+  # The genPDF button should be visible
+  gen_btn <- app$get_html("#main_table-genPDF")
+  expect_match(gen_btn, "Generate PDF")
+
+  # Click "Generate PDF for Download" and wait for async chrome_print
+
+  app$click(selector = "#main_table-genPDF")
+  app$wait_for_idle(timeout = 60000)
+
+  # The downloadTable UI should now contain a download button
+  download_btn <- app$get_html("#main_table-downloadPDF")
+  expect_match(download_btn, "Download PDF")
+
+  # Actually download the file and verify it's a valid PDF
+  download_path <- app$get_download("main_table-downloadPDF")
+  expect_true(file.exists(download_path))
+  expect_gt(file.size(download_path), 0)
+
+  # Check PDF magic bytes (%PDF)
+  raw_header <- readBin(download_path, "raw", n = 4)
+  expect_equal(rawToChar(raw_header), "%PDF")
+
+  # Verify PDF content contains expected table elements
+  skip_if_not_installed("pdftools")
+  pdf_text <- pdftools::pdf_text(download_path)
+  full_text <- paste(pdf_text, collapse = " ")
+
+  # Caption should include the visit date
+  expect_match(full_text, as.character(single_row$VISITDATE[1]))
+
+  # Table should contain cognitive domain group labels
+  expect_match(full_text, "General Cognition")
+  expect_match(full_text, "Memory")
+  expect_match(full_text, "Language")
+
+  # Table should contain column headers
+  expect_match(full_text, "Percentile")
+  expect_match(full_text, "Description")
+})
+
+# --- Server logic tests ---
+
+test_that("mainTableServer renders a gt table for single-row data", {
+  prepped <- get_prepared_demo_data()
+  single_row <- prepped[1, ]
+  shiny::testServer(
+    mainTableServer,
+    args = list(
+      dat = shiny::reactive(single_row),
+      table_font_size = shiny::reactiveVal(100)
+    ),
+    {
+      session$flushReact()
+
+      # mainTable() is the internal reactiveVal holding the gt object
+      expect_s3_class(mainTable(), "gt_tbl")
+    }
+  )
+})
+
+test_that("mainTableServer returns NULL for NULL dat", {
+  shiny::testServer(
+    mainTableServer,
+    args = list(
+      dat = shiny::reactive(NULL),
+      table_font_size = shiny::reactiveVal(100)
+    ),
+    {
+      session$flushReact()
+
+      expect_null(mainTable())
+    }
+  )
+})
+
+test_that("mainTableServer returns NULL for multi-row dat", {
+  prepped <- get_prepared_demo_data()
+  multi_row <- prepped[1:2, ]
+
+  shiny::testServer(
+    mainTableServer,
+    args = list(
+      dat = shiny::reactive(multi_row),
+      table_font_size = shiny::reactiveVal(100)
+    ),
+    {
+      session$flushReact()
+
+      # Should not render a table for multi-row data
+      expect_null(mainTable())
+    }
+  )
+})
+
+test_that("mainTableServer table updates when dat changes", {
+  prepped <- get_prepared_demo_data()
+
+  row_rv <- shiny::reactiveVal(prepped[1, ])
+
+  shiny::testServer(
+    mainTableServer,
+    args = list(
+      dat = row_rv,
+      table_font_size = shiny::reactiveVal(100)
+    ),
+    {
+      session$flushReact()
+      first_table <- mainTable()
+      expect_s3_class(first_table, "gt_tbl")
+
+      # Update to a different row
+      row_rv(prepped[2, ])
+      session$flushReact()
+
+      second_table <- mainTable()
+      expect_s3_class(second_table, "gt_tbl")
+    }
+  )
+})
+
+test_that("mainTableServer wraps non-reactive table_font_size", {
+  prepped <- get_prepared_demo_data()
+  single_row <- prepped[1, ]
+
+  # Pass plain numeric (not reactive) — should be auto-wrapped
+  shiny::testServer(
+    mainTableServer,
+    args = list(
+      dat = shiny::reactive(single_row),
+      table_font_size = 80
+    ),
+    {
+      session$flushReact()
+      expect_s3_class(mainTable(), "gt_tbl")
+    }
+  )
+})
+
+test_that("mainTableServer handles print_updating = TRUE", {
+  prepped <- get_prepared_demo_data()
+  single_row <- prepped[1, ]
+
+  shiny::testServer(
+    mainTableServer,
+    args = list(
+      dat = shiny::reactive(single_row),
+      table_font_size = shiny::reactiveVal(100),
+      print_updating = TRUE
+    ),
+    {
+      session$flushReact()
+      expect_s3_class(mainTable(), "gt_tbl")
+    }
+  )
+})

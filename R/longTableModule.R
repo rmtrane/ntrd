@@ -16,6 +16,7 @@ longTableUI <- function(id) {
 
 #' @rdname longTableModule
 #'
+#' @inheritParams assessment_longitudinal_table
 #' @param print_updating logical (default `FALSE`); should message be printed to let user know the table is updating. For debugging.
 #'
 #' @export
@@ -112,7 +113,7 @@ longTableServer <- function(
 #' @description
 #' A short description...
 #'
-#' @param dat A data frame.
+#' @inheritParams longTableServer
 #'
 #' @returns
 #' A shiny app.

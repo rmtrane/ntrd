@@ -1,4 +1,6 @@
-#' Server Logic for shinyAssessmentApp
+#' Server Logic for shinyDashboard
+#'
+#' @param input,output,session Standard Shiny server arguments.
 #'
 #' @keywords internal
 #'
@@ -12,132 +14,69 @@ appServer <- function(input, output, session) {
   ## Setup data select module
   dat_sel <- dataSelectServer("dataSelect")
 
-<<<<<<< Updated upstream
-=======
   ## In-app update banner (see updateBannerModule.R)
   update_banner_server("update_banner", update_info = dat_sel$update_info)
 
->>>>>>> Stashed changes
   ## Reactive values to store data object, selected data source, and data type,
   ## all assigned from dataSelect module. Also, reactive value to indicate if
   ## user should be allowed to select columns for variables. We only allow this
   ## for csv upload.
-  dat_obj <- shiny::reactiveVal()
-  data_source <- shiny::reactiveVal()
-  data_type <- shiny::reactiveVal()
-  biomarker_api <- shiny::reactiveVal()
-  allow_col_selections <- shiny::reactiveVal()
 
   devmode <- shiny::reactiveVal(value = FALSE)
 
   selected_date <- shiny::reactiveVal()
 
   shiny::observe({
-    # shiny::req(
-    #   dat_sel$dat_obj(),
-    #   dat_sel$data_source(),
-    #   dat_sel$data_type()
-    # )
-
-    dat_obj(dat_sel$dat_obj())
-    data_source(dat_sel$data_source())
-    data_type(dat_sel$data_type())
-    biomarker_api(dat_sel$biomarker_api())
-
-    if (!is.null(dat_sel$biomarker_api())) {
+    if (!is.null(dat_sel$extras()$extension_ui)) {
+      output$extension_ui <- shiny::renderUI({
+        #   bslib::nav_panel(
+        #     title = "Biomarkers",
+        #     value = "biomarkers",
+        dat_sel$extras()$extension_ui()
+        # )
+      })
       bslib::nav_show(id = "long-trends", target = "biomarkers")
     }
-
-    allow_col_selections("disable")
-
-    if (!is.null(data_source()) && data_source() == "csv_upload") {
-      allow_col_selections("enable")
-    }
-
-    if (!is.null(data_source()) && data_source() == "redcap") {
-      allow_col_selections("hide")
-    }
-
-    # allow_col_selections(data_source() == "csv_upload")
-  })
+  }) #()$panda_api_token)
 
   ## Reactive object with available columns to use to select from
   cols_avail <- shiny::reactive({
-    colnames(dat_obj())
+    if (S7::S7_inherits(dat_sel$dat_obj(), data_nacc)) {
+      colnames(dat_sel$dat_obj()@data)
+    }
   })
 
-<<<<<<< Updated upstream
+  # default_methods <- shiny::reactive({
+  #   shiny::req(dat_sel$default_methods())
+
+  #   dat_sel$default_methods()
+  # })
+
   ## Reactive values to hold selected columns, and methods
   col_sel <- shiny::reactiveVal()
-=======
+
   ## Reactive value to hold selected methods
->>>>>>> Stashed changes
   std_methods <- shiny::reactiveVal()
 
-  ## When dat_obj changes, flush selected columns and methods
+  ## When dat_obj changes, flush selected methods
   shiny::observe({
-    col_sel(NA)
     std_methods(NA)
   }) |>
     shiny::bindEvent(
-      dat_obj()
+      dat_sel$dat_obj()
     )
 
-  ## Select columns
-  colSelectOutput <- colSelectServer(
+  ## Select columns and domains
+  methodSelectOutput <- methodSelectServer(
     "colSelect",
-    col_names = cols_avail,
-    data_type = data_type,
-    default_methods = list(
-      MOCATOTS = c(method = "regression", version = "nacc"),
-      OTRAILA = c(method = "regression", version = "updated_2025.06"),
-      OTRAILB = c(method = "regression", version = "updated_2025.06"),
-      # OTRLARR = c(method = "regression", version = "updated"),
-      # OTRLBRR = c(method = "regression", version = "updated"),
-      DIGFORCT = c(method = "regression", version = "nacc"),
-      DIGFORSL = c(method = "regression", version = "nacc"),
-      DIGBACCT = c(method = "regression", version = "nacc"),
-      DIGBACLS = c(method = "regression", version = "nacc"),
-      TRAILA = c(method = "regression", version = "nacc"),
-      TRAILB = c(method = "regression", version = "nacc"),
-      WAIS = c(method = "T-score", version = NA),
-      MINTTOTS = c(method = "regression", version = "nacc"),
-      ANIMALS = c(method = "regression", version = "nacc"),
-      VEG = c(method = "regression", version = "nacc"),
-      UDSVERFC = c(method = "regression", version = "nacc"),
-      UDSVERLC = c(method = "regression", version = "nacc"),
-      UDSVERTN = c(method = "regression", version = "nacc"),
-      UDSBENTC = c(method = "regression", version = "nacc"),
-      UDSBENTD = c(method = "regression", version = "nacc"),
-      CRAFTVRS = c(method = "regression", version = "nacc"),
-      CRAFTURS = c(method = "regression", version = "nacc"),
-      CRAFTDVR = c(method = "regression", version = "nacc"),
-      CRAFTDRE = c(method = "regression", version = "nacc"),
-      # REY1REC = c(method = "T-score", version = NA),
-      # REY2REC = c(method = "T-score", version = NA),
-      # REY3REC = c(method = "T-score", version = NA),
-      # REY4REC = c(method = "T-score", version = NA),
-      # REY5REC = c(method = "T-score", version = NA),
-      REY6REC = c(method = "T-score", version = NA),
-      REYDREC = c(method = "T-score", version = NA),
-      REYTOTAL = c(method = "T-score", version = NA),
-      REYAREC = c(method = "T-score", version = NA),
-      REYDLIST = c(method = "T-score", version = NA),
-      NACCMMSE = c(method = "regression", version = "nacc"),
-      BOSTON = c(method = "regression", version = "nacc"),
-      LOGIMEM = c(method = "regression", version = "nacc"),
-      MEMUNITS = c(method = "regression", version = "nacc"),
-      DIGIF = c(method = "regression", version = "nacc"),
-      DIGIFLEN = c(method = "regression", version = "nacc"),
-      DIGIB = c(method = "regression", version = "nacc"),
-      DIGIBLEN = c(method = "regression", version = "nacc")
-    ),
-    col_selection = allow_col_selections()
+    dat_obj = dat_sel$dat_obj,
+    default_methods = dat_sel$default_methods
   )
 
   shiny::observe({
-    col_sel(colSelectOutput$var_cols())
-    std_methods(colSelectOutput$std_methods())
+    shiny::req(methodSelectOutput$std_methods())
+
+    std_methods(methodSelectOutput$std_methods())
   })
 
   shiny::observe({
@@ -157,56 +96,87 @@ appServer <- function(input, output, session) {
       ignoreNULL = T
     )
 
-  ## Prepare data
+  ## Prepare data and get nacc_var_groups
   fin_dat <- shiny::reactiveVal()
+  nacc_var_groups <- shiny::reactiveVal(value = nacc_var_groups)
 
   shiny::observe({
-    if (!all(is.na(std_methods())) & !all(is.na(col_sel()))) {
-      fin_dat(
-        prepare_data(
-          dat_obj(),
-          selected_cols = col_sel(),
-          methods = std_methods(),
-          print_messages = F
-        )
+    shiny::req(dat_sel$dat_obj())
+    shiny::req(!all(is.na(std_methods())))
+    domain_asgn <- methodSelectOutput$domain_assignments()
+    shiny::req(domain_asgn)
+
+    dat_prepped <-
+      prepare_data(
+        dat_sel$dat_obj(),
+        methods = std_methods()
       )
+
+    npsych_subclass_map <- lapply(
+      dat_prepped[, .SD, .SDcols = ntrs::is_npsych_scores],
+      \(x) S7::S7_class(x)@name
+    )
+
+    for (x in names(domain_asgn)) {
+      wh <- names(which(npsych_subclass_map == x))
+      dat_prepped[[wh]]@domain <- domain_asgn[[x]]
     }
+
+    fin_dat(dat_prepped)
   }) |>
     shiny::bindEvent(
-      col_sel(),
       std_methods(),
       ignoreNULL = T,
       ignoreInit = T
     )
 
   shiny::observe({
+    shiny::req(fin_dat())
+
+    domain_asgn <- methodSelectOutput$domain_assignments()
+    shiny::req(domain_asgn)
+
+    dat_prepped <- fin_dat()
+
+    npsych_subclass_map <- lapply(
+      dat_prepped[, .SD, .SDcols = ntrs::is_npsych_scores],
+      \(x) S7::S7_class(x)@name
+    )
+
+    for (x in names(domain_asgn)) {
+      wh <- names(which(npsych_subclass_map == x))
+      dat_prepped[[wh]]@domain <- domain_asgn[[x]]
+    }
+
+    fin_dat(dat_prepped)
+
+    ## Use domain_assignments from the method select module
+    nacc_var_groups(domain_asgn[!is.na(domain_asgn)])
+  }) |>
+    shiny::bindEvent(
+      methodSelectOutput$domain_assignments(),
+      ignoreNULL = T,
+      ignoreInit = T
+    )
+
+  ## Show notification when defaults were auto-applied and main view is ready
+  shiny::observe({
+    shiny::req(fin_dat())
+    shiny::req(methodSelectOutput$auto_applied())
+
     bslib::nav_show(
       id = "main_navbar",
       target = "tables-and-figures",
       select = T
     )
 
-    shiny::showModal(
-      shiny::modalDialog(
-        title = "Columns Recognized",
-        easy_close = TRUE,
-        "Enough NACC columns were recognized automatically. To make
-                custom selections, go to the 'Setup' tab.",
-        footer = bslib::layout_columns(
-          cols_widths = c(4, -4, 4),
-          shiny::actionButton("goToColSelect", label = "Setup"),
-          shiny::modalButton("Dismiss")
-        )
-      )
+    shiny::showNotification(
+      "Default methods applied. To customize, go to the Setup tab.",
+      type = "message",
+      duration = 8
     )
   }) |>
-    shiny::bindEvent(input$moveToTables)
-
-  shiny::observe({
-    shiny::removeModal()
-    bslib::nav_select(id = "main_navbar", selected = "colSelect")
-  }) |>
-    shiny::bindEvent(input$goToColSelect)
+    shiny::bindEvent(fin_dat(), once = TRUE)
 
   ## Once data has been readied the first time, move to 'Participant Data'
   ## and update options for study ID dropdown.
@@ -309,7 +279,7 @@ appServer <- function(input, output, session) {
   })
 
   ## Get default descriptions if saved as option, otherwise set defaults
-  default_descriptions <- getOption("NpsychAssessmentTool.default_descriptions")
+  default_descriptions <- getOption("ntrd.default_descriptions")
   if (is.null(default_descriptions)) {
     default_descriptions <- c(
       "Impaired" = 0.03,
@@ -323,7 +293,7 @@ appServer <- function(input, output, session) {
   }
 
   ## Get default colors if saved as option, otherwise set defaults
-  default_fill_values <- getOption("NpsychAssessmentTool.default_fill_values")
+  default_fill_values <- getOption("ntrd.default_fill_values")
   if (is.null(default_fill_values)) {
     default_fill_values <- setNames(
       calc_fill_colors(n = length(default_descriptions)),
@@ -376,7 +346,6 @@ appServer <- function(input, output, session) {
     table_font_size = table_font_size,
     descriptions = descriptions,
     fill_values = fill_values,
-    methods = std_methods,
     include_caption = T,
     print_updating = F
   )
@@ -410,11 +379,11 @@ appServer <- function(input, output, session) {
   y_ranges <- shiny::reactiveValues()
 
   shiny::observe({
-    lapply(unique(nacc_var_groups), \(cur_group) {
+    lapply(unique(nacc_groups), \(cur_group) {
       ## Get variables in group corresponding
       cur_vars <- paste(
         "std",
-        names(nacc_var_groups[nacc_var_groups == cur_group]),
+        names(nacc_var_groups()[nacc_var_groups() == cur_group]),
         sep = "_"
       ) |>
         intersect(
@@ -430,19 +399,33 @@ appServer <- function(input, output, session) {
       fin_dat()
     )
 
-  ## Create all plots
-  lapply(unique(nacc_var_groups), \(x) {
-    plotServer(
-      x,
-      dat = current_studyid_dat,
-      x_range = x_range,
-      y_range = shiny::reactive(y_ranges[[x]]),
-      descriptions = descriptions,
-      fill_values = fill_values,
-      print_updating = T,
-      shade_descriptions = shade_descriptions,
-      new_id = x
+  ## Plots UI
+  output$plots_accordion <- shiny::renderUI({
+    bslib::accordion(
+      #!!!lapply(unique(nacc_var_groups()), \(x) plotUI(id = x)),
+      !!!lapply(nacc_groups, \(x) plotUI(id = x)),
+      id = "plots-accordion",
+      open = TRUE
     )
+  })
+
+  ## Create all plots
+  shiny::observe({
+    # lapply(unique(nacc_var_groups()), \(x) {
+    lapply(nacc_groups, \(x) {
+      plotServer(
+        x,
+        dat = current_studyid_dat,
+        x_range = x_range,
+        y_range = shiny::reactive(y_ranges[[x]]),
+        descriptions = descriptions,
+        fill_values = fill_values,
+        print_updating = T,
+        shade_descriptions = shade_descriptions,
+        new_id = x,
+        var_groups = nacc_var_groups
+      )
+    })
   })
 
   ### Cognitive scores (Table)
@@ -465,11 +448,61 @@ appServer <- function(input, output, session) {
   )
 
   ## Biomarkers
-  biomarkerServer(
-    "biomarker-tables",
-    adrc_ptid = shiny::reactive(input$current_studyid),
-    biomarker_api = biomarker_api
-  )
+  # To avoid R CMD check warnings:
+  m <- NULL
+
+  # base_query_file <- system.file(
+  #   "json/panda_template.json",
+  #   package = "ntrd"
+  # )
+
+  # all_values_et <- shiny::ExtendedTask$new(
+  #   \(api) {
+  #     m <<- mirai::mirai(
+  #       {
+  #         get_all_values(
+  #           api_key = api,
+  #           base_query_file = base_query_file #"inst/json/panda_template.json"
+  #         )
+  #       },
+  #       .args = list(
+  #         get_all_values = get_all_values,
+  #         api = api,
+  #         base_query_file = base_query_file
+  #       )
+  #     )
+
+  #     m
+  #   }
+  # )
+
+  # shiny::observe({
+  #   shiny::req(biomarker_api())
+  #   all_values_et$invoke(
+  #     api = biomarker_api()
+  #   )
+  # })
+
+  # biomarkerServer(
+  #   "biomarker-tables",
+  #   adrc_ptid = shiny::reactive(input$current_studyid),
+  #   biomarker_api = shiny::reactive(
+  #     dat_sel$extras()$biomarker_api
+  #   ),
+  #   all_values = shiny::reactive(dat_sel$extras()$all_values)
+  # )
+
+  shiny::observe({
+    shiny::req(dat_sel$extras())
+    shiny::req(input$current_studyid)
+
+    if (!is.null(dat_sel$extras()$extension_server)) {
+      dat_sel$extras()$extension_server(
+        ptid = shiny::reactive(input$current_studyid),
+        extras = dat_sel$extras
+      )
+    }
+  })
 
   # } else {
   #   # If mirai is not installed, use simple reactiveValues

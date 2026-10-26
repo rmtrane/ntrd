@@ -2,7 +2,7 @@
 #'
 #' @param id An ID string to match module UI and server UI
 #' @param table_font_size (optional) scalar indicating font size as a percentage.
-#' @inheritParams assessment_summary_table
+#' @inheritParams assessment_summary_data
 #'
 #' @rdname mainTableModule
 #'
@@ -46,7 +46,6 @@ mainTableServer <- function(
     "Very Superior" = 1
   ),
   fill_values = NULL,
-  methods = "infer",
   table_font_size = 100,
   include_caption = F,
   print_updating = F
@@ -64,10 +63,6 @@ mainTableServer <- function(
 
   if (!shiny::is.reactive(table_font_size)) {
     table_font_size <- shiny::reactiveVal(table_font_size)
-  }
-
-  if (!shiny::is.reactive(methods)) {
-    methods <- shiny::reactiveVal(methods)
   }
 
   shiny::moduleServer(id, function(input, output, session) {
@@ -107,7 +102,6 @@ mainTableServer <- function(
       summary_dat <- assessment_summary_data(
         dat = for_table,
         id = "NACCID",
-        methods = methods(),
         include_caption = include_caption
       )
 
@@ -133,12 +127,7 @@ mainTableServer <- function(
         gt::gtsave(
           data = mainTable() |>
             gt::tab_caption(
-              caption = paste(
-                "ID:",
-                unique(dat()$NACCID),
-                ". Visit Date:",
-                unique(dat()$VISITDATE)
-              )
+              caption = make_table_caption(dat()$NACCID, dat()$VISITDATE)
             ),
           filename = tmp_html
         )
@@ -158,15 +147,7 @@ mainTableServer <- function(
             )
             output$downloadPDF <- shiny::downloadHandler(
               filename = function() {
-                paste0(
-                  paste(dat()$NACCID, dat()$VISITDATE, sep = "-"),
-                  "_created-on-",
-                  Sys.Date(),
-                  "-at-",
-                  format(Sys.time(), "%I-%M_%P"),
-                  # format(Sys.time(), "%r"),
-                  ".pdf"
-                )
+                make_pdf_filename(dat()$NACCID, dat()$VISITDATE)
               },
               content = function(file) {
                 file.copy(value, file)
@@ -193,6 +174,7 @@ mainTableServer <- function(
 
 #' @rdname mainTableModule
 #'
+#' @inheritParams assessment_summary_data
 #' @param testing logical (default `FALSE`); should the app be run in testing mode?
 #'
 #' @return a Shiny app object.
@@ -213,7 +195,7 @@ mainTableApp <- function(
     ifelse(
       development,
       "inst/shiny/www",
-      system.file("www", package = "NpsychAssessmentTool")
+      system.file("www", package = "ntrd")
     )
   )
 
@@ -235,7 +217,6 @@ mainTableApp <- function(
     mainTableServer(
       "main_table",
       dat = shiny::reactive(dat),
-      methods = "infer",
       table_font_size = shiny::reactive(100),
       include_caption = T
     )
@@ -244,6 +225,39 @@ mainTableApp <- function(
   shiny::shinyApp(ui, server, options = list(port = 3229, test.mode = testing))
 }
 
+
+#' Generate PDF filename for download
+#'
+#' @param naccid Character string with the NACC ID.
+#' @param visitdate Character string or Date with the visit date.
+#' @param time POSIXct timestamp used for the "created-on" portion of the
+#'   filename. Defaults to [Sys.time()].
+#'
+#' @return A character string suitable for use as a PDF filename.
+#'
+#' @keywords internal
+make_pdf_filename <- function(naccid, visitdate, time = Sys.time()) {
+  paste0(
+    paste(naccid, visitdate, sep = "-"),
+    "_created-on-",
+    as.Date(time),
+    "-at-",
+    format(time, "%I-%M_%P"),
+    ".pdf"
+  )
+}
+
+#' Generate table caption from ID and visit date
+#'
+#' @param naccid Character vector of NACC IDs (will be uniquified).
+#' @param visitdate Character or Date vector of visit dates (will be uniquified).
+#'
+#' @return A single character string caption.
+#'
+#' @keywords internal
+make_table_caption <- function(naccid, visitdate) {
+  paste("ID:", unique(naccid), ". Visit Date:", unique(visitdate))
+}
 
 #' Return Chrome CLI arguments
 #'
@@ -254,6 +268,8 @@ mainTableApp <- function(
 #' @param default_args Arguments to be used in any circumstances.
 #'
 #' @return A character vector with CLI arguments to be passed to Chrome.
+#'
+#' @keywords internal
 chrome_extra_args <- function(default_args = c("--disable-gpu")) {
   args <- default_args
   # Test whether we are in a shinyapps container

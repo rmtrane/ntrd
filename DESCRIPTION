@@ -1,23 +1,24 @@
-Package: NpsychAssessmentTool
+Package: ntrd
 Type: Package
-Title: UDS Battery Scores in Interactive Tables and Figures
-Version: 0.2.0.9000
-Description: Building on the NpsychBatteryNorms package,
+Title: Neuropsychological Test Results Dashboard
+Version: 0.0.0.9000
+Description: Building on the ntrs package,
     this package includes a Shiny application that makes 
-    it easy to present UDS battery scores in a way useful
-    to consensus diagnosis. Data can be imported as an
-    .csv file or pulled directly from a REDCap database
-    (`REDCapR` needed).
+    it easy to present test scores in a way useful
+    to consensus diagnosis. Data can be imported as a
+    .csv file, or extensions can be created to import
+    directly from REDCap/any other database system accessible
+    via API.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-Suggests: 
+Suggests:
     httr2,
-    jsonlite,
-    mirai,
     pagedown,
-    REDCapR (>= 1.5.0),
+    pdftools,
+    quarto,
     shinytest2,
+    withr,
     testthat (>= 3.0.0),
     rvest,
     dplyr,
@@ -25,16 +26,13 @@ Suggests:
     tidyr
 Config/testthat/edition: 3
 Config/testthat/load-all: list(export_all = TRUE, helpers = TRUE)
-RoxygenNote: 7.3.2
-Depends: 
-    R (>= 4.2.0)
-Imports: 
+RoxygenNote: 7.3.3
+Imports:
     bslib,
     data.table (>= 1.9.8),
     DT,
     gt,
     lubridate,
-    NpsychBatteryNorms,
     plotly,
     purrr,
     shiny,
@@ -42,12 +40,78 @@ Imports:
     methods,
     utils,
     cli,
-    safer
+    safer,
+    stats,
+    mirai,
+    ntrs,
+    S7
+Depends: 
+    R (>= 4.2.0)
 Remotes: 
-    rmtrane/NpsychBatteryNorms
+    rmtrane/ntrs
+VignetteBuilder: quarto
 Roxygen: list(markdown = TRUE)
 Authors@R: c(
-    person("Ralph", "Møller Trane", email = "rtrane@wisc.edu", role = c("aut", "cre"), comment = c(ORCID = "0000-0001-7824-1785"))
+    person(
+        "Ralph", "Møller Trane", 
+        email = "rtrane@wisc.edu", 
+        role = c("aut", "cre"), 
+        comment = c(ORCID = "0000-0001-7824-1785")
+    )
   )
-URL: https://github.com/rmtrane/NpsychAssessmentTool
-BugReports: https://github.com/rmtrane/NpsychAssessmentTool/issues
+URL: https://rmtrane.github.io/ntrd, https://rmtrane.github.io/ntrd/
+BugReports: https://github.com/rmtrane/ntrd/issues
+Config/Needs/website:
+    htmltools,
+    here,
+    yaml
+Collate: 
+    'appServer.R'
+    'appUI.R'
+    'apply_extension_defaults.R'
+    'assessment_longitudinal_table.R'
+    'assessment_summary_table.R'
+    'birth_vars.R'
+    'calc_fill_colors.R'
+    'check_colors.R'
+    'critical_vars.R'
+    'crosswalk_translations.R'
+    'data_source.R'
+    'csv_source.R'
+    'dataSelectModule.R'
+    'data_nacc.R'
+    'demo_data.R'
+    'demo_source.R'
+    'demographics_table.R'
+    'descriptionsModule.R'
+    'diag_contr_pairs.R'
+    'discover_data_sources.R'
+    'from_gtExtras_for_my_gt_blt_bar_pct.R'
+    'get_plot_ranges.R'
+    'load_extensions.R'
+    'longTableModule.R'
+    'mainTableModule.R'
+    'methodSelectModule.R'
+    'my_gt_plt_bar_pct.R'
+    'nacc_groups.R'
+    'nacc_to_wls.R'
+    'nacc_var_groups.R'
+    'nacc_var_labels.R'
+    'ntrd-package.R'
+    'onRender.R'
+    'optional_vars.R'
+    'plotModule.R'
+    'plotly_new_traces.R'
+    'plotly_plots.R'
+    'prepare_data.R'
+    'prevDiagnosesModule.R'
+    'prev_diagnoses_table.R'
+    'rdd.R'
+    'shinyAddResources.R'
+    'shinyApp_header.R'
+    'shinyDashboard.R'
+    'var_labels.R'
+    'visibility_defaults.R'
+    'visit_vars.R'
+    'wls_to_nacc.R'
+    'zzz.R'

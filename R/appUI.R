@@ -1,4 +1,4 @@
-#' UI for shinyAssessmentApp
+#' UI for shinyDashboard
 #'
 #' @keywords internal
 #' @export
@@ -6,16 +6,12 @@
 appUI <- function() {
   bslib::page_navbar(
     ## Header: add JS scripts, CSS, and spinner elements to be shown/hidden later.
-<<<<<<< Updated upstream
-    header = shinyApp_header(),
-=======
     header = shiny::tagList(
       shinyApp_header(),
       update_banner_ui("update_banner")
     ),
->>>>>>> Stashed changes
     theme = bslib::bs_theme(version = 5),
-    title = "Npsych Scoring Application",
+    title = "Npsych Test Result Dashboard",
     id = "main_navbar",
     navbar_options = bslib::navbar_options(underline = TRUE),
     ######
@@ -113,7 +109,17 @@ appUI <- function() {
                     width = NULL,
                     options = list(
                       ## When new options loaded, resize the dropdown.
-                      onLoad = I("resizeSelectize('current_date')")
+                      onLoad = I("resizeSelectize('current_date')"),
+                      onInitialize = I(
+                        "
+                        function() {
+                          var controlInput = this.$control_input;
+                          controlInput.attr('autocomplete', 'nope');
+                          controlInput.on('focus', function() {
+                            $(this).attr('name', Math.random().toString(36).substring(7));
+                          });
+                        }"
+                      )
                     )
                   )
                 )
@@ -131,14 +137,7 @@ appUI <- function() {
               id = "long-trends",
               bslib::nav_panel(
                 title = "Cognitive Scores (Plots)",
-                # plotVarUI("plot_var")
-                #do.call(
-                #htmltools::tagList,
-                bslib::accordion(
-                  !!!lapply(unique(nacc_var_groups), \(x) plotUI(id = x)),
-                  id = "plots-accordion",
-                  open = TRUE
-                ) #
+                shiny::uiOutput("plots_accordion"),
               ),
               bslib::nav_panel(
                 title = "Cognitive Scores (Table)",
@@ -151,8 +150,9 @@ appUI <- function() {
               bslib::nav_panel(
                 title = "Biomarkers",
                 value = "biomarkers",
-                biomarkerUI("biomarker-tables")
+                shiny::uiOutput("extension_ui")
               )
+              # shiny::uiOutput("extension_ui")
             )
           )
         )
@@ -161,7 +161,7 @@ appUI <- function() {
     bslib::nav_panel(
       title = "Setup",
       value = "colSelect",
-      colSelectUI("colSelect")
+      methodSelectUI("colSelect")
     )
   )
 }

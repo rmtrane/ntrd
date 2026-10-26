@@ -9,9 +9,9 @@ bibliography: references.bib
 
 ## Introduction
 
-This R Shiny application is build on the R package [`NpsychBatteryNorms`](https://rmtrane.github.io/NpsychBatteryNorms), which implements a handful of methods to standardize various 
+This R Shiny application is build on the R package [`ntrs`](https://rmtrane.github.io/ntrs), which implements a handful of methods to standardize various 
 neuropsychological scores. The main focus is to standardize scores that are part 
-of UDS 3, but some legacy and a few additional scores are included as well.  
+of UDS 3, but some legacy and a few additional scores are included as well. 
 
 ## General Workflow 
 
@@ -24,33 +24,54 @@ the data and what machine you are using.** Once finished, you will either go to
 the "Setup" tab or (if enough variables were recognized) the "Participant Data" 
 tab with the option to be redirected to the "Setup" tab. 
 
-On the "Participant Data" tab, you will find tables and figures showing the 
+On the "Scoring Tables and Figures" tab, you will find tables and figures showing the 
 scores of participants at different visits and longitudinally. Many of these are
 interaction. As a few examples, you can zoom in/out and select/deselect scores 
 on the plots, and error codes in the summary table (highlighted with red text 
 and underlined) will show description when hovered.
 
-The video below shows a brief walk through using the demo data that is included. 
-(Note: the application might have been updated since the recording of this video,
-but the core functionality has not changed.)
+```{r}
+#| echo: false
+#| warning: false
+
+if (file.exists(here::here("inst/qmd/carousel.R"))) {
+  source(here::here("inst/qmd/carousel.R"))
+  source(here::here("inst/qmd/get_image_uri.R"))
+}
+
+if (file.exists("carousel.R")) {
+  source("carousel.R")
+  source("get_image_uri.R")
+}
+
+
+if (
+  !file.exists(here::here("inst/qmd/carousel.yml")) &
+    !file.exists("carousel.yml")
+) {
+  tmp <- getwd()
+  cli::cli_abort(paste("File does not exist. Current directory is", tmp))
+}
+
+carousel_yaml_file <- yaml.load_file(here::here("inst/qmd/carousel.yml"))
+```
 
 ```{r}
 #| classes: '.g-col-lg-6 .g-col-12 .g-col-md-12'
 #| warning: false
 #| echo: false
-source(here::here("inst/qmd/carousel.R"))
-
 carousel(
   "gallery-carousel",
   5000,
-  yaml.load_file(here::here("inst/qmd/carousel.yml"))
+  carousel_yaml_file
 )
 ```
 
+<!--
+
 ## Standardization Methods
 
-Multiple standardization methods are implemented in the R-package 
-`NpsychBatteryNorms`, though not all methods are available for all variables. 
+Two standardization methods are implemented in the R-package [`ntrs`](https://rmtrane.github.io/ntrs), though not both methods are available for all variables. 
 @tbl-implemented-methods lists all variables that can be standardization and all
 methods available.
 
@@ -65,103 +86,176 @@ tries to recalculate the summary statistics with the June 2024 data lock.
 
 * `regression` refers to the practice of standardizing to z-scores using a 
 an estimated average and standard deviation derived from a regression model 
-fitted to a normative sample. Again, we have two versions: "NACC" uses the 
+fitted to a normative sample. We have multiple versions: "NACC" uses the 
 regression model published by @weintraubVersionAlzheimerDisease2018, while 
-"Updated" tries to refit the same model to an updated normative sample using the
-June 2024 data lock. 
+"Updated (`X Y`)" tries to refit the same model to an updated normative 
+sample using the data lock from month `X` of year `Y`. 
 
-* `T-score` refers to the model presented in @strickerMayoNormativeStudies2021.
+* `T-score` refers to the models presented in @strickerMayoNormativeStudies2021 and @karstensMayoNormativeStudies2024. 
 
 Default methods are underlined in @tbl-implemented-methods. Not all variables 
 have default methods. This is because some variables are not used standardized 
 in this application. The user can change the standardization methods used on the
 "Setup" tab once data has been loaded.
 
-
 ```{r}
 #| label: data-prep
 #| echo: false
 #| warning: false
 #| message: false
+#| eval: false
 
-library(tidyverse)
+library(dplyr)
+library(tidyr)
+library(purrr)
+library(stringr)
 
-for_tab <- data.frame(
-  method = c("norms", "norms", "regression", "regression", "T-score"),
-  version = c("nacc", "updated", "nacc", "updated_2024.06", NA)
+for_tab <- tibble(
+  variables = ntrs::list_npsych_scores(),
+  methods = map(variables, \(x) {
+    ntrs::list_std_methods(ntrs::get_npsych_scores(x)())
+  })
 ) |>
+  filter(map_lgl(methods, \(x) length(x) > 0)) |>
+  unnest_longer(methods) |>
   mutate(
-    variables = map2(
-      method,
-      version,
-      \(x, y) NpsychBatteryNorms::std_methods(method = x, version = y)
-    )
-  ) |>
-  unnest_longer(variables) |>
-  mutate(
-    method = factor(method, levels = c("norms", "regression", "T-score")),
-    version = factor(
-      if_else(is.na(version), "T", version),
-      levels = c("nacc", "updated", "updated_2024.06", "T")
-    ),
-    available = "check"
-  ) |>
-  complete(method, version, variables, fill = list(available = "x")) |>
-  mutate(
-    short_descriptor = purrr::map(
+    versions = map2(
       variables,
-      \(x) purrr::pluck(NpsychBatteryNorms::rdd, x, "short_descriptor")
-    ),
-  ) |>
-  unnest(short_descriptor) |>
-  filter(
-    !(method == "T-score" & version != "T"),
-    !(method != "T-score" & version == "T")
-  ) |>
-  arrange(variables) |>
-  left_join(
-    NpsychBatteryNorms::default_methods |>
-      bind_rows(.id = "variables") |>
-      mutate(
-        default = T,
-        version = if_else(method == "T-score", "T", version)
-      )
-  ) |>
-  select(variables, short_descriptor, method, version, available, default) |>
-  unite(
-    col = "version",
-    version,
-    available
-  ) |>
-  mutate(
-    version = map2_chr(version, default, \(x, y) {
-      if (isTRUE(y)) {
-        out <- str_replace_all(
-          x,
-          c(
-            "nacc" = "<span style=\"font-weight: bold; text-decoration: underline;\">NACC</span>",
-            "updated" = "<span style=\"font-weight: bold; text-decoration: underline;\">Updated</span>",
-            "updated_2024.06" = "<span style=\"font-weight: bold; text-decoration: underline;\">Updated (June 2024)</span>",
-            "T" = "",
-            "_check" = " (<span style=\"font-weight: bold; color: #1D8A28; text-decoration: underline;\">&#10003;</span>)"
-          )
-        )
-      } else {
-        out <- str_replace_all(
-          x,
-          c(
-            "nacc" = "NACC",
-            "updated" = "Updated",
-            "updated_2024.06" = "Updated (June 2024)",
-            "T" = "",
-            "_check" = " (<span style=\"font-weight: bold; color: #1D8A28;\">&#10003;</span>)",
-            "_x" = " (<span style=\"font-weight: bold; color: #B61717;\">&#10007;</span>)"
-          )
+      methods,
+      \(x, y) {
+        ntrs::list_method_versions(
+          scores = ntrs::get_npsych_scores(x)(),
+          method = y
         )
       }
-
-      out
+    ),
+    def_meth = map(variables, \(x) {
+      ntrs::get_std_defaults(ntrs::get_npsych_scores(x)())
     })
+  )
+
+all_methods <- c("norms", "regression")
+
+for_tab <- map(
+  all_methods,
+  \(mth) {
+    tab <- tibble(
+      version = {
+        if (mth == "norms") {
+          out <- names(ntrs::normative_summaries)
+        }
+
+        if (mth == "regression") {
+          out <- names(ntrs::reg_coefs)
+        }
+
+        if (mth == "T-score") {
+          out <- NA_character_
+        }
+
+        out
+      }
+    ) |>
+      mutate(
+        variables = map(
+          version,
+          \(y) ntrs::std_methods(method = mth, version = y)
+        )
+      ) |>
+      unnest_longer(variables) |>
+      mutate(
+        version = factor(
+          if_else(is.na(version), "T", version),
+          levels = c(na.omit(unique(version)), "T")
+        ),
+        available = "check"
+      ) |>
+      complete(
+        version,
+        variables,
+        fill = list(available = "x")
+      ) |>
+      mutate(
+        short_descriptor = purrr::map_chr(
+          variables,
+          \(x) {
+            out <- purrr::pluck(ntrs::rdd, x, "short_descriptor")
+
+            if (is.null(out)) {
+              return(NA)
+            }
+
+            out
+          }
+        )
+      ) |>
+      arrange(variables)
+
+    if (mth != "norms") {
+      tab <- left_join(
+        tab,
+        ntrs::default_methods |>
+          bind_rows(.id = "variables") |>
+          filter(method == mth) |>
+          mutate(
+            default = T,
+            version = if_else(method == "T-score", "T", version)
+          )
+      )
+    } else {
+      tab$default <- NA
+    }
+
+    tab |>
+      select(
+        variables,
+        short_descriptor,
+        version,
+        available,
+        default
+      ) |>
+      unite(
+        col = "version",
+        version,
+        available
+      ) |>
+      mutate(
+        version = map2_chr(version, default, \(x, y) {
+          if (isTRUE(y)) {
+            out <- str_replace_all(
+              x,
+              c(
+                "nacc" = "<span style=\"font-weight: bold; text-decoration: underline;\">NACC</span>",
+                "updated_2024.06" = "<span style=\"font-weight: bold; text-decoration: underline;\">Updated (June 2024)</span>",
+                "updated_2025.06" = "<span style=\"font-weight: bold; text-decoration: underline;\">Updated (June 2025)</span>",
+                "updated" = "<span style=\"font-weight: bold; text-decoration: underline;\">Updated </span>",
+                "T" = "",
+                "_check" = " (<span style=\"font-weight: bold; color: #1D8A28; text-decoration: underline;\">&#10003;</span>)"
+              )
+            )
+          } else {
+            out <- str_replace_all(
+              x,
+              c(
+                "nacc" = "NACC",
+                "updated_2024.06" = "Updated (June 2024)",
+                "updated_2025.06" = "Updated (June 2025)",
+                "updated" = "Updated",
+                "T" = "",
+                "_check$" = " (<span style=\"font-weight: bold; color: #1D8A28;\">&#10003;</span>)",
+                "_x$" = " (<span style=\"font-weight: bold; color: #B61717;\">&#10007;</span>)"
+              )
+            )
+          }
+
+          out
+        })
+      )
+  }
+) |>
+  set_names(all_methods) |>
+  bind_rows(
+    .id = "method"
   )
 ```
 
@@ -172,7 +266,8 @@ for_tab <- data.frame(
 #| echo: false
 #| warning: false
 #| message: false
-#| include: true
+#| eval: false
+#| include: false
 
 for_tab |>
   select(-default) |>
@@ -193,3 +288,4 @@ for_tab |>
   )
 ```
 
+-->

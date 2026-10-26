@@ -38,6 +38,8 @@ prevDiagnosesServer <- function(
 }
 
 #' @rdname prevDiagnosesModule
+#'
+#' @inheritParams prevDiagnosesServer
 prevDiagnosesApp <- function(
   dat,
   print_updating = F,

@@ -1,0 +1,52 @@
+on:
+  push:
+    branches: ['main']
+    paths: ['README.qmd']
+
+name: Render and Commit README.qmd 
+
+jobs:
+  build-deploy:
+    permissions:
+      contents: write
+    
+    runs-on: macos-latest
+    
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        
+      - name: Set up Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+
+      - name: Install packages
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+          needs: check
+      
+      - name: Install ntrds
+        run: |
+          install.packages("devtools")
+          devtools::install(reload=FALSE,quick=TRUE,build=TRUE,dependencies=FALSE,build_vignettes=FALSE)
+        shell: Rscript {0}
+      
+      - name: Render README.qmd
+        uses: quarto-dev/quarto-actions/render@v2
+        with:
+          to: gfm
+          path: README.qmd
+
+      - name: Commit results
+        run: |
+          git config --global user.name "rmtrane"
+          git config --global user.email "rmtrane@users.noreply.github.com"
+
+          git add README.md
+          git commit -m "Rebuild README.qmd"
+          git push

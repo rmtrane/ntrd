@@ -9,11 +9,7 @@
 #' @param fill_values (optional) A named vector of same length (with same names)
 #'   as `descriptions` with hex color values to use. If `NULL`, no colorcoding used.
 #'   By default, evenly spread out colors from red through yellow to green are used.
-#' @param methods (optional) either list of named entries specifying which model was used
-#'   for standardizing cognitive scores, or the character string "infer". For the
-#'   latter, methods are infered from the `dat` object using
-#'   `NpsychBatteryNorms::methods_from_std_data`. If specified, footnotes are added
-#'   to indicate the methods used.
+#' @param summary_dat A list as returned by `assessment_summary_data()`.
 #' @param bar_height In pixels. Height of the percentile bars. Default: 16
 #' @param include_caption Logical; should a caption be included above the table
 #'   with age and IQCODEs at current visit?
@@ -25,31 +21,6 @@ assessment_summary_table <- function(
   summary_dat,
   bar_height = 16
 ) {
-  # if (missingArg(fill_values)) fill_values <- NULL
-
-  # stopifnot(
-  #   "Exactly one of 'dat' or 'summary_dat' must be provided" = missingArg(dat) +
-  #     missingArg(summary_dat) ==
-  #     1
-  # )
-
-  # if (
-  #   unique(dat$NACCID) == "adrc000178" & unique(dat$VISITDATE == "2020-10-12")
-  # ) {
-  #   browser()
-  # }
-
-  # if (missingArg(summary_dat)) {
-  # summary_dat <- assessment_summary_data(
-  #   dat = dat,
-  #   id = id,
-  #   descriptions = descriptions,
-  #   fill_values = fill_values,
-  #   methods = methods,
-  #   include_caption = include_caption
-  # )
-  # }
-
   for_main_table <- summary_dat$for_main_table
 
   fill_values <- summary_dat$fill_values
@@ -206,39 +177,17 @@ assessment_summary_table <- function(
     )
 
   if ("footnotes" %in% names(summary_dat)) {
-    out <- out |>
-      gt::tab_footnote(
-        footnote = "Z-scores based on regression models adjusting for age, sex, and years of education.",
-        locations = gt::cells_body(
-          columns = "std",
-          rows = summary_dat$footnotes$regression_rows
-        ),
-        placement = "right"
-      ) |>
-      gt::tab_footnote(
-        footnote = "Z-scores based on regression models adjusting for age, sex, years of education, and delay interval.",
-        locations = gt::cells_body(
-          columns = "std",
-          rows = summary_dat$footnotes$regression_rows_w_delay
-        ),
-        placement = "right"
-      ) |>
-      gt::tab_footnote(
-        footnote = "T-scores adjusting for age, sex, and years of education.",
-        locations = gt::cells_body(
-          columns = "std",
-          rows = summary_dat$footnotes$t_score_rows
-        ),
-        placement = "right"
-      ) |>
-      gt::tab_footnote(
-        footnote = "Z-scores obtained from standardizing using group specific means and standard deviations. Groups based on age, sex, and years of education.",
-        locations = gt::cells_body(
-          columns = "std",
-          rows = summary_dat$footnotes$norm_rows
-        ),
-        placement = "right"
-      )
+    for (fn_text in names(summary_dat$footnotes)) {
+      out <- out |>
+        gt::tab_footnote(
+          footnote = fn_text,
+          locations = gt::cells_body(
+            columns = "std",
+            rows = summary_dat$footnotes[[fn_text]]
+          ),
+          placement = "right"
+        )
+    }
   }
 
   ## Add colors to "Description" column
@@ -309,19 +258,30 @@ assessment_summary_data <- function(
     "Very Superior" = 1
   ),
   fill_values = NULL,
-  methods = "infer",
   include_caption = TRUE
 ) {
-  stopifnot(
-    "'id' must be a character string specifying a column in the data frame 'dat'" = is.character(
-      id
-    ) &&
-      id %in% colnames(dat)
-  )
+  # To avoid R CMD check NOTE:
+  value.name <- name <- for_percentile <- group <- NULL
 
-  stopifnot(
-    "'dat' must be of class 'data.table'" = data.table::is.data.table(dat)
-  )
+  if (!data.table::is.data.table(dat)) {
+    cli::cli_abort("{.arg dat} must be of class {.cls data.table}.")
+  }
+
+  dat <- data.table::copy(dat)
+
+  if (!is.character(id) || !id %in% colnames(dat)) {
+    cli::cli_abort(
+      "{.arg id} must be a character string specifying a column in {.arg dat}."
+    )
+  }
+
+  data.table::setnames(dat, old = id, new = "id")
+
+  if (nrow(dat) != 1) {
+    cli::cli_abort(
+      "Data provided must have exactly one row, but has {nrow(dat)}."
+    )
+  }
 
   if (is.null(fill_values)) {
     fill_values <- setNames(
@@ -330,43 +290,51 @@ assessment_summary_data <- function(
     )
   }
 
-  base::stopifnot(
-    "The names of fill_values and descriptions must be the same" = names(
-      fill_values
-    ) ==
-      names(descriptions)
-  )
-
-  t_scores <- NULL
-
-  if (length(methods) == 1 && methods == "infer") {
-    methods <- NpsychBatteryNorms::methods_from_std_data(std_data = dat)
+  if (!identical(names(fill_values), names(descriptions))) {
+    cli::cli_abort(
+      "The names of {.arg fill_values} and {.arg descriptions} must be the same."
+    )
   }
 
-  base::stopifnot(
-    "'methods' must either be given or included as attributes from 'dat'" = exists(
-      "methods"
+  ## Get npsych_scores columns: map column name -> class name
+  npsych_class_map <- unlist(dat[,
+    lapply(.SD, \(x) S7::S7_class(x)@name),
+    .SDcols = ntrs::is_npsych_scores
+  ])
+
+  ## Get domains from npsych_scores columns: map column name -> domain
+  domain_map <- unlist(
+    lapply(
+      dat[, names(npsych_class_map), with = F],
+      \(x) x@domain
     )
   )
 
-  t_scores <- names(methods)[sapply(methods, `[[`, "method") == "T-score"]
+  ## Get std_npsych_scores columns: map column name -> scores_subclass
+  std_subclass_map <- unlist(dat[,
+    lapply(.SD, \(x) x@scores_subclass),
+    .SDcols = \(x) S7::S7_inherits(x, ntrs::std_npsych_scores)
+  ])
 
-  base::stopifnot("Data provided must have exactly one row" = nrow(dat) == 1)
-
-  ## Rename id column for easier coding.
-  colnames(dat)[colnames(dat) == id] <- "id"
+  ## Get all methods
+  std_col_methods <- lapply(
+    dat[, names(std_subclass_map), with = F],
+    \(x) {
+      x@method
+    }
+  )
+  ## Identify t-scores
+  t_scores <- unname(std_subclass_map[unlist(std_col_methods) == "tscores"])
 
   ## Create labels to be used.
-  # Create named list with arguments for var_labels()
+  # Match var_labels formals to npsych_scores class names
   for_labels <- lapply(
     setNames(formalArgs(var_labels), formalArgs(var_labels)),
     \(x) {
-      if (x %in% colnames(dat)) {
-        return(dat[[x]])
-      }
-
-      if (paste("raw", x, sep = "_") %in% colnames(dat)) {
-        return(dat[[paste("raw", x, sep = "_")]])
+      if (x %in% npsych_class_map) {
+        return(
+          dat[[names(which(npsych_class_map == x))]]
+        )
       }
 
       NA
@@ -376,134 +344,169 @@ assessment_summary_data <- function(
   ## Don't want a data.frame, but named vector. Hence, unlist
   cur_labels <- unlist(do.call(var_labels, for_labels))
 
-  ## Get rid of columns not needed
-  for_main_table <- dat[,
-    grep(
-      pattern = paste(c("id", names(cur_labels)), collapse = "|"),
-      x = colnames(dat)
-    ),
-    with = F
-  ]
-  ## Rename columns that we do not standardize to still include prefix raw_
-  colnames(for_main_table)[
-    colnames(for_main_table) %in% names(cur_labels)
-  ] <- paste0(
-    "raw_",
-    colnames(for_main_table)[colnames(for_main_table) %in% names(cur_labels)]
+  ## Select columns by class name (npsych_scores) and scores_subclass
+  ## (std_npsych_scores), but remove those without domain.
+  desired_scores <- setdiff(
+    unique(c(names(cur_labels), unname(std_subclass_map))),
+    names(which(is.na(domain_map)))
   )
-  for_main_table <- for_main_table[,
-    names(.SD) := lapply(.SD, as.numeric),
-    .SDcols = data.table::patterns("std_|raw_")
+  raw_to_keep <- names(npsych_class_map)[npsych_class_map %in% desired_scores]
+  std_to_keep <- names(std_subclass_map)[std_subclass_map %in% desired_scores]
+  for_main_table <- dat[, c("id", raw_to_keep, std_to_keep), with = FALSE]
+
+  ## Rename raw columns using class name, std columns using scores_subclass
+  data.table::setnames(
+    for_main_table,
+    old = raw_to_keep,
+    new = paste0("raw_", npsych_class_map[raw_to_keep])
+  )
+  data.table::setnames(
+    for_main_table,
+    old = std_to_keep,
+    new = paste0("std_", std_subclass_map[std_to_keep])
+  )
+
+  ## Rename domain_map to use npsych_scores subclass instead
+  domain_map <- setNames(
+    domain_map[names(npsych_class_map)],
+    unname(npsych_class_map)
+  )
+
+  ## Replace negative error codes with NA for raw cols, and convert to numeric.
+  raw_cols <- paste0("raw_", npsych_class_map[raw_to_keep])
+
+  for_main_table[,
+    names(.SD) := lapply(.SD, \(x) {
+      neg_err_codes <- x@codes[x@codes < 0]
+      if (as.numeric(x) %in% neg_err_codes) {
+        return(NA_real_)
+      }
+
+      as.double(x)
+    }),
+    .SDcols = raw_cols
   ]
-  ## Replace error codes with NA
-  raw_cols <- grep(pattern = "^raw_", x = colnames(for_main_table), value = T)
-  for (x in raw_cols) {
-    for_main_table[[x]] <- NpsychBatteryNorms::valid_values_only(
-      raw_score = for_main_table[[x]],
-      var_name = gsub(pattern = "^raw_", replacement = "", x = x),
-      remove_errorcodes = -4
-    )
-  }
+
+  ## For std cols, just convert to numeric.
+  for_main_table[,
+    names(.SD) := lapply(.SD, as.double),
+    .SDcols = data.table::patterns("^std_")
+  ]
 
   ## Create long data with one row per variable. To do so, we go through a data set with two rows per variable, one for raw and one for std.
   for_main_table <- data.table::melt(
     for_main_table,
-    measure.vars = data.table::patterns("std_|raw_"),
-    variable.name = "name"
-  )
+    measure.vars = data.table::measure(
+      value.name,
+      name,
+      sep = "_"
+    ),
+    variable.factor = FALSE,
+    value.factor = FALSE
+  )[!is.na(raw)]
 
-  for_main_table$type <- with(
-    for_main_table,
-    substr(name, 1, 3)
-  )
+  # Get all npsych_scores labels, keyed by class name
+  all_labels <- unlist(dat[,
+    setNames(lapply(.SD, \(x) x@label), npsych_class_map[names(.SD)]),
+    .SDcols = ntrs::is_npsych_scores
+  ])
 
-  for_main_table$name <- with(
-    for_main_table,
-    gsub(pattern = "raw_|std_", replacement = "", x = name)
-  )
+  # Overwrite if special label necessary
+  all_labels[names(cur_labels)] <- cur_labels
 
-  for_main_table <- data.table::dcast(
-    for_main_table,
-    id + name ~ type,
-    value.var = "value"
-  )
+  ## Add additional columns.
+  for_main_table[,
+    c(
+      "group",
+      "labels",
+      "for_percentile",
+      "raw_suffix",
+      "units",
+      "is_error"
+    ) := list(
+      if (length(name) == 0) {
+        return(character())
+      } else {
+        factor(
+          domain_map[name],
+          levels = unique(c(nacc_groups, na.omit(domain_map)))
+        )
+      },
+      factor(
+        all_labels[name],
+        levels = all_labels[order(match(
+          names(all_labels),
+          names(cur_labels),
+          nomatch = 99
+        ))]
+      ),
+      as.numeric(ifelse(name %in% t_scores, (std - 50) / 10, std)),
+      purrr::map2_chr(name, raw, \(x, y) {
+        if (is.na(y)) {
+          return("")
+        }
 
-  ## Add additional columns. Avoid tidyverse verbs for devtools::check (? not sure why this throws a warning here... EDIT: fixed by importing .data from rlang. Could rewrite back to use tidyverse syntax...)
-  for_main_table$group <- with(
-    for_main_table,
-    nacc_var_groups[name]
-  )
+        if (x %in% ntrs::list_npsych_scores()) {
+          x <- ntrs::get_npsych_scores(x)()
+        } else {
+          return("")
+        }
 
-  for_main_table$labels <- with(
-    for_main_table,
-    factor(
-      cur_labels[name],
-      levels = unname(cur_labels)
+        if (is.null(x@range)) {
+          return("")
+        }
+
+        if (y %in% x@codes) {
+          return("")
+        }
+
+        paste0("/", x@range[2])
+      }),
+      purrr::map2_chr(name, raw, \(x, y) {
+        if (is.na(y)) {
+          return("")
+        }
+
+        base::ifelse(
+          x %in% c("TRAILA", "TRAILB", "OTRAILA", "OTRAILB"),
+          "&nbspsec",
+          ""
+        )
+      }),
+      purrr::map2_lgl(name, raw, \(x, y) {
+        if (is.na(y)) {
+          return(FALSE)
+        }
+
+        if (x %in% ntrs::list_npsych_scores()) {
+          x <- ntrs::get_npsych_scores(x)()
+        } else {
+          return(FALSE)
+        }
+
+        if (y %in% x@codes & y > x@range[2]) {
+          return(TRUE)
+        }
+
+        FALSE
+      })
     )
-  )
-
-  for_main_table <- subset(for_main_table, !is.na(raw))
-
-  for_main_table$for_percentile <- with(
-    for_main_table,
-    ifelse(name %in% t_scores, (std - 50) / 10, std)
-  )
-
-  for_main_table$Percentile <- with(
-    for_main_table,
-    pnorm(for_percentile) * 100
-  )
-
-  for_main_table$Description <- names(descriptions)[
-    findInterval(
-      for_main_table$Percentile / 100,
-      vec = descriptions,
-      rightmost.closed = T
-    ) +
-      1
+  ][,
+    c("Percentile", "Description") := list(
+      stats::pnorm(as.numeric(for_percentile)) * 100, # for some reason, for_main_table$for_percentile is character if nrow(for_main_table) == 0.
+      names(descriptions)[
+        findInterval(
+          stats::pnorm(as.numeric(for_percentile)),
+          vec = descriptions,
+          rightmost.closed = T
+        ) +
+          1
+      ]
+    )
   ]
 
-  for_main_table$raw_suffix <- with(
-    for_main_table,
-    purrr::map2_chr(name, raw, \(x, y) {
-      if (is.na(y)) {
-        return("")
-      }
-
-      cur_range <- purrr::pluck(rdd, x)$range
-
-      if (is.null(cur_range)) {
-        return("")
-      }
-
-      if (y %in% purrr::pluck(rdd, x)$codes) {
-        return("")
-      }
-
-      paste0("/", cur_range[2])
-    })
-  )
-
-  for_main_table$units <- with(
-    for_main_table,
-    purrr::map2_chr(name, raw, \(x, y) {
-      if (is.na(y)) {
-        return("")
-      }
-
-      if (y %in% purrr::pluck(rdd, x)$codes) {
-        return("")
-      }
-
-      base::ifelse(
-        x %in% c("TRAILA", "TRAILB", "OTRAILA", "OTRAILB"),
-        "&nbspsec",
-        ""
-      )
-    })
-  )
-
-  for_main_table <- for_main_table[,
+  for_main_table <- for_main_table[
+    order(labels),
     c(
       "group",
       "labels",
@@ -513,35 +516,27 @@ assessment_summary_data <- function(
       "units",
       "std",
       "Percentile",
-      "Description"
+      "Description",
+      "is_error"
     ),
     with = F
+  ][
+    !is.na(group)
   ]
 
-  for_main_table <- for_main_table[order(labels)]
-
-  for_main_table$is_error <- with(
-    for_main_table,
-    purrr::map2_lgl(name, raw, \(x, y) {
-      codes <- rdd[[x]]$codes
-
-      if (y %in% codes & y > 10) {
-        return(TRUE)
-      }
-
-      FALSE
-    })
-  )
-
-  for_main_table$raw <- with(
-    for_main_table,
-    purrr::map2_chr(name, raw, \(x, y) {
-      # purrr::map2(name, raw, \(x, y) {
+  for_main_table[,
+    raw := purrr::map2_chr(name, raw, \(x, y) {
       if (x == "CDRGLOB") {
         return(sprintf("%.1f", y))
       }
 
-      codes <- rdd[[x]]$codes
+      if (x %in% ntrs::list_npsych_scores()) {
+        x <- ntrs::get_npsych_scores(x)()
+      } else {
+        return("")
+      }
+
+      codes <- x@codes
 
       if (y %in% codes) {
         return(as.character(bslib::tooltip(y, names(codes)[which(codes == y)])))
@@ -549,39 +544,58 @@ assessment_summary_data <- function(
 
       sprintf("%.0f", y)
     })
-  )
+  ]
+
+  # for_main_table$is_error <- with(
+  #   for_main_table,
+  #   purrr::map2_lgl(name, raw, \(x, y) {
+  #     codes <- rdd[[x]]$codes
+
+  #     if (y %in% codes & y > 10) {
+  #       return(TRUE)
+  #     }
+
+  #     FALSE
+  #   })
+  # )
+
+  # for_main_table$raw <- with(
+  #   for_main_table,
+  #   purrr::map2_chr(name, raw, \(x, y) {
+  #     # purrr::map2(name, raw, \(x, y) {
+  #     if (x == "CDRGLOB") {
+  #       return(sprintf("%.1f", y))
+  #     }
+
+  #     codes <- rdd[[x]]$codes
+
+  #     if (y %in% codes) {
+  #       return(as.character(bslib::tooltip(y, names(codes)[which(codes == y)])))
+  #     }
+
+  #     sprintf("%.0f", y)
+  #   })
+  # )
 
   out <- list(
     for_main_table = for_main_table,
     fill_values = fill_values
   )
 
-  if (!missingArg(methods)) {
-    regression_rows <- for_main_table$name %in%
-      names(methods)[lapply(methods, `[[`, "method") == "regression"] &
-      !for_main_table$is_error &
-      for_main_table$name != "MEMUNITS"
+  ## Build footnotes from @description of std_npsych_scores columns
+  std_descriptions <- dat[, lapply(.SD, \(x) x@description), .SDcols = \(x) {
+    S7::S7_inherits(x, ntrs::std_npsych_scores)
+  }]
+  # Map std column names to score names using scores_subclass
+  names(std_descriptions) <- std_subclass_map[names(std_descriptions)]
 
-    regression_rows_w_delay <- for_main_table$name %in%
-      names(methods)[lapply(methods, `[[`, "method") == "regression"] &
-      !for_main_table$is_error &
-      for_main_table$name == "MEMUNITS"
-
-    t_score_rows <- for_main_table$name %in%
-      names(methods)[lapply(methods, `[[`, "method") == "T-score"] &
-      !for_main_table$is_error
-
-    norm_rows <- for_main_table$name %in%
-      names(methods)[lapply(methods, `[[`, "method") == "norms"] &
-      !for_main_table$is_error
-
-    out$footnotes <- list(
-      regression_rows = regression_rows,
-      regression_rows_w_delay = regression_rows_w_delay,
-      t_score_rows = t_score_rows,
-      norm_rows = norm_rows
-    )
-  }
+  unique_descs <- unique(unlist(std_descriptions))
+  out$footnotes <- lapply(setNames(unique_descs, unique_descs), \(desc) {
+    scores_with_desc <- names(std_descriptions)[
+      unlist(std_descriptions) == desc
+    ]
+    for_main_table$name %in% scores_with_desc & !for_main_table$is_error
+  })
 
   if (include_caption) {
     for_cap <- dat[,

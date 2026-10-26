@@ -26,32 +26,20 @@ demographics_table <- function(
     )
   }
 
+  dat <- data.table::copy(dat)
+
   for (cur_var in c("SEX", "RACE", "HANDED")) {
     dat[[cur_var]] <- unlist(lapply(dat[[cur_var]], \(x) {
-      if (is.numeric(x)) NpsychBatteryNorms::values_to_labels(x, cur_var) else x
+      if (is.numeric(x)) {
+        names(ntrs::rdd[[cur_var]]$codes)[match(
+          x,
+          ntrs::rdd[[cur_var]]$codes
+        )]
+      } else {
+        x
+      }
     }))
   }
-
-  # dat$SEX <- unlist(lapply(
-  #   dat$SEX,
-  #   \(x) {
-  #     if (is.numeric(x)) NpsychBatteryNorms::values_to_labels(x, "SEX") else x
-  #   }
-  # ))
-
-  # dat$RACE <- unlist(lapply(
-  #   dat$RACE,
-  #   \(x) {
-  #     if (is.numeric(x)) NpsychBatteryNorms::values_to_labels(x, "RACE") else x
-  #   }
-  # ))
-
-  # dat$RACE <- unlist(lapply(
-  #   dat$RACE,
-  #   \(x) {
-  #     if (is.numeric(x)) NpsychBatteryNorms::values_to_labels(x, "RACE") else x
-  #   }
-  # ))
 
   cols_selected <- c(
     "Study ID:" = "NACCID",

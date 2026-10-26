@@ -13,7 +13,6 @@
   margin: 0;
 }
 
-
 .my-tooltip .tooltip-inner {
   min-width: 500px;
   text-align: left;
@@ -81,3 +80,45 @@
   background-color:rgb(200, 200, 200) !important;
 }
 */
+
+.spaced-accordion .accordion-item  {
+  margin: 12px 0;
+}
+
+/* For toggling of passwords */
+.password-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #999;
+  font-size: 16px;
+  z-index: 10;
+  background: transparent;
+  padding: 5px;
+  user-select: none;
+  transition: color 0.2s;
+}
+
+.password-toggle:hover {
+  color: #555;
+}
+
+/* Ensure the password input has enough padding on the right for the icon */
+.password-wrapper input {
+  padding-right: 40px !important;
+}
+
+/* Optional: Style the input field */
+.password-wrapper input:focus {
+  border-color: #66afe9;
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}

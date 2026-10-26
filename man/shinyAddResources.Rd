@@ -18,4 +18,3 @@ development environment.
 \description{
 Adds resource paths for Shiny applications to access static files.
 }
-\keyword{internal}

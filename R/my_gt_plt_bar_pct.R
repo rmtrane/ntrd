@@ -51,10 +51,12 @@ my_gt_plt_bar_pct <- function(
   ))
 
   bar_plt_html <- function(xy) {
-    if (length(na.omit(xy)) == 0) {
+    xy <- na.omit(suppressWarnings(as.double(xy)))
+
+    if (length(xy) == 0) {
       max_x <- 0
     } else {
-      max_x <- max(suppressWarnings(as.double(xy)), na.rm = TRUE)
+      max_x <- max(xy, na.rm = TRUE)
     }
 
     bar <- lapply(data_in, function(x) {

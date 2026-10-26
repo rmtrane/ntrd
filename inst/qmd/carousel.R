@@ -2,16 +2,15 @@ library(htmltools)
 library(yaml)
 
 # carousel displays a list of items w/ nav buttons
-carousel <- function(id, duration, items) {
+carousel <- function(id, duration, items, base_url = NULL) {
   index <- -1
   items <- lapply(items, function(item) {
     index <<- index + 1
     carouselItem(
-      item$caption,
-      here::here(item$image),
-      # item$link,
-      index,
-      duration
+      caption = item$caption,
+      image = paste(c(base_url, item$image), collapse = "/"),
+      index = index,
+      interval = duration
     )
   })
 
@@ -19,10 +18,12 @@ carousel <- function(id, duration, items) {
     class = "carousel-indicators",
     tagList(lapply(items, function(item) item$button))
   )
+
   items <- div(
     class = "carousel-inner",
     tagList(lapply(items, function(item) item$item))
   )
+
   div(
     id = id,
     class = "carousel carousel-dark slide",
@@ -38,7 +39,6 @@ carousel <- function(id, duration, items) {
 carouselItem <- function(
   caption,
   image,
-  # link,
   index,
   interval
 ) {
@@ -61,11 +61,15 @@ carouselItem <- function(
     `data-bs-interval` = interval,
     a(
       # href = link,
-      img(src = image, class = "d-block  mx-auto border", width = "100%")
+      img(
+        src = get_image_uri(image),
+        class = "d-block  mx-auto border",
+        width = "100%"
+      )
     ),
     div(
       class = "carousel-caption d-none d-md-block",
-      tags$p(class = "fw-light", caption)
+      tags$p(caption)
     )
   )
   list(

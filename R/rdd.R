@@ -1,4 +1,4 @@
-#' @inherit NpsychBatteryNorms::rdd title description format
+#' @inherit ntrs::rdd title description format
 #'
 #' @export
-rdd <- NpsychBatteryNorms::rdd
+rdd <- ntrs::rdd
