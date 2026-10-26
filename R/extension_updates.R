@@ -15,7 +15,11 @@
 #'     \code{\link{update_result}} S7 object. A plain list with the same
 #'     fields is also accepted as a backwards-compatibility courtesy.
 #'   \item \code{ntrd_update_extension()} — performs the install. Runs in a
-#'     restarted R session; the extension package is not loaded when it runs.
+#'     restarted R session. Functions made by
+#'     \code{\link{default_github_update_extension}} are not called at all:
+#'     ntrd reads the repo they record and installs without loading the
+#'     extension. Any other function is called with the extension (and
+#'     ntrd) loaded.
 #' }
 #'
 #' See \code{\link{default_github_update_available}} and
@@ -267,30 +271,38 @@ supports_command_restart <- function() {
 #' Build the restart command that performs an extension update
 #'
 #' Constructs the string passed to `rstudioapi::restartSession(command = ...)`.
-#' The command, when executed in a fresh R session:
-#' \enumerate{
-#'   \item Prints an "Updating..." banner via [update_intro_message()].
-#'   \item Calls the extension's `ntrd_update_extension()` inside `tryCatch`,
-#'     binding `ok` to `TRUE` on success or `FALSE` on failure. The error
-#'     is surfaced via `message()`.
-#'   \item Queues a second `restartSession()` whose command calls
-#'     [update_finalize()] with the resulting `ok` flag and the package
-#'     name. That second restart lands in a fresh session at an idle R
-#'     prompt, with a styled status message and instructions to relaunch
-#'     the dashboard.
+#' How the command installs the update depends on the extension's
+#' `ntrd_update_extension()`:
+#'
+#' \itemize{
+#'   \item If it was made by [default_github_update_extension()] (so it carries
+#'     an `"ntrd_github_repo"` attribute), the command calls
+#'     [remotes::install_github()] directly. Only base R, `remotes`, and
+#'     `rstudioapi` are loaded during the install, so `ntrd`, the extension,
+#'     and their compiled dependencies can be replaced safely (on Windows,
+#'     a loaded DLL cannot be overwritten).
+#'   \item Otherwise, the command calls [update_intro_message()] and
+#'     `try_update()`, which load `ntrd` and the extension before the
+#'     extension's own install function runs.
 #' }
 #'
-#' The user-facing messages live in [update_intro_message()],
-#' [update_success_message()], [update_failure_message()], and the
-#' [update_finalize()] dispatcher — keeping this function focused on
-#' orchestration rather than copy.
+#' Either way, the install is wrapped in `tryCatch`, and a second restart
+#' runs [update_finalize()] with the outcome. That leaves the user at an
+#' idle R prompt with a status message and instructions to relaunch the
+#' dashboard; the dashboard does not reopen by itself.
 #'
 #' @param package Character string giving the extension package name.
+#' @param repo GitHub repository to install from, or `NULL` to fall back to
+#'   calling the extension's `ntrd_update_extension()`. By default, read from
+#'   the extension's `ntrd_update_extension()`.
 #'
 #' @returns A character string suitable for `rstudioapi::restartSession()`'s
 #'   `command` argument.
 #' @keywords internal
-build_update_restart_command <- function(package) {
+build_update_restart_command <- function(
+  package,
+  repo = extension_install_repo(package)
+) {
   if (
     !is.character(package) ||
       length(package) != 1 ||
@@ -300,21 +312,76 @@ build_update_restart_command <- function(package) {
     cli::cli_abort("{.arg package} must be a single non-empty string.")
   }
 
-  # fmt: skip
-  sprintf('ntrd::update_intro_message("%s")\nntrd:::try_update("%s")',
-    package, package #, "%s", package
-  ) # |> cat()
+  q <- function(x) encodeString(x, quote = "\"")
+
+  if (is.null(repo)) {
+    return(sprintf(
+      "ntrd::update_intro_message(%s)\nntrd:::try_update(%s)",
+      q(package),
+      q(package)
+    ))
+  }
+
+  intro <- sprintf(
+    "\n== Updating %s ==\nInstalling the latest version. This may take a few minutes...\n\n",
+    package
+  )
+  finalize <- function(ok) {
+    q(sprintf("ntrd::update_finalize(%s, %s)", ok, q(package)))
+  }
+
+  paste(
+    sprintf("cat(%s)", q(intro)),
+    paste0(
+      "ok <- tryCatch({\n",
+      sprintf(
+        "  remotes::install_github(%s, upgrade = \"always\", dependencies = TRUE, quiet = TRUE)\n",
+        q(repo)
+      ),
+      "  TRUE\n",
+      "}, error = function(e) {\n",
+      "  message(\"Install error: \", conditionMessage(e))\n",
+      "  FALSE\n",
+      "})"
+    ),
+    sprintf(
+      "rstudioapi::restartSession(command = if (ok) %s else %s)",
+      finalize("TRUE"),
+      finalize("FALSE")
+    ),
+    sep = "\n"
+  )
 }
 
-#' Try update extension
+# GitHub repo recorded by default_github_update_extension(), or NULL when the
+# extension supplies its own install function.
+extension_install_repo <- function(package) {
+  fun <- tryCatch(
+    get_from_namespace("ntrd_update_extension", ns = package),
+    error = function(e) NULL
+  )
+  repo <- attr(fun, "ntrd_github_repo", exact = TRUE)
+  if (is.character(repo) && length(repo) == 1 && !is.na(repo) && nzchar(repo)) {
+    repo
+  } else {
+    NULL
+  }
+}
+
+#' Run an extension's own install function and queue the finalize restart
+#'
+#' Used by [build_update_restart_command()] for extensions whose
+#' `ntrd_update_extension()` was not made by
+#' [default_github_update_extension()]. Loads the extension's namespace to
+#' find the function.
 #'
 #' @param pkg A single string.
 #'
-#' @returns
-#' `TRUE` if the update executes successfully, `FALSE` otherwise. A message
-#' is emitted if an error occurs.
+#' @returns Invisibly, `TRUE` if the install function ran without error and
+#'   `FALSE` otherwise. A message is emitted if an error occurs. Called for
+#'   its side effect of queueing a restart into [update_finalize()].
 #'
-#' @export
+#' @keywords internal
 try_update <- function(pkg) {
   update_fun <- get_from_namespace("ntrd_update_extension", ns = pkg)
 
@@ -329,9 +396,10 @@ try_update <- function(pkg) {
     }
   )
 
-  if (ok) {
-    restart_session(sprintf("ntrd::update_finalize(TRUE, \"%s\")", pkg))
-  } else {
-    restart_session(sprintf("ntrd::update_finalize(FALSE, \"%s\")", pkg))
-  }
+  restart_session(sprintf(
+    "ntrd::update_finalize(%s, %s)",
+    ok,
+    encodeString(pkg, quote = "\"")
+  ))
+  invisible(ok)
 }

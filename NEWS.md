@@ -89,8 +89,9 @@ diagnosis, plus an extension API for adding new data sources.
 * Update banner appears in the header when a newer version of the active
   extension is published, with a "What's new?" link to the extension's
   `NEWS.md` when provided.
-* Two-stage restart cascade (install in one restart, relaunch in the
-  next) for RStudio users; clear manual install instructions in the
+* Two-stage restart cascade for RStudio users (install in one restart,
+  report the result in the next; the user then relaunches the dashboard);
+  clear manual install instructions in the
   modal for Positron, plain R, Rscript, and the VS Code R extension,
   where the restart-with-command flow isn't supported.
 * `update_result` S7 class formalizes the contract between extensions
@@ -100,6 +101,12 @@ diagnosis, plus an extension API for adding new data sources.
 * `default_github_update_available()` and
   `default_github_update_extension()` factories provide ready-to-use
   implementations for GitHub-hosted extensions.
+  Updates installed through the factory run without loading `ntrd` or
+  the extension, so packages with compiled code can be replaced safely on
+  Windows.
+* The GitHub version check gives up after 5 seconds
+  (`options(ntrd.update_check_timeout = )`), so the app doesn't stall
+  when offline.
 
 ## Infrastructure
 

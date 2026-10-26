@@ -18,7 +18,11 @@ Extensions opt in by exporting two functions:
 \code{\link{update_result}} S7 object. A plain list with the same
 fields is also accepted as a backwards-compatibility courtesy.
 \item \code{ntrd_update_extension()} — performs the install. Runs in a
-restarted R session; the extension package is not loaded when it runs.
+restarted R session. Functions made by
+\code{\link{default_github_update_extension}} are not called at all:
+ntrd reads the repo they record and installs without loading the
+extension. Any other function is called with the extension (and
+ntrd) loaded.
 }
 
 See \code{\link{default_github_update_available}} and

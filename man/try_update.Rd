@@ -2,7 +2,7 @@
 % Please edit documentation in R/extension_updates.R
 \name{try_update}
 \alias{try_update}
-\title{Try update extension}
+\title{Run an extension's own install function and queue the finalize restart}
 \usage{
 try_update(pkg)
 }
@@ -10,9 +10,14 @@ try_update(pkg)
 \item{pkg}{A single string.}
 }
 \value{
-\code{TRUE} if the update executes successfully, \code{FALSE} otherwise. A message
-is emitted if an error occurs.
+Invisibly, \code{TRUE} if the install function ran without error and
+\code{FALSE} otherwise. A message is emitted if an error occurs. Called for
+its side effect of queueing a restart into \code{\link[=update_finalize]{update_finalize()}}.
 }
 \description{
-Try update extension
+Used by \code{\link[=build_update_restart_command]{build_update_restart_command()}} for extensions whose
+\code{ntrd_update_extension()} was not made by
+\code{\link[=default_github_update_extension]{default_github_update_extension()}}. Loads the extension's namespace to
+find the function.
 }
+\keyword{internal}

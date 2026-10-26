@@ -12,11 +12,17 @@
 #' `DESCRIPTION` file from the GitHub repository's default branch, parses out
 #' the `Version:` field, and compares it against the locally installed
 #' version. The result is wrapped in an \code{\link{update_result}} object.
+#' The download gives up after `getOption("ntrd.update_check_timeout", 5)`
+#' seconds, so an offline user isn't left waiting.
 #'
 #' `default_github_update_extension()` returns a function that calls
 #' [remotes::install_github()] with `upgrade = "always"` and
 #' `dependencies = TRUE`, so dependencies (including `ntrd` itself) are also
-#' brought up to date.
+#' brought up to date. The function records `repo` in its
+#' `"ntrd_github_repo"` attribute. The in-app update flow reads that
+#' attribute and runs the install in a restarted session without loading
+#' `ntrd` or the extension. Only `remotes` and `rstudioapi`, which have no
+#' compiled code, are loaded while packages are replaced.
 #'
 #' Both factories call `force()` on their arguments so that captured values
 #' are safe to use even if the factory is ever called in a loop.
@@ -106,7 +112,7 @@ default_github_update_available <- function(repo, package = NULL) {
 default_github_update_extension <- function(repo) {
   force(repo)
 
-  function() {
+  install_fun <- function() {
     if (!requireNamespace("remotes", quietly = TRUE)) {
       cli::cli_abort(
         "The {.pkg remotes} package is required to install extensions from GitHub."
@@ -122,6 +128,8 @@ default_github_update_extension <- function(repo) {
 
     invisible(NULL)
   }
+
+  structure(install_fun, ntrd_github_repo = repo)
 }
 
 
@@ -133,11 +141,17 @@ default_github_update_extension <- function(repo) {
 #'
 #' @param repo A GitHub repository specification of the form `"user/repo"`
 #'   or `"user/repo@ref"`.
+#' @param timeout Seconds to wait before giving up. The check runs
+#'   synchronously in the Shiny session, so this bounds how long the app can
+#'   stall when GitHub is unreachable.
 #'
 #' @returns A `package_version` object.
 #' @keywords internal
 #' @noRd
-get_github_version <- function(repo) {
+get_github_version <- function(
+  repo,
+  timeout = getOption("ntrd.update_check_timeout", 5)
+) {
   ref <- "HEAD"
   if (grepl("@", repo, fixed = TRUE)) {
     parts <- strsplit(repo, "@", fixed = TRUE)[[1]]
@@ -151,9 +165,7 @@ get_github_version <- function(repo) {
     ref
   )
 
-  con <- url(url)
-  on.exit(close(con), add = TRUE)
-  desc_lines <- readLines(con, warn = FALSE)
+  desc_lines <- read_url_lines(url, timeout = timeout)
 
   ver_line <- grep("^Version:", desc_lines, value = TRUE)
   if (length(ver_line) == 0) {
@@ -164,4 +176,14 @@ get_github_version <- function(repo) {
 
   ver_string <- trimws(sub("^Version:", "", ver_line[1]))
   package_version(ver_string)
+}
+
+
+read_url_lines <- function(url, timeout) {
+  old <- options(timeout = timeout)
+  on.exit(options(old), add = TRUE)
+
+  con <- url(url)
+  on.exit(close(con), add = TRUE)
+  readLines(con, warn = FALSE)
 }

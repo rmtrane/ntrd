@@ -4,10 +4,14 @@
 \alias{build_update_restart_command}
 \title{Build the restart command that performs an extension update}
 \usage{
-build_update_restart_command(package)
+build_update_restart_command(package, repo = extension_install_repo(package))
 }
 \arguments{
 \item{package}{Character string giving the extension package name.}
+
+\item{repo}{GitHub repository to install from, or \code{NULL} to fall back to
+calling the extension's \code{ntrd_update_extension()}. By default, read from
+the extension's \code{ntrd_update_extension()}.}
 }
 \value{
 A character string suitable for \code{rstudioapi::restartSession()}'s
@@ -15,23 +19,25 @@ A character string suitable for \code{rstudioapi::restartSession()}'s
 }
 \description{
 Constructs the string passed to \code{rstudioapi::restartSession(command = ...)}.
-The command, when executed in a fresh R session:
-\enumerate{
-\item Prints an "Updating..." banner via \code{\link[=update_intro_message]{update_intro_message()}}.
-\item Calls the extension's \code{ntrd_update_extension()} inside \code{tryCatch},
-binding \code{ok} to \code{TRUE} on success or \code{FALSE} on failure. The error
-is surfaced via \code{message()}.
-\item Queues a second \code{restartSession()} whose command calls
-\code{\link[=update_finalize]{update_finalize()}} with the resulting \code{ok} flag and the package
-name. That second restart lands in a fresh session at an idle R
-prompt, with a styled status message and instructions to relaunch
-the dashboard.
-}
+How the command installs the update depends on the extension's
+\code{ntrd_update_extension()}:
 }
 \details{
-The user-facing messages live in \code{\link[=update_intro_message]{update_intro_message()}},
-\code{\link[=update_success_message]{update_success_message()}}, \code{\link[=update_failure_message]{update_failure_message()}}, and the
-\code{\link[=update_finalize]{update_finalize()}} dispatcher — keeping this function focused on
-orchestration rather than copy.
+\itemize{
+\item If it was made by \code{\link[=default_github_update_extension]{default_github_update_extension()}} (so it carries
+an \code{"ntrd_github_repo"} attribute), the command calls
+\code{\link[remotes:install_github]{remotes::install_github()}} directly. Only base R, \code{remotes}, and
+\code{rstudioapi} are loaded during the install, so \code{ntrd}, the extension,
+and their compiled dependencies can be replaced safely (on Windows,
+a loaded DLL cannot be overwritten).
+\item Otherwise, the command calls \code{\link[=update_intro_message]{update_intro_message()}} and
+\code{try_update()}, which load \code{ntrd} and the extension before the
+extension's own install function runs.
+}
+
+Either way, the install is wrapped in \code{tryCatch}, and a second restart
+runs \code{\link[=update_finalize]{update_finalize()}} with the outcome. That leaves the user at an
+idle R prompt with a status message and instructions to relaunch the
+dashboard; the dashboard does not reopen by itself.
 }
 \keyword{internal}
