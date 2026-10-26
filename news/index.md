@@ -1,5 +1,12 @@
 # Changelog
 
+## ntrd 0.1.2
+
+### New features
+
+This release includes the backend for presenting a banner when a new
+update to an extension is available with an “Update” button.
+
 ## ntrd 0.1.1
 
 ### Bug Fixes
