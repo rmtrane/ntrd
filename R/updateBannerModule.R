@@ -61,14 +61,10 @@ update_banner_server <- function(id, update_info) {
       }
 
       shiny::showNotification(
-<<<<<<< HEAD
         sprintf(
           "Updating %s\u2026. R will restart. Follow the instructions in the console to relaunch the dashboard.",
           pkg
         ),
-=======
-        sprintf("Updating %s\u2026 the dashboard will reopen shortly.", pkg),
->>>>>>> main
         duration = NULL,
         type = "message",
         closeButton = FALSE
@@ -76,12 +72,8 @@ update_banner_server <- function(id, update_info) {
 
       cmd <- build_update_restart_command(pkg)
       session$onSessionEnded(function() {
-<<<<<<< HEAD
         # rstudioapi::restartSession(command = cmd)
         restart_session(cmd)
-=======
-        rstudioapi::restartSession(command = cmd)
->>>>>>> main
       })
       shiny::stopApp()
     })
@@ -180,13 +172,7 @@ build_confirm_modal <- function(info, ns) {
       result@current
     )),
     shiny::tags$p(
-<<<<<<< HEAD
       "Updating will close the dashboard, restart R to install the new version, then restart R again. This typically takes a minutes or two. Once the update is complete, a message will appear in the console with instructions to relaunch the dashboard."
-=======
-      "Updating will close the dashboard, restart R to install the new ",
-      "version, then restart R again. This typically takes a minutes or",
-      "two. Once the update is complete, a message will appear in the console with instructions to relaunch the dashboard."
->>>>>>> main
     ),
     if (!is.na(result@news_url)) {
       shiny::tags$p(
