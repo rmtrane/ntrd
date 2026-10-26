@@ -1,9 +1,9 @@
 pandoc: 3.8.3
-pkgdown: 2.2.0
+pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
   articles/extension-api: extension-api.html
-last_built: 2026-06-25T21:03Z
+last_built: 2026-10-26T21:34Z
 urls:
   reference: https://rmtrane.github.io/ntrd/reference
   article: https://rmtrane.github.io/ntrd/articles

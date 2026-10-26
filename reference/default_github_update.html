@@ -90,11 +90,17 @@ that performs the install and returns invisibly.</p>
     <p><code>default_github_update_available()</code> returns a function that fetches the
 <code>DESCRIPTION</code> file from the GitHub repository's default branch, parses out
 the <code>Version:</code> field, and compares it against the locally installed
-version. The result is wrapped in an <code><a href="update_result.html">update_result</a></code> object.</p>
+version. The result is wrapped in an <code><a href="update_result.html">update_result</a></code> object.
+The download gives up after <code>getOption("ntrd.update_check_timeout", 5)</code>
+seconds, so an offline user isn't left waiting.</p>
 <p><code>default_github_update_extension()</code> returns a function that calls
 <code><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">remotes::install_github()</a></code> with <code>upgrade = "always"</code> and
 <code>dependencies = TRUE</code>, so dependencies (including <code>ntrd</code> itself) are also
-brought up to date.</p>
+brought up to date. The function records <code>repo</code> in its
+<code>"ntrd_github_repo"</code> attribute. The in-app update flow reads that
+attribute and runs the install in a restarted session without loading
+<code>ntrd</code> or the extension. Only <code>remotes</code> and <code>rstudioapi</code>, which have no
+compiled code, are loaded while packages are replaced.</p>
 <p>Both factories call <code><a href="https://rdrr.io/r/base/force.html" class="external-link">force()</a></code> on their arguments so that captured values
 are safe to use even if the factory is ever called in a loop.</p>
     </div>
@@ -126,7 +132,7 @@ are safe to use even if the factory is ever called in a loop.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

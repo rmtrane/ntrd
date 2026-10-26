@@ -235,16 +235,12 @@ the needs of this package.
 - [`prepare_data()`](https://rmtrane.github.io/ntrd/reference/prepare_data.md)
   : Wrapper to prepare raw data
 
-- [`update_intro_message()`](https://rmtrane.github.io/ntrd/reference/update_messages.md)
-  [`update_success_message()`](https://rmtrane.github.io/ntrd/reference/update_messages.md)
+- [`update_success_message()`](https://rmtrane.github.io/ntrd/reference/update_messages.md)
   [`update_failure_message()`](https://rmtrane.github.io/ntrd/reference/update_messages.md)
-  : Print formatted messages for the extension update flow
+  : Print formatted messages after an extension update attempt
 
 - [`clear_update_cache()`](https://rmtrane.github.io/ntrd/reference/clear_update_cache.md)
   : Clear the update-check cache
-
-- [`try_update()`](https://rmtrane.github.io/ntrd/reference/try_update.md)
-  : Try update extension
 
 - [`update_result()`](https://rmtrane.github.io/ntrd/reference/update_result.md)
   : Result of an extension update check

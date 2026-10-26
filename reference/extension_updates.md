@@ -8,8 +8,11 @@ used by the ntrd Shiny app to discover whether an extension has opted in
 to in-app updates, fetch (and cache) the update-availability
 information, validate its shape, and build the restart command used by
 the "Update" button. See also
-[`update_intro_message()`](https://rmtrane.github.io/ntrd/reference/update_messages.md)
-and friends for the user-facing copy printed during the restart cascade.
+[`update_success_message()`](https://rmtrane.github.io/ntrd/reference/update_messages.md),
+[`update_failure_message()`](https://rmtrane.github.io/ntrd/reference/update_messages.md),
+and the
+[`update_finalize()`](https://rmtrane.github.io/ntrd/reference/update_finalize.md)
+dispatcher for the user-facing copy printed during the restart cascade.
 
 Extensions opt in by exporting two functions:
 
@@ -19,7 +22,12 @@ Extensions opt in by exporting two functions:
   backwards-compatibility courtesy.
 
 - `ntrd_update_extension()` — performs the install. Runs in a restarted
-  R session; the extension package is not loaded when it runs.
+  R session. Functions made by
+  [`default_github_update_extension`](https://rmtrane.github.io/ntrd/reference/default_github_update.md)
+  are not called at all: ntrd reads the repo they record and installs by
+  package name. Any other function is looked up and called directly in
+  that session, which loads the extension's namespace — but not
+  `ntrd`'s, which isn't loaded until the install has finished.
 
 See
 [`default_github_update_available`](https://rmtrane.github.io/ntrd/reference/default_github_update.md)

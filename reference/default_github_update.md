@@ -48,12 +48,19 @@ that performs the install and returns invisibly.
 out the `Version:` field, and compares it against the locally installed
 version. The result is wrapped in an
 [`update_result`](https://rmtrane.github.io/ntrd/reference/update_result.md)
-object.
+object. The download gives up after
+`getOption("ntrd.update_check_timeout", 5)` seconds, so an offline user
+isn't left waiting.
 
 `default_github_update_extension()` returns a function that calls
 [`remotes::install_github()`](https://remotes.r-lib.org/reference/install_github.html)
 with `upgrade = "always"` and `dependencies = TRUE`, so dependencies
-(including `ntrd` itself) are also brought up to date.
+(including `ntrd` itself) are also brought up to date. The function
+records `repo` in its `"ntrd_github_repo"` attribute. The in-app update
+flow reads that attribute and runs the install in a restarted session
+without loading `ntrd` or the extension. Only `remotes` and
+`rstudioapi`, which have no compiled code, are loaded while packages are
+replaced.
 
 Both factories call [`force()`](https://rdrr.io/r/base/force.html) on
 their arguments so that captured values are safe to use even if the

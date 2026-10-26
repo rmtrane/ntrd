@@ -422,7 +422,7 @@
 <li>
 <code>ntrd_update_available()</code> — returns an <code>update_result</code> describing whether an update is available.</li>
 <li>
-<code>ntrd_update_extension()</code> — performs the install. Runs in a restarted R session; your extension’s namespace is <strong>not</strong> loaded when it runs.</li>
+<code>ntrd_update_extension()</code> — performs the install, in a restarted R session (see <a href="#the-easy-path-github-hosted-extensions">the GitHub factories</a> and <a href="#writing-a-custom-update-check">custom install functions</a> for what is loaded while it runs).</li>
 </ul>
 <p>If only one of the two is exported, <code>ntrd</code> emits a one-time warning per session and disables in-app updates for the extension.</p>
 </section><section class="level3"><h3 id="the-easy-path-github-hosted-extensions">The easy path: GitHub-hosted extensions<a class="anchor" aria-label="anchor" href="#the-easy-path-github-hosted-extensions"></a>
@@ -445,6 +445,8 @@
 <li>Compare the locally installed version against the <code>Version:</code> field in the <code>DESCRIPTION</code> on the repo’s default branch (or a pinned ref — see below).</li>
 <li>Construct an <code>update_result</code> whose <code>news_url</code> points at <code>https://github.com/&lt;repo&gt;/blob/HEAD/NEWS.md</code>, so the update banner’s “What’s new?” link works automatically if you maintain a <code>NEWS.md</code>.</li>
 <li>Install with <code>remotes::install_github(..., upgrade = "always", dependencies = TRUE)</code>, so <code>ntrd</code> and other dependencies are also brought up to date.</li>
+<li>Install without loading <code>ntrd</code> or your extension. <code>ntrd</code> reads the repo recorded by <code><a href="../reference/default_github_update.html">default_github_update_extension()</a></code> and runs <code><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">remotes::install_github()</a></code> itself in the restarted session. Only <code>remotes</code> and <code>rstudioapi</code>, which have no compiled code, are loaded while packages are replaced. This matters on Windows, where a package whose compiled code is loaded can’t be overwritten.</li>
+<li>Give up on the version check after 5 seconds (set <code>options(ntrd.update_check_timeout = )</code> to change this), so an offline user isn’t left waiting. A failed check counts as “no update” and is cached like any other result.</li>
 </ul>
 <p>If your package name differs from the repo name, pass <code>package =</code> explicitly to <code><a href="../reference/default_github_update.html">default_github_update_available()</a></code>. You can also pin a specific ref with the <code>"user/repo@ref"</code> syntax.</p>
 <p><code>ntrdWisconsin/R/updates.R</code> uses this pattern verbatim.</p>
@@ -528,13 +530,14 @@
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"myExtension"</span>, repos <span class="op">=</span> <span class="st">"https://example.com/cran"</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/invisible.html" class="external-link">invisible</a></span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<p><code>ntrd_update_available()</code> is invoked from a Shiny reactive context; the framework wraps it in error handling so a thrown error becomes a warning plus the safe “no update” fallback, but it’s still good practice to wrap network calls in <code>tryCatch</code>. <code>ntrd_update_extension()</code> runs in a restarted session and its return value is interpreted as success/failure based on whether it threw an error.</p>
+<p><code>ntrd_update_available()</code> is invoked from a Shiny reactive context; the framework wraps it in error handling so a thrown error becomes a warning plus the safe “no update” fallback, but it’s still good practice to wrap network calls in <code>tryCatch</code>. The check runs synchronously, so give network calls a short timeout too: the data-select page waits until it returns.</p>
+<p>A custom <code>ntrd_update_extension()</code> runs in a restarted session. Finding it requires loading your extension’s namespace, which also loads everything your extension imports — <code>ntrd</code> itself is not loaded, so it’s never one of the packages your install might replace, but your own dependencies are. If the install upgrades any of those, it may fail on Windows, where loaded compiled code can’t be overwritten. Avoid upgrading your dependencies from this function if you can. Success or failure is decided by whether the function throws an error; its return value is ignored.</p>
 </section><section class="level3"><h3 id="caching-and-forced-refresh">Caching and forced refresh<a class="anchor" aria-label="anchor" href="#caching-and-forced-refresh"></a>
 </h3>
 <p>Update checks are cached per package for one hour by default. The Shiny app calls <code>ntrd::check_extension_update(package)</code> internally. If you need to invalidate the cache (for example, in a “check again” affordance or during testing), use <code>ntrd::clear_update_cache(package)</code> or <code><a href="../reference/clear_update_cache.html">ntrd::clear_update_cache()</a></code> for everything.</p>
 </section><section class="level3"><h3 id="platform-support">Platform support<a class="anchor" aria-label="anchor" href="#platform-support"></a>
 </h3>
-<p>The two-stage restart cascade — install in one fresh R session, then relaunch in the next — depends on <code>rstudioapi::restartSession(command = ...)</code>. Only RStudio honors the <code>command</code> argument fully. In Positron, plain R, Rscript, and VS Code’s R extension, the update modal shows manual install instructions instead. Extensions don’t need to do anything different to support either path; the framework picks the right flow automatically.</p>
+<p>The two-stage restart cascade — install in one fresh R session, then report the result in the next — depends on <code>rstudioapi::restartSession(command = ...)</code>. The user relaunches the dashboard by hand afterwards; it does not reopen automatically. Only RStudio honors the <code>command</code> argument fully. In Positron, plain R, Rscript, and VS Code’s R extension, the update modal shows manual install instructions instead. Extensions don’t need to do anything different to support either path; the framework picks the right flow automatically.</p>
 </section><section class="level3"><h3 id="news-md-convention">
 <code>NEWS.md</code> convention<a class="anchor" aria-label="anchor" href="#news-md-convention"></a>
 </h3>
@@ -740,7 +743,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

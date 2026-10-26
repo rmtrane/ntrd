@@ -100,11 +100,14 @@
 <ul><li>
 <code><a href="../reference/check_extension_update.html">check_extension_update()</a></code> calls an extension’s exported <code>ntrd_update_available()</code> (cached for one hour by default; configurable via <code>ttl</code>); <code><a href="../reference/clear_update_cache.html">clear_update_cache()</a></code> invalidates the cache.</li>
 <li>Update banner appears in the header when a newer version of the active extension is published, with a “What’s new?” link to the extension’s <code>NEWS.md</code> when provided.</li>
-<li>Two-stage restart cascade (install in one restart, relaunch in the next) for RStudio users; clear manual install instructions in the modal for Positron, plain R, Rscript, and the VS Code R extension, where the restart-with-command flow isn’t supported.</li>
+<li>Two-stage restart cascade for RStudio users (install in one restart, report the result in the next; the user then relaunches the dashboard); clear manual install instructions in the modal for Positron, plain R, Rscript, and the VS Code R extension, where the restart-with-command flow isn’t supported.</li>
 <li>
 <code>update_result</code> S7 class formalizes the contract between extensions and the framework; <code><a href="../reference/validate_update_check_result.html">validate_update_check_result()</a></code> gracefully downgrades malformed results to a safe “no update” state instead of crashing the app.</li>
 <li>
-<code><a href="../reference/default_github_update.html">default_github_update_available()</a></code> and <code><a href="../reference/default_github_update.html">default_github_update_extension()</a></code> factories provide ready-to-use implementations for GitHub-hosted extensions.</li>
+<code><a href="../reference/default_github_update.html">default_github_update_available()</a></code> and <code><a href="../reference/default_github_update.html">default_github_update_extension()</a></code> factories provide ready-to-use implementations for GitHub-hosted extensions. Updates installed through the factory run without loading <code>ntrd</code> or the extension, so packages with compiled code can be replaced safely on Windows.</li>
+<li>
+<code>ntrd</code> itself is never loaded while an update is being installed, even for extensions with a custom <code>ntrd_update_extension()</code> — the install script looks that function up and calls it without attaching <code>ntrd</code>.</li>
+<li>The GitHub version check gives up after 5 seconds (<code>options(ntrd.update_check_timeout = )</code>), so the app doesn’t stall when offline.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="infrastructure-0-1-0">Infrastructure<a class="anchor" aria-label="anchor" href="#infrastructure-0-1-0"></a></h3>
@@ -126,7 +129,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

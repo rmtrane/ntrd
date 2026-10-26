@@ -1,10 +1,13 @@
-# Print formatted messages for the extension update flow
+# Print formatted messages after an extension update attempt
 
-These functions print user-facing messages during the in-app update
-flow's restarted-session steps. They are exported so that they can be
-invoked by fully qualified name from the strings built by
+These functions print a user-facing success or failure message in the
+second restart of the in-app update flow (see
+[`build_update_restart_command()`](https://rmtrane.github.io/ntrd/reference/build_update_restart_command.md)),
+which runs in a fresh R session where `ntrd` is not yet attached. The
+"installing..." message printed before the install itself is plain
+[`cat()`](https://rdrr.io/r/base/cat.html), generated inline by
 [`build_update_restart_command()`](https://rmtrane.github.io/ntrd/reference/build_update_restart_command.md),
-which run in restarted R sessions where `ntrd` is not attached.
+so that step doesn't need to load `ntrd` either.
 
 Each function takes the extension package name as its only argument and
 returns invisibly.
@@ -17,8 +20,6 @@ Users do not normally call these directly.
 ## Usage
 
 ``` r
-update_intro_message(package)
-
 update_success_message(package)
 
 update_failure_message(package)
