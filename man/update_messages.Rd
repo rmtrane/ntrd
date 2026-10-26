@@ -2,13 +2,10 @@
 % Please edit documentation in R/update_messages.R
 \name{update_messages}
 \alias{update_messages}
-\alias{update_intro_message}
 \alias{update_success_message}
 \alias{update_failure_message}
-\title{Print formatted messages for the extension update flow}
+\title{Print formatted messages after an extension update attempt}
 \usage{
-update_intro_message(package)
-
 update_success_message(package)
 
 update_failure_message(package)
@@ -20,11 +17,13 @@ update_failure_message(package)
 Invisible \code{NULL}.
 }
 \description{
-These functions print user-facing messages during the in-app update
-flow's restarted-session steps. They are exported so that they can be
-invoked by fully qualified name from the strings built by
-\code{\link[=build_update_restart_command]{build_update_restart_command()}}, which run in restarted R sessions
-where \code{ntrd} is not attached.
+These functions print a user-facing success or failure message in the
+second restart of the in-app update flow (see
+\code{\link[=build_update_restart_command]{build_update_restart_command()}}), which runs in a fresh R session where
+\code{ntrd} is not yet attached. The "installing..." message printed before
+the install itself is plain \code{cat()}, generated inline by
+\code{\link[=build_update_restart_command]{build_update_restart_command()}}, so that step doesn't need to load
+\code{ntrd} either.
 
 Each function takes the extension package name as its only argument and
 returns invisibly. \code{\link[=update_finalize]{update_finalize()}} dispatches to the appropriate

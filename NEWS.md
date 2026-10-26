@@ -100,10 +100,12 @@ diagnosis, plus an extension API for adding new data sources.
   crashing the app.
 * `default_github_update_available()` and
   `default_github_update_extension()` factories provide ready-to-use
-  implementations for GitHub-hosted extensions.
-  Updates installed through the factory run without loading `ntrd` or
-  the extension, so packages with compiled code can be replaced safely on
-  Windows.
+  implementations for GitHub-hosted extensions. Updates installed through
+  the factory run without loading `ntrd` or the extension, so packages
+  with compiled code can be replaced safely on Windows.
+* `ntrd` itself is never loaded while an update is being installed, even
+  for extensions with a custom `ntrd_update_extension()` --- the install
+  script looks that function up and calls it without attaching `ntrd`.
 * The GitHub version check gives up after 5 seconds
   (`options(ntrd.update_check_timeout = )`), so the app doesn't stall
   when offline.

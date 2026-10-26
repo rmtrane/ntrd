@@ -10,8 +10,8 @@ build_update_restart_command(package, repo = extension_install_repo(package))
 \item{package}{Character string giving the extension package name.}
 
 \item{repo}{GitHub repository to install from, or \code{NULL} to fall back to
-calling the extension's \code{ntrd_update_extension()}. By default, read from
-the extension's \code{ntrd_update_extension()}.}
+looking up the extension's \code{ntrd_update_extension()} at restart time. By
+default, read from the extension's \code{ntrd_update_extension()}.}
 }
 \value{
 A character string suitable for \code{rstudioapi::restartSession()}'s
@@ -19,25 +19,29 @@ A character string suitable for \code{rstudioapi::restartSession()}'s
 }
 \description{
 Constructs the string passed to \code{rstudioapi::restartSession(command = ...)}.
-How the command installs the update depends on the extension's
-\code{ntrd_update_extension()}:
+The generated script prints a short "installing..." message, attempts the
+install in a \code{tryCatch}, and queues a second restart that runs
+\code{\link[=update_finalize]{update_finalize()}} with the outcome. That leaves the user at an idle R
+prompt with a status message and instructions to relaunch the dashboard;
+the dashboard does not reopen by itself.
 }
 \details{
+How the script installs the update depends on the extension's
+\code{ntrd_update_extension()}:
+
 \itemize{
-\item If it was made by \code{\link[=default_github_update_extension]{default_github_update_extension()}} (so it carries
-an \code{"ntrd_github_repo"} attribute), the command calls
-\code{\link[remotes:install_github]{remotes::install_github()}} directly. Only base R, \code{remotes}, and
-\code{rstudioapi} are loaded during the install, so \code{ntrd}, the extension,
-and their compiled dependencies can be replaced safely (on Windows,
-a loaded DLL cannot be overwritten).
-\item Otherwise, the command calls \code{\link[=update_intro_message]{update_intro_message()}} and
-\code{try_update()}, which load \code{ntrd} and the extension before the
-extension's own install function runs.
+\item If it was made by \code{\link[=default_github_update_extension]{default_github_update_extension()}} (so it
+carries an \code{"ntrd_github_repo"} attribute), the script calls
+\code{\link[remotes:install_github]{remotes::install_github()}} directly, by package name, without
+looking up the function at all.
+\item Otherwise, the script looks up \code{ntrd_update_extension()} with
+\code{getNamespace()} and calls it. This loads the extension's namespace
+(and whatever it imports), but it's base R only — no package lookup
+function from \code{ntrd} is involved.
 }
 
-Either way, the install is wrapped in \code{tryCatch}, and a second restart
-runs \code{\link[=update_finalize]{update_finalize()}} with the outcome. That leaves the user at an
-idle R prompt with a status message and instructions to relaunch the
-dashboard; the dashboard does not reopen by itself.
+Either way, nothing from \code{ntrd} itself is loaded until the second
+restart, after the install has finished, so \code{ntrd} is never one of the
+packages the install might be replacing.
 }
 \keyword{internal}

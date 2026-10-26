@@ -523,13 +523,14 @@ plus the safe "no update" fallback, but it's still good practice to wrap
 network calls in `tryCatch`. The check runs synchronously, so give network
 calls a short timeout too: the data-select page waits until it returns.
 
-A custom `ntrd_update_extension()` runs in a restarted session, but `ntrd`
-has to load your extension's namespace to call it, which also loads
-everything your extension imports. If the install replaces any of those
-packages, it may fail on Windows, where loaded compiled code can't be
-overwritten. Avoid upgrading your dependencies from this function if you
-can. Success or failure is decided by whether the function throws an error;
-its return value is ignored.
+A custom `ntrd_update_extension()` runs in a restarted session. Finding it
+requires loading your extension's namespace, which also loads everything
+your extension imports --- `ntrd` itself is not loaded, so it's never one
+of the packages your install might replace, but your own dependencies are.
+If the install upgrades any of those, it may fail on Windows, where loaded
+compiled code can't be overwritten. Avoid upgrading your dependencies from
+this function if you can. Success or failure is decided by whether the
+function throws an error; its return value is ignored.
 
 ### Caching and forced refresh
 
