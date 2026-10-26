@@ -6,9 +6,7 @@
 #' @export
 prev_diagnoses_table <- function(dat, table_font_size = 100) {
   # due to NSE notes in R CMD check:
-  var <-
-    val <-
-      for_tab <- NULL
+  var <- val <- for_tab <- contribution <- disease <- etiology <- nacc_name <- NACCID <- NACCUDSD <- VISITDATE <- CDRGLOB <- CDRSUM <- MOCATOTS <- NACCMMSE <- contribution_character <- etiologies <- variable <- NULL
 
   if (!data.table::is.data.table(dat)) {
     cli::cli_abort("The {.var dat} object must be a {.cls data.table}.")
@@ -47,72 +45,72 @@ prev_diagnoses_table <- function(dat, table_font_size = 100) {
       "_etiology$|_contribution",
       cols = colnames(diagnosis_table)
     ))
-  )
+  )[,
+    `:=`(
+      nacc_name = gsub(
+        pattern = "_etiology$|_contribution$",
+        replacement = "",
+        x = variable
+      ),
+      variable = gsub(
+        pattern = "^[A-Z0-9]+_",
+        replacement = "",
+        x = variable
+      )
+    )
+  ]
 
-  diagnosis_table$nacc_name <- gsub(
-    pattern = "_etiology$|_contribution$",
-    replacement = "",
-    x = diagnosis_table$variable
-  )
+  # diagnosis_table$nacc_name <- gsub(
+  #   pattern = "_etiology$|_contribution$",
+  #   replacement = "",
+  #   x = diagnosis_table$variable
+  # )
 
-  diagnosis_table$variable <- gsub(
-    pattern = "^[A-Z0-9]+_",
-    replacement = "",
-    x = diagnosis_table$variable
-  )
+  # diagnosis_table$variable <- gsub(
+  #   pattern = "^[A-Z0-9]+_",
+  #   replacement = "",
+  #   x = diagnosis_table$variable
+  # )
 
   diagnosis_table <- data.table::dcast(
     diagnosis_table,
     ... ~ variable,
     value.var = "value"
-  )
-
-  diagnosis_table <- diagnosis_table[with(
-    diagnosis_table,
-    order(NACCID, VISITDATE)
-  )]
-
-  diagnosis_table$contribution_character <- c(
-    "1" = "Primary",
-    "2" = "Contributing",
-    "3" = "Non-contributing"
-  )[diagnosis_table$contribution]
-
-  diagnosis_table$disease <- with(
-    diag_contr_pairs,
-    setNames(disease, presump_etio_diag)
   )[
-    diagnosis_table$nacc_name
-  ]
-
-  diagnosis_table$disease <- with(
-    diagnosis_table,
-    ifelse(
+    order(NACCID, VISITDATE)
+  ][,
+    `:=`(
+      contribution_character = c(
+        "1" = "Primary",
+        "2" = "Contributing",
+        "3" = "Non-contributing"
+      )[contribution],
+      disease = setNames(
+        diag_contr_pairs$disease,
+        diag_contr_pairs$presump_etio_diag
+      )[nacc_name],
+      cdr = paste0(CDRGLOB, " (", CDRSUM, ")")
+    )
+  ][,
+    disease := ifelse(
       grepl(pattern = "^Other", x = disease),
       paste0(disease, ": ", etiology),
       disease
     )
-  )
+  ][,
+    names(.SD) := lapply(.SD, ntrs::remove_error_codes),
+    .SDcols = data.table::patterns("raw_[MOCATOTS|NACCMMSE]")
+  ]
 
-  diagnosis_table$cdr <- with(
+  data.table::setnames(
     diagnosis_table,
-    paste0(CDRGLOB, " (", CDRSUM, ")")
-  )
-
-  # fmt: skip
-  for (x in intersect(c("raw_MOCATOTS", "raw_NACCMMSE"), colnames(diagnosis_table))) {
-    diagnosis_table[[x]] <- ntrs::remove_error_codes(diagnosis_table[[x]])
-  }
-
-  colnames(diagnosis_table) <- gsub(
-    pattern = "^raw_",
-    replacement = "",
-    x = colnames(diagnosis_table)
+    old = colnames(diagnosis_table),
+    new = gsub("^raw_", "", colnames(diagnosis_table))
   )
 
   diagnosis_table <- diagnosis_table[,
     list(
-      etiologies = list(.SD)
+      etiologies = list(disease)
     ),
     by = intersect(
       c(
@@ -126,43 +124,38 @@ prev_diagnoses_table <- function(dat, table_font_size = 100) {
         "contribution_character"
       ),
       colnames(diagnosis_table)
-    ),
-    .SDcols = "disease"
+    ) #,
+    # .SDcols = "disease"
+  ][
+    is.na(NACCUDSD) | (NACCUDSD == 1),
+    etiologies := list(NA)
   ]
 
-  diagnosis_table$etiologies <- lapply(
-    diagnosis_table$etiologies,
-    `[[`,
-    "disease"
-  )
+  if (!"MOCATOTS" %in% colnames(diagnosis_table)) {
+    diagnosis_table$MOCATOTS <- NA_real_
+  }
 
-  diagnosis_table$etiologies[which(
-    is.na(diagnosis_table$NACCUDSD) | diagnosis_table$NACCUDSD == 1
-  )] <- list(NA)
+  if (!"NACCMMSE" %in% colnames(diagnosis_table)) {
+    diagnosis_table$NACCMMSE <- NA_real_
+  }
 
-  ## Combine MOCATOTS and NACCMMSE
-  diagnosis_table$MOCATOTS <- with(
-    diagnosis_table,
-    ifelse(
-      !is.na(MOCATOTS) & MOCATOTS > 0,
-      MOCATOTS,
-      NACCMMSE
-    )
-  )
+  diagnosis_table[,
+    MOCATOTS := data.table::fcoalesce(MOCATOTS, NACCMMSE)
+  ]
 
   which_mmse <- diagnosis_table[
     !is.na(diagnosis_table$NACCMMSE) & diagnosis_table$NACCMMSE > 0
   ]$VISITDATE
 
-  diagnosis_table <- diagnosis_table[,
-    which(!colnames(diagnosis_table) %in% "NACCMMSE"),
-    with = F
-  ]
+  diagnosis_table[, NACCMMSE := NULL]
 
-  # fmt: skip
   for_out <- diagnosis_table[
-    diagnosis_table$NACCUDSD %in% 1:4 | 
-      !is.na(diagnosis_table$contribution_character)
+    NACCUDSD %in% 1:4 | !is.na(contribution_character)
+  ][,
+    NACCUDSD := names(ntrs::rdd$NACCUDSD$codes)[match(
+      as.numeric(NACCUDSD),
+      ntrs::rdd$NACCUDSD$codes
+    )]
   ]
 
   if (nrow(for_out) == 0) {
@@ -204,10 +197,11 @@ prev_diagnoses_table <- function(dat, table_font_size = 100) {
             unique(.SD$MOCATOTS),
             unique(.SD$cdr),
             unique(.SD$FAS),
-            names(ntrs::rdd$NACCUDSD$codes)[match(
-              as.numeric(unique(.SD$NACCUDSD)),
-              ntrs::rdd$NACCUDSD$codes
-            )],
+            # names(ntrs::rdd$NACCUDSD$codes)[match(
+            #   as.numeric(unique(.SD$NACCUDSD)),
+            #   ntrs::rdd$NACCUDSD$codes
+            # )],
+            unique(.SD$NACCUDSD),
             unname(.SD$etiologies)
           )
         ))[
@@ -258,14 +252,13 @@ prev_diagnoses_table <- function(dat, table_font_size = 100) {
     by = "VISITDATE"
   ]
 
-  for_out <- for_out[order(for_out$VISITDATE)]
+  for_out <- for_out[order(VISITDATE)]
 
   for_out <- data.table::dcast(
     for_out,
     var ~ VISITDATE,
     value.var = "val"
-  )
-  for_out <- for_out[order(for_out$var)]
+  )[order(var)]
 
   for_out[,
     c("var", names(.SD)) := c(
@@ -376,7 +369,8 @@ prev_diagnoses_table <- function(dat, table_font_size = 100) {
         if (length(which_mmse) > 0) "or <u><i>MMSE</u></i>"
       )),
       locations = gt::cells_stub(
-        rows = grepl("Cognition", .data$var)
+        rows = grepl("Cognition", for_out$var)
+        # rows = gt::matches("Cognition")
       )
     )
 

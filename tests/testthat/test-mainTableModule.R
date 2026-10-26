@@ -64,7 +64,6 @@ test_that("mainTable gt HTML output is stable", {
     ),
     {
       session$flushReact()
-
       expect_snapshot(gt::as_raw_html(mainTable()), transform = function(x) {
         # Remove whitespace and newlines for stable snapshot
         gsub("width:[0-9]+\\.[0-9]+%|margin\\-left:[0-9]+\\.[0-9]+px;", "", x)
@@ -87,7 +86,7 @@ test_that("mainTableApp download flow produces a download button and downloads a
   single_row <- prepped[1, ]
 
   app <- shinytest2::AppDriver$new(
-    mainTableApp(dat = single_row, testing = TRUE),
+    mainTableApp(dat = single_row),
     name = "mainTableApp-download",
     timeout = 30000
   )

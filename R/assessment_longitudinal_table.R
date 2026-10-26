@@ -59,7 +59,8 @@ assessment_longitudinal_table <- function(
   data.table::setnames(dat, old = id, new = "id")
   data.table::setnames(dat, old = date, new = "date")
 
-  if (!lubridate::is.Date(dat$date)) {
+  # if (!lubridate::is.Date(dat$date)) {
+  if (!inherits(dat$date, "Date")) {
     cli::cli_abort("{.arg date} column must contain dates.")
   }
 
@@ -150,15 +151,19 @@ assessment_longitudinal_table <- function(
     ## Remove rows without dates
     !is.na(date),
     ## Only return columns that are non-empty
-    purrr::imap(.SD, \(x, idx) {
-      if (idx == "date") {
-        return(x)
-      }
+    Map(
+      \(x, idx) {
+        if (idx == "date") {
+          return(x)
+        }
 
-      x <- ntrs::remove_error_codes(x)
+        x <- ntrs::remove_error_codes(x)
 
-      if (any(!is.na(x))) x
-    }),
+        if (any(!is.na(x))) x
+      },
+      .SD,
+      names(.SD)
+    ),
     .SDcols = c("date", raw_to_keep)
   ][
     ## Order by date
@@ -374,7 +379,7 @@ assessment_longitudinal_table <- function(
     gt::cols_hide(
       columns = c(
         "name",
-        dplyr::ends_with("_std")
+        gt::ends_with("_std")
       )
     ) |>
     gt::cols_align("right", columns = -c("group", "labels")) |>

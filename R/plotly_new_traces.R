@@ -196,7 +196,7 @@ plotly_new_traces <- function(
       new_traces = unlist(new_traces, recursive = FALSE),
       legend_names = legend_names,
       new_x_range = date_range(new_dat$VISITDATE),
-      new_y_range = range(new_dat$std, na.rm = T)
+      new_y_range = range(as.numeric(new_dat$std), na.rm = T)
     )
   )
 }

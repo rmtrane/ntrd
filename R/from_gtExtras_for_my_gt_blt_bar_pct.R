@@ -3,14 +3,14 @@
 #' @rdname from_gtExtras_for_my_gt_blt_bar_pct
 #' @keywords internal
 
-ideal_fgnd_color <- function(bgnd_color, light = "#FFFFFF", dark = "#000000") {
-  bgnd_color <- rgba_to_hex(colors = bgnd_color)
-  bgnd_color <- html_color(colors = bgnd_color, alpha = 1)
-  yiq_contrasted_threshold <- 128
-  colors <- grDevices::col2rgb(bgnd_color)
-  score <- colSums(colors * c(299, 587, 144)) / 1000
-  ifelse(score >= yiq_contrasted_threshold, dark, light)
-}
+# ideal_fgnd_color <- function(bgnd_color, light = "#FFFFFF", dark = "#000000") {
+#   bgnd_color <- rgba_to_hex(colors = bgnd_color)
+#   bgnd_color <- html_color(colors = bgnd_color, alpha = 1)
+#   yiq_contrasted_threshold <- 128
+#   colors <- grDevices::col2rgb(bgnd_color)
+#   score <- colSums(colors * c(299, 587, 144)) / 1000
+#   ifelse(score >= yiq_contrasted_threshold, dark, light)
+# }
 
 rgba_to_hex <- function(
   colors
@@ -156,6 +156,10 @@ gt_index <- function(gt_object, column, as_vector = TRUE) {
     `'gt_object' must be a 'gt_tbl', have you accidentally passed raw data?` = "gt_tbl" %in%
       class(gt_object)
   )
+  stopifnot(
+    `'column' must be a single string` = is.character(column) &&
+      length(column) == 1L
+  )
   stopifnot(`'as_vector' must be a TRUE or FALSE` = is.logical(as_vector))
   if (length(gt_object[["_row_groups"]]) >= 1) {
     gt_row_grps <- gt_object[["_row_groups"]]
@@ -168,7 +172,7 @@ gt_index <- function(gt_object, column, as_vector = TRUE) {
     df_ordered <- gt_object[["_data"]]
   }
   if (isTRUE(as_vector)) {
-    df_ordered[[rlang::as_name(column)]]
+    df_ordered[[column]]
   } else {
     df_ordered
   }

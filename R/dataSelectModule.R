@@ -50,8 +50,6 @@ dataSelectServer <- function(id) {
       vapply(sources, \(s) s@name, character(1))
     )
 
-    # print(choices)
-
     output$data_source_selector <- shiny::renderUI({
       if (length(choices) > 0) {
         shiny::selectizeInput(
@@ -76,6 +74,33 @@ dataSelectServer <- function(id) {
       source <- sources[[input$data_source]]
 
       config_file(file.path(config_dir, paste0(source@id, ".bin")))
+    })
+
+    # --- Check for extension updates when data source changes ---
+    update_res <- shiny::reactiveVal(update_result())
+
+    shiny::observe({
+      shiny::req(input$data_source)
+
+      source <- sources[[input$data_source]]
+      pkg <- source@package
+
+      # Reset to "no update" immediately on every source switch.
+      update_res(update_result())
+
+      if (extension_supports_updates(pkg)) {
+        update_res(check_extension_update(pkg))
+      }
+    }) |>
+      shiny::bindEvent(input$data_source)
+
+    update_info <- shiny::reactive({
+      shiny::req(input$data_source, update_res())
+
+      list(
+        package = sources[[input$data_source]]@package,
+        result = update_res()
+      )
     })
 
     # --- Create data source UI ---
@@ -216,17 +241,9 @@ dataSelectServer <- function(id) {
         ))
       }
 
-      # shiny::tagList(
       shiny::actionButton(
         inputId = shiny::NS(id, "save_config"),
         label = "Save Data Sources"
-        # ),
-        # shiny::tags$script(shiny::HTML(
-        #   sprintf(
-        #     "$(document).on('click', '#%1$s-download_data_sources', function() {Shiny.setInputValue(%1$s-download_data_sources_clicked, 1, {priority: 'event'});});",
-        #     id
-        #   )
-        # ))
       )
     })
 
@@ -267,14 +284,15 @@ dataSelectServer <- function(id) {
       ## Set defaults for the active extension
       apply_extension_defaults(source@package)
 
-      lapply(
-        setNames(ntrs::list_npsych_scores(), ntrs::list_npsych_scores()),
-        \(x) {
-          get_std_defaults(get_npsych_scores(x)())
-        }
-      ) |>
-        purrr::discard(is.null) |>
-        default_methods()
+      nm <- ntrs::list_npsych_scores()
+
+      default_methods(
+        setNames(
+          lapply(nm, \(x) ntrs::get_std_defaults(ntrs::get_npsych_scores(x)())),
+          nm
+        ) |>
+          Filter(f = Negate(is.null))
+      )
 
       dat_src_server <- data_source_servers[[input$data_source]]
 
@@ -301,24 +319,21 @@ dataSelectServer <- function(id) {
         )
       }
 
+      if (
+        "extras" %in% names(dat_src_server) && !is.null(dat_src_server$extras)
+      ) {
+        data_source_extras(dat_src_server$extras)
+      }
+
       dat_obj(result)
     }) |>
       shiny::bindEvent(input$go)
 
-    # Proxy extras from active plugin
-    shiny::observe({
-      shiny::req(input$data_source)
-      srv <- data_source_servers[[input$data_source]]
-
-      if ("extras" %in% names(srv) && !is.null(srv$extras)) {
-        data_source_extras(shiny::reactiveValuesToList(srv$extras))
-      }
-    })
-
     return(list(
       dat_obj = dat_obj,
       extras = data_source_extras,
-      default_methods = default_methods
+      default_methods = default_methods,
+      update_info = update_info
     ))
   })
 }

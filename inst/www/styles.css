@@ -5,10 +5,12 @@
   gap: 10px;
   margin-bottom: 15px;
 }
+
 .inline-input-container label {
   margin: 0;
   white-space: nowrap;
 }
+
 .inline-input-container .shiny-input-container {
   margin: 0;
 }
@@ -27,7 +29,7 @@
   /* height: auto; */
   aspect-ratio: 1;
   animation: spin 2s linear infinite;
-  position: fixed; 
+  position: fixed;
   top: 35%;
   left: 46.25%;
   /* justify-content: center;
@@ -53,26 +55,43 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* For loading ellipses */
 .loading:after {
-    overflow: hidden;
-    display: inline-block;
-    vertical-align: bottom;
-    animation: ellipsis-animation steps(1,end) 2s infinite;
-    content: "\2026"; /* ascii code for the ellipsis character */
-    /* Enable this to see what is going on: */
-    /* background-color: red; */
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: bottom;
+  animation: ellipsis-animation steps(1, end) 2s infinite;
+  content: "\2026";
+  /* ascii code for the ellipsis character */
+  /* Enable this to see what is going on: */
+  /* background-color: red; */
 }
 
 @keyframes ellipsis-animation {
-    0%  { clip-path: inset(0 100% 0 0); }
-    25% { clip-path: inset(0 66.6% 0 0); }
-    50% { clip-path: inset(0 33.3% 0 0); }
-    75% { clip-path: inset(0 0 0 0); }
+  0% {
+    clip-path: inset(0 100% 0 0);
+  }
+
+  25% {
+    clip-path: inset(0 66.6% 0 0);
+  }
+
+  50% {
+    clip-path: inset(0 33.3% 0 0);
+  }
+
+  75% {
+    clip-path: inset(0 0 0 0);
+  }
 }
 
 /* Accordian header 
@@ -81,7 +100,7 @@
 }
 */
 
-.spaced-accordion .accordion-item  {
+.spaced-accordion .accordion-item {
   margin: 12px 0;
 }
 
@@ -120,5 +139,29 @@
 .password-wrapper input:focus {
   border-color: #66afe9;
   outline: 0;
-  box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, .25);
+}
+
+/* Update banner */
+.update-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  background-color: var(--bs-info-bg-subtle, #cfe2ff);
+  color: var(--bs-info-text-emphasis, #052c65);
+  border-radius: 0;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.update-banner-news-link {
+  text-decoration: underline;
+  color: inherit;
+}
+
+.update-banner-action {
+  margin-left: 0.25rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
 }

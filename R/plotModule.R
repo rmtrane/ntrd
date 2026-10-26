@@ -342,24 +342,9 @@ plotServer <- function(
     ## to listen for changes to input$`name`_visibility,
     ## since this is updated when visibility is toggled.
     for (nam in names(visibility_defaults)) {
-      ## We use the rlang::inject to avoid environment weirdness.
+      ## Use `force` in the helper function.
       ## Without this, only the last observer is created.
-      rlang::inject({
-        shiny::observe({
-          visibility[[!!nam]] <- input[[paste(
-            !!nam,
-            "visibility",
-            sep = "_"
-          )]]
-
-          ## Create new var to pass to cli
-          var_nm <- !!nam
-          cli::cli_alert_info("visibility updated for {var_nm}")
-        }) |>
-          shiny::bindEvent(
-            input[[paste(!!nam, "visibility", sep = "_")]]
-          )
-      })
+      make_visibility_observer(nam, input, visibility, print_updating)
     }
 
     ###################
@@ -723,4 +708,16 @@ plotApp <- function(
   }
 
   shiny::shinyApp(ui, server, options = list(test.mode = testing))
+}
+
+
+make_visibility_observer <- function(nam, input, visibility, print_updating) {
+  force(nam)
+  shiny::observe({
+    visibility[[nam]] <- input[[paste(nam, "visibility", sep = "_")]]
+    if (isTRUE(print_updating)) {
+      cli::cli_alert_info("visibility updated for {nam}")
+    }
+  }) |>
+    shiny::bindEvent(input[[paste(nam, "visibility", sep = "_")]])
 }

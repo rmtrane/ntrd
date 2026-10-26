@@ -6,16 +6,143 @@
 #'
 #' @export
 appServer <- function(input, output, session) {
+  ## Check that ntrs was loaded. If not, load it!
+  if (!isNamespaceLoaded("ntrs")) {
+    cli::cli_inform("Loading {.pkg ntrs}")
+    loadNamespace("ntrs")
+  }
+
+  session$onSessionEnded(function() {
+    shiny::stopApp()
+  })
+
   ## Hide 'Participant Data' on startup
   bslib::nav_hide(id = "main_navbar", target = "colSelect")
   bslib::nav_hide(id = "main_navbar", target = "tables-and-figures")
-  bslib::nav_hide(id = "long-trends", target = "biomarkers")
+  # bslib::nav_hide(id = "long-trends", target = "biomarkers")
 
   ## Setup data select module
   dat_sel <- dataSelectServer("dataSelect")
 
+<<<<<<< HEAD
   ## In-app update banner (see updateBannerModule.R)
   update_banner_server("update_banner", update_info = dat_sel$update_info)
+=======
+  ## Check for updates
+  output$update_banner <- shiny::renderUI({
+    shiny::req(dat_sel$update_info())
+
+    update_info <- dat_sel$update_info()
+
+    render_update_banner(
+      result = update_info$result,
+      package = update_info$package,
+      action = shiny::actionButton(
+        inputId = "do_update",
+        label = "Update",
+        class = "btn-sm btn-primary update-banner-action"
+      )
+    )
+  })
+
+  shiny::observe({
+    info <- dat_sel$update_info()
+
+    # Defensive: the button shouldn't render unless info has what we need,
+    # but be safe — a stale click after a source switch is conceivable.
+    if (!info$result@available || is.na(info$package)) {
+      return()
+    }
+
+    pkg <- info$package
+
+    shiny::showModal(shiny::modalDialog(
+      title = "Update extension",
+      shiny::tagList(
+        shiny::tags$p(sprintf(
+          "This will install version %s of %s, replacing the currently installed version %s.",
+          info$result@latest,
+          pkg,
+          info$result@current
+        )),
+        shiny::tags$p(
+          "The dashboard will close, R will restart twice (first to perform the update, ",
+          "then to relaunch the dashboard), and the app will reopen automatically. ",
+          "This typically takes 10\u201330 seconds."
+        ),
+        if (!is.na(info$result@news_url)) {
+          shiny::tags$p(
+            "Review the ",
+            shiny::tags$a(
+              "release notes",
+              href = info$result@news_url,
+              target = "_blank",
+              rel = "noopener noreferrer"
+            ),
+            " before continuing."
+          )
+        }
+      ),
+      footer = shiny::tagList(
+        shiny::modalButton("Cancel"),
+        shiny::actionButton(
+          "confirm_update",
+          "Update now",
+          class = "btn-primary"
+        )
+      ),
+      easyClose = TRUE
+    ))
+  }) |>
+    shiny::bindEvent(input$do_update)
+
+  shiny::observe({
+    info <- dat_sel$update_info()
+    pkg <- info$package
+
+    if (is.na(pkg)) {
+      shiny::removeModal()
+      return()
+    }
+
+    if (!rstudioapi::isAvailable()) {
+      shiny::removeModal()
+      shiny::showModal(shiny::modalDialog(
+        title = "Cannot update automatically",
+        shiny::tags$p(
+          "Automatic updates require RStudio. Please close the app and run ",
+          "the following in your R console:"
+        ),
+        shiny::tags$pre(sprintf(
+          'remotes::install_github("rmtrane/%s", upgrade = "always", dependencies = TRUE)',
+          pkg
+        )),
+        easyClose = TRUE
+      ))
+      return()
+    }
+
+    shiny::removeModal()
+    shiny::showNotification(
+      sprintf(
+        "Updating %s and restarting\u2026 your dashboard will reopen shortly.",
+        pkg
+      ),
+      duration = NULL,
+      type = "message",
+      closeButton = FALSE
+    )
+
+    cmd <- build_update_restart_command(pkg)
+
+    session$onSessionEnded(function() {
+      rstudioapi::restartSession(command = cmd)
+    })
+
+    shiny::stopApp()
+  }) |>
+    shiny::bindEvent(input$confirm_update)
+>>>>>>> main
 
   ## Reactive values to store data object, selected data source, and data type,
   ## all assigned from dataSelect module. Also, reactive value to indicate if
@@ -28,16 +155,28 @@ appServer <- function(input, output, session) {
 
   shiny::observe({
     if (!is.null(dat_sel$extras()$extension_ui)) {
-      output$extension_ui <- shiny::renderUI({
-        #   bslib::nav_panel(
-        #     title = "Biomarkers",
-        #     value = "biomarkers",
-        dat_sel$extras()$extension_ui()
-        # )
-      })
-      bslib::nav_show(id = "long-trends", target = "biomarkers")
+      ext_ui <- dat_sel$extras()$extension_ui() #id = "ext-module")
+
+      if (inherits(ext_ui, "shiny.tag")) {
+        ext_ui <- list(ext_ui)
+      }
+
+      for (nav_pan in rev(ext_ui)) {
+        bslib::nav_insert(
+          id = "long-trends",
+          nav_pan,
+          position = "after",
+          target = "prev_diagnoses_table",
+          select = FALSE
+        )
+      }
     }
-  }) #()$panda_api_token)
+  }) |>
+    shiny::bindEvent(
+      dat_sel$extras(),
+      ignoreNULL = TRUE,
+      once = TRUE
+    )
 
   ## Reactive object with available columns to use to select from
   cols_avail <- shiny::reactive({
@@ -183,17 +322,22 @@ appServer <- function(input, output, session) {
   study_id_choices <- shiny::reactiveVal()
 
   shiny::observe({
+    ## Move to tab
     bslib::nav_show(
       id = "main_navbar",
       target = "tables-and-figures",
       select = T
     )
 
+    ## Get all NACCIDs
     new_choices <- unique(fin_dat()$NACCID)
 
     if (
+      ## If no id choices...
       is.null(study_id_choices()) |
+        # ... or any new_choices not already in study_id_choices
         any(!new_choices %in% study_id_choices()) |
+        # ... or in devmode and study_id_choices without names.
         (!is.null(devmode()) &&
           (devmode() & is.null(names(study_id_choices()))))
     ) {
@@ -201,16 +345,22 @@ appServer <- function(input, output, session) {
 
       cur_choices <- study_id_choices()
 
+      ## If in devmode...
       if (!is.null(devmode()) && devmode()) {
+        ## ... add number of visits to names of study id choices
         n_visits <- table(fin_dat()$NACCID)[cur_choices]
         names(cur_choices) <- paste0(names(n_visits), " (", n_visits, ")")
       }
 
+      ## If this is triggered after being initialized and a study id is already chosen...
+      ## (this would happen if devmode is toggled in app)
       if (
         !is.null(input$current_studyid) & input$current_studyid %in% cur_choices
       ) {
+        ## ... save the current choice
         cur_select <- input$current_studyid
       } else {
+        ## Else select first choice
         cur_select <- cur_choices[1]
       }
 
@@ -230,20 +380,29 @@ appServer <- function(input, output, session) {
       ignoreNULL = TRUE
     )
 
+  ## Create gated current_studyid
+  current_studyid <- shiny::reactive({
+    shiny::req(
+      input$current_studyid %in% fin_dat()$NACCID
+    )
+
+    input$current_studyid
+  })
+
   ## Create demographics table
   output$demographics_table_output <- gt::render_gt({
-    shiny::req(input$current_studyid)
+    shiny::req(current_studyid())
 
-    if (input$current_studyid %in% fin_dat()$NACCID) {
-      demographics_table(
-        subset(fin_dat(), fin_dat()$NACCID == input$current_studyid)
-      )
-    }
+    demographics_table(
+      subset(fin_dat(), fin_dat()$NACCID == current_studyid())
+    )
   })
 
   ## Update dropdown menu with visit dates when new study ID selected
   shiny::observe({
-    dates <- fin_dat()$VISITDATE[fin_dat()$NACCID == input$current_studyid]
+    shiny::req(current_studyid())
+
+    dates <- fin_dat()$VISITDATE[fin_dat()$NACCID == current_studyid()]
 
     sel_date <- NULL
 
@@ -261,9 +420,9 @@ appServer <- function(input, output, session) {
     selected_date(NULL)
   }) |>
     shiny::bindEvent(
-      input$current_studyid,
+      current_studyid(),
       ignoreNULL = T,
-      ignoreInit = T
+      ignoreInit = F
     )
 
   ## When marker on one of the figures is clicked, input$update_date is set using session$sendCustomMessage (see plotVarModule.R)
@@ -335,7 +494,7 @@ appServer <- function(input, output, session) {
     # Note: use data.table since `[[` doesn't preserve attributes, which we need
     # to infer std. methods. Can be replaced by using data.table.
     fin_dat()[
-      fin_dat()$NACCID == input$current_studyid &
+      fin_dat()$NACCID == current_studyid() &
         fin_dat()$VISITDATE == input$current_date
     ]
   })
@@ -351,14 +510,14 @@ appServer <- function(input, output, session) {
   )
 
   #### Longitudinal Trends
-  ## Subset full data to the data specific to input$current_studyid
+  ## Subset full data to the data specific to current_studyid()
   current_studyid_dat <- shiny::reactive({
-    shiny::req(input$current_studyid)
+    shiny::req(current_studyid())
 
     # Note: use data.table since `[[` doesn't preserve attributes, which we need
     # to infer std. methods. Can be replaced by using data.table.
     fin_dat()[
-      fin_dat()$NACCID == input$current_studyid
+      fin_dat()$NACCID == current_studyid()
     ]
   })
 
@@ -447,85 +606,25 @@ appServer <- function(input, output, session) {
     print_updating = F
   )
 
-  ## Biomarkers
-  # To avoid R CMD check warnings:
-  m <- NULL
-
-  # base_query_file <- system.file(
-  #   "json/panda_template.json",
-  #   package = "ntrd"
-  # )
-
-  # all_values_et <- shiny::ExtendedTask$new(
-  #   \(api) {
-  #     m <<- mirai::mirai(
-  #       {
-  #         get_all_values(
-  #           api_key = api,
-  #           base_query_file = base_query_file #"inst/json/panda_template.json"
-  #         )
-  #       },
-  #       .args = list(
-  #         get_all_values = get_all_values,
-  #         api = api,
-  #         base_query_file = base_query_file
-  #       )
-  #     )
-
-  #     m
-  #   }
-  # )
-
-  # shiny::observe({
-  #   shiny::req(biomarker_api())
-  #   all_values_et$invoke(
-  #     api = biomarker_api()
-  #   )
-  # })
-
-  # biomarkerServer(
-  #   "biomarker-tables",
-  #   adrc_ptid = shiny::reactive(input$current_studyid),
-  #   biomarker_api = shiny::reactive(
-  #     dat_sel$extras()$biomarker_api
-  #   ),
-  #   all_values = shiny::reactive(dat_sel$extras()$all_values)
-  # )
+  ## Extension
+  extension_server_initialized <- shiny::reactiveVal(FALSE)
 
   shiny::observe({
     shiny::req(dat_sel$extras())
-    shiny::req(input$current_studyid)
+    shiny::req(!extension_server_initialized())
+    shiny::req(fin_dat())
 
     if (!is.null(dat_sel$extras()$extension_server)) {
       dat_sel$extras()$extension_server(
-        ptid = shiny::reactive(input$current_studyid),
+        # id = "ext-module",
+        ptid = current_studyid, #shiny::reactive(input$current_studyid),
+        dat = fin_dat,
         extras = dat_sel$extras
       )
+
+      extension_server_initialized(TRUE)
     }
   })
-
-  # } else {
-  #   # If mirai is not installed, use simple reactiveValues
-  #   biomarker_dat <- shiny::reactiveVal()
-  #   biomarker_status <- shiny::reactiveVal("initiated")
-
-  #   shiny::observe({
-  #     biomarker_dat(
-  #       get_biomarker_data(
-  #         adrc_ptid = input$current_studyid,
-  #         api_key = biomarker_api()
-  #       )
-  #     )
-
-  #     biomarker_status("done")
-  #   })
-
-  #   biomarkerServer(
-  #     "biomarker-tables",
-  #     biomarker_data = biomarker_dat,
-  #     biomarker_status = biomarker_status
-  #   )
-  # }
 
   ## Update reactiveVals for values chosen in Options pane.
   shiny::observe({
@@ -559,12 +658,10 @@ appServer <- function(input, output, session) {
       "setInputValue",
       list(
         inputId = "current_studyid",
-        inputValue = input$current_studyid,
+        inputValue = current_studyid(),
         priority = "event"
       )
     )
   }) |>
-    shiny::bindEvent(
-      input$update_colors
-    )
+    shiny::bindEvent(input$update_colors)
 }

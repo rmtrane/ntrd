@@ -1,11 +1,10 @@
 #' data_source
 #'
-#' @description
-#' A short description...
+#' @description S7 class used to create data sources
 #'
-#' @param name A character string for the display name.
-#' @param id A character string for the unique identifier.
-#' @param package A character string. Must match the name of the package the data source lives in.
+#' @param name Character. Human-readable display name shown in the UI dropdown.
+#' @param id Character. Unique identifier used internally as a key.
+#' @param package Character. The name of the package defining this data source.
 #'
 #' @export
 data_source <- S7::new_class(
@@ -23,9 +22,7 @@ data_source <- S7::new_class(
 #' [data_source]. The returned object is a **class** (not an instance) that
 #' can be instantiated with no arguments.
 #'
-#' @param name Character. Human-readable display name shown in the UI dropdown.
-#' @param id Character. Unique identifier used internally as a key.
-#' @param package Character. The name of the package defining this data source.
+#' @inheritParams data_source
 #' @param ... Additional arguments passed to [data_source()].
 #'
 #' @returns An S7 class that inherits from `data_source`.

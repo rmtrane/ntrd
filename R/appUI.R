@@ -7,8 +7,13 @@ appUI <- function() {
   bslib::page_navbar(
     ## Header: add JS scripts, CSS, and spinner elements to be shown/hidden later.
     header = shiny::tagList(
+<<<<<<< HEAD
       shinyApp_header(),
       update_banner_ui("update_banner")
+=======
+      shinyApp_header() #,
+      # shiny::uiOutput("update_banner")
+>>>>>>> main
     ),
     theme = bslib::bs_theme(version = 5),
     title = "Npsych Test Result Dashboard",
@@ -50,7 +55,8 @@ appUI <- function() {
               options = list(
                 create = FALSE,
                 maxOptions = 100,
-                closeAfterSelect = TRUE
+                closeAfterSelect = TRUE,
+                allowEmptyOption = FALSE
               )
             ),
             gt::gt_output("demographics_table_output")
@@ -145,13 +151,14 @@ appUI <- function() {
               ),
               bslib::nav_panel(
                 title = "Diagnoses",
-                prevDiagnosesUI("prev_diagnoses_table")
-              ),
-              bslib::nav_panel(
-                title = "Biomarkers",
-                value = "biomarkers",
-                shiny::uiOutput("extension_ui")
-              )
+                prevDiagnosesUI("prev_diagnoses_table"),
+                value = "prev_diagnoses_table"
+              ) #,
+              # bslib::nav_panel(
+              #   title = "Biomarkers",
+              #   value = "biomarkers",
+              #   shiny::uiOutput("extension_ui")
+              # )
               # shiny::uiOutput("extension_ui")
             )
           )

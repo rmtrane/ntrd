@@ -167,8 +167,10 @@ methodSelectServer <- function(
 
     ## Auto-apply defaults on first load
     shiny::observe({
+      shiny::req(npsych_vars(), default_methods())
+
       all_vars <- npsych_vars()
-      shiny::req(all_vars)
+
       dat <- dat_obj()@data
 
       domain_tmp <- vapply(
@@ -182,6 +184,7 @@ methodSelectServer <- function(
 
       std_methods_tmp <- list()
       defaults <- default_methods()
+
       for (x in all_vars) {
         if (!is.null(defaults) && x %in% names(defaults)) {
           std_methods_tmp[[x]] <- as.list(defaults[[x]])
@@ -260,10 +263,11 @@ methodSelectApp <- function(testing = FALSE) {
   default_methods <- lapply(
     setNames(ntrs::list_npsych_scores(), ntrs::list_npsych_scores()),
     \(x) {
-      get_std_defaults(get_npsych_scores(x)())
+      ntrs::get_std_defaults(ntrs::get_npsych_scores(x)())
     }
   ) |>
-    purrr::discard(is.null)
+    # purrr::discard(is.null)
+    Filter(f = Negate(is.null))
 
   ui <- bslib::page_fluid(
     shinyApp_header(),

@@ -34,9 +34,11 @@ S7::method(data_load, csv_source) <- function(source, file_path) {
   dat <- data.table::fread(file_path)
 
   dat[,
-    names(.SD) := purrr::imap(
+    names(.SD) := Map(
+      # purrr::imap(
       .SD,
-      \(x, idx) {
+      names(.SD),
+      f = \(x, idx) {
         ntrs::get_npsych_scores(idx)(x)
       }
     ),

@@ -79,6 +79,9 @@ demographics_table <- function(
     colnames(cur_pt_dat)[colnames(cur_pt_dat) == "BIRTHYR"] <- "Year of Birth:"
   }
 
+  # to avoid cmd check note:
+  name <- value <- NULL
+
   out <- data.table::melt(
     cur_pt_dat[, names(.SD) := lapply(.SD, as.character)],
     measure.vars = colnames(cur_pt_dat),
@@ -89,7 +92,7 @@ demographics_table <- function(
     ) |>
     gt::cols_align(
       "right",
-      .data$name
+      columns = "name"
     ) |>
     gt::tab_style(
       style = gt::cell_text(
@@ -103,7 +106,7 @@ demographics_table <- function(
         # size = px(16)
       ),
       locations = gt::cells_body(
-        rows = .data$name == "Study ID:"
+        rows = name == "Study ID:"
       )
     ) |>
     gt::tab_style(
@@ -112,8 +115,8 @@ demographics_table <- function(
         color = "red"
       ),
       locations = gt::cells_body(
-        columns = .data$value,
-        rows = is.na(.data$value)
+        columns = "value",
+        rows = is.na(value)
       )
     ) |>
     gt::tab_options(
@@ -146,7 +149,7 @@ demographics_table <- function(
           weight = "bold"
         ),
         locations = gt::cells_body(
-          rows = grepl(pattern = "\\/", x = .data$value) | is.na(.data$value)
+          rows = grepl(pattern = "\\/", x = value) | is.na(value)
         )
       )
   }

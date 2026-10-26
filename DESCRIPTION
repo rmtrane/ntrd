@@ -1,7 +1,7 @@
 Package: ntrd
 Type: Package
 Title: Neuropsychological Test Results Dashboard
-Version: 0.0.0.9000
+Version: 0.1.1
 Description: Building on the ntrs package,
     this package includes a Shiny application that makes 
     it easy to present test scores in a way useful
@@ -13,40 +13,36 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Suggests:
-    httr2,
-    pagedown,
+    htmlwidgets,
+    lubridate,
     pdftools,
+    purrr,
     quarto,
     shinytest2,
-    withr,
-    testthat (>= 3.0.0),
-    rvest,
-    dplyr,
-    htmlwidgets,
-    tidyr
+    testthat (>= 3.1.10),
+    withr
 Config/testthat/edition: 3
 Config/testthat/load-all: list(export_all = TRUE, helpers = TRUE)
 RoxygenNote: 7.3.3
 Imports:
     bslib,
+    cli,
     data.table (>= 1.9.8),
     DT,
     gt,
-    lubridate,
-    plotly,
-    purrr,
-    shiny,
-    rlang,
     methods,
-    utils,
-    cli,
-    safer,
-    stats,
-    mirai,
     ntrs,
-    S7
+    pagedown,
+    plotly,
+    remotes,
+    rstudioapi,
+    S7,
+    safer,
+    shiny,
+    stats,
+    utils
 Depends: 
-    R (>= 4.2.0)
+    R (>= 4.4.0)
 Remotes: 
     rmtrane/ntrs
 VignetteBuilder: quarto
@@ -80,14 +76,17 @@ Collate:
     'csv_source.R'
     'dataSelectModule.R'
     'data_nacc.R'
+    'default_update_functions.R'
     'demo_data.R'
     'demo_source.R'
     'demographics_table.R'
     'descriptionsModule.R'
     'diag_contr_pairs.R'
     'discover_data_sources.R'
+    'extension_updates.R'
     'from_gtExtras_for_my_gt_blt_bar_pct.R'
     'get_plot_ranges.R'
+    'html_table.R'
     'load_extensions.R'
     'longTableModule.R'
     'mainTableModule.R'
@@ -100,16 +99,22 @@ Collate:
     'ntrd-package.R'
     'onRender.R'
     'optional_vars.R'
+    'percentile_bars.R'
     'plotModule.R'
     'plotly_new_traces.R'
     'plotly_plots.R'
     'prepare_data.R'
     'prevDiagnosesModule.R'
     'prev_diagnoses_table.R'
+    'quarter_helpers.R'
     'rdd.R'
+    'render_update_banner.R'
     'shinyAddResources.R'
     'shinyApp_header.R'
     'shinyDashboard.R'
+    'updateBannerModule.R'
+    'update_messages.R'
+    'update_result.R'
     'var_labels.R'
     'visibility_defaults.R'
     'visit_vars.R'

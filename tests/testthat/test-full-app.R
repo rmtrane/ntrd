@@ -48,6 +48,7 @@ test_that("full app flow with demo data produces correct views", {
     timeout = 30000,
     load_timeout = 60000
   )
+
   app$wait_for_idle()
   on.exit(app$stop(), add = TRUE)
 
@@ -132,7 +133,7 @@ test_that("full app flow with demo data produces correct views", {
   }
 
   # Screenshot 4: Click "Diagnoses" tab
-  app$click(selector = "#long-trends [data-value='Diagnoses']")
+  app$click(selector = "#long-trends [data-value='prev_diagnoses_table']")
   app$wait_for_idle(timeout = 15000)
 
   app$expect_screenshot(name = "diagnoses")
