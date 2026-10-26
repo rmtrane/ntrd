@@ -6,7 +6,14 @@
 appUI <- function() {
   bslib::page_navbar(
     ## Header: add JS scripts, CSS, and spinner elements to be shown/hidden later.
+<<<<<<< Updated upstream
     header = shinyApp_header(),
+=======
+    header = shiny::tagList(
+      shinyApp_header(),
+      update_banner_ui("update_banner")
+    ),
+>>>>>>> Stashed changes
     theme = bslib::bs_theme(version = 5),
     title = "Npsych Scoring Application",
     id = "main_navbar",

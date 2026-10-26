@@ -12,6 +12,12 @@ appServer <- function(input, output, session) {
   ## Setup data select module
   dat_sel <- dataSelectServer("dataSelect")
 
+<<<<<<< Updated upstream
+=======
+  ## In-app update banner (see updateBannerModule.R)
+  update_banner_server("update_banner", update_info = dat_sel$update_info)
+
+>>>>>>> Stashed changes
   ## Reactive values to store data object, selected data source, and data type,
   ## all assigned from dataSelect module. Also, reactive value to indicate if
   ## user should be allowed to select columns for variables. We only allow this
@@ -60,8 +66,12 @@ appServer <- function(input, output, session) {
     colnames(dat_obj())
   })
 
+<<<<<<< Updated upstream
   ## Reactive values to hold selected columns, and methods
   col_sel <- shiny::reactiveVal()
+=======
+  ## Reactive value to hold selected methods
+>>>>>>> Stashed changes
   std_methods <- shiny::reactiveVal()
 
   ## When dat_obj changes, flush selected columns and methods
