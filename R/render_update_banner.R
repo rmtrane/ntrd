@@ -1,10 +1,16 @@
 #' Render the update-available banner
 #'
 #' @param result An `update_result` S7 object.
-#' @param package The package name the result is about (used in the
-#'   button's input id so the appServer observer can dispatch correctly).
+#' @param package The package name the result is about, shown in the banner
+#'   text.
+#' @param action A UI tag for the "Update" button (e.g. built with
+#'   `shiny::actionButton()` against the calling module's namespaced id),
+#'   inserted into the banner as-is. `NULL` suppresses the banner.
+#'
 #' @return A `shiny::tagList` if an update is available, or NULL otherwise.
+#'
 #' @keywords internal
+#'
 #' @noRd
 render_update_banner <- function(result, package, action = NULL) {
   if (!S7::S7_inherits(result, update_result) || !result@available) {
