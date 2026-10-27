@@ -61,3 +61,76 @@ test_that("update banner is suppressed when no update is available", {
   full_html <- app$get_html("body")
   expect_false(grepl("update-banner", full_html, fixed = TRUE))
 })
+
+# The tests above run the app in a separate process via shinytest2, so they
+# cannot mock anything inside it. The tests below drive the module server
+# in-process with shiny::testServer(), which lets local_mocked_bindings()
+# replace the restart seams and check what the confirm handler does with
+# them.
+fake_update_info <- function(package = "fakeExt") {
+  shiny::reactive(list(
+    package = package,
+    result = update_result(
+      available = TRUE,
+      current = "0.0.0.9000",
+      latest = "0.0.0.9999"
+    )
+  ))
+}
+
+test_that("confirming an update queues restart_session() with the restart command", {
+  restart_calls <- character()
+
+  local_mocked_bindings(
+    supports_command_restart = function() TRUE,
+    build_update_restart_command = function(package, ...) {
+      paste0("restart-command-for-", package)
+    },
+    restart_session = function(command) {
+      restart_calls <<- c(restart_calls, command)
+    }
+  )
+
+  shiny::testServer(
+    update_banner_server,
+    args = list(update_info = fake_update_info()),
+    {
+      session$setInputs(do_update = 1)
+      session$setInputs(confirm_update = 1)
+
+      # The restart is deferred until the session ends, so nothing has
+      # been called yet.
+      expect_length(restart_calls, 0)
+
+      session$close()
+    }
+  )
+
+  expect_identical(restart_calls, "restart-command-for-fakeExt")
+})
+
+test_that("confirming an update never restarts when command restarts are unsupported", {
+  restart_calls <- character()
+
+  local_mocked_bindings(
+    supports_command_restart = function() FALSE,
+    build_update_restart_command = function(package, ...) {
+      paste0("restart-command-for-", package)
+    },
+    restart_session = function(command) {
+      restart_calls <<- c(restart_calls, command)
+    }
+  )
+
+  shiny::testServer(
+    update_banner_server,
+    args = list(update_info = fake_update_info()),
+    {
+      session$setInputs(do_update = 1)
+      session$setInputs(confirm_update = 1)
+      session$close()
+    }
+  )
+
+  expect_length(restart_calls, 0)
+})
