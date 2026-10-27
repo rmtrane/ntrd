@@ -29,6 +29,24 @@ Extensions are regular R packages that:
 The [`ntrdWisconsin`](https://github.com/rmtrane/ntrdWisconsin) package is a
 full working example and is referenced throughout this guide.
 
+### How the packages fit together
+
+```
+ntrs            npsych_scores classes + standardization framework
+  └─ ntrsTscores      adds std_using_tscores() methods
+ntrd            Shiny dashboard + the extension API described here
+  └─ ntrdWisconsin    an extension: REDCap + Panda data source, custom
+                      scores, and in-app updates; imports ntrd, ntrs, and
+                      ntrsTscores (see the DESCRIPTION example below)
+```
+
+`ntrs` and `ntrd` are independent of each other's extensions --- `ntrs`
+doesn't know about `ntrd`, and `ntrd` doesn't know about `ntrsTscores`.
+An extension package is where these come together: it's an `ntrd`
+extension (for the dashboard) that may also define custom score classes
+(for `ntrs`) built on a standardization method from `ntrsTscores` or
+elsewhere.
+
 ::: {.callout-note}
 
 ## Custom Scores 
@@ -369,8 +387,17 @@ extras <- shiny::reactiveValues(
 
 When a data source is selected and the user clicks "Go", `ntrd` uses the
 `package` property of the data source to identify the extension package and
-checks whether it defines a `.set_defaults()` function. If it does, it is
-called to set standardization method defaults. 
+calls `apply_extension_defaults()`, which looks for (and, if found, calls) a
+`.set_defaults()` function in that package's namespace to set
+standardization method defaults.
+
+`.set_defaults()` is a naming convention, not an exported hook --- `ntrd`
+finds it with `get0(".set_defaults", envir = asNamespace(ext_pkg))`, so it
+doesn't need `@export` (or even a roxygen block) in your package. Setting
+`package = "ntrd"` on a data source is always a no-op here: `ntrd`'s own
+built-in sources use that package name, and `apply_extension_defaults()`
+skips the lookup entirely when `ext_pkg` is `"ntrd"`, so it never applies
+to an extension.
 
 Define this function in your package (it does not need to be exported):
 
@@ -539,6 +566,13 @@ app calls `ntrd::check_extension_update(package)` internally. If you need
 to invalidate the cache (for example, in a "check again" affordance or
 during testing), use `ntrd::clear_update_cache(package)` or
 `ntrd::clear_update_cache()` for everything.
+
+An update is only detected when the installed and remote `Version:` fields
+differ. If you're iterating on an extension and testing the update flow,
+remember to bump `Version:` in `DESCRIPTION` (and clear the cache) before
+expecting the banner to appear --- pushing new commits without a version
+bump, or testing against a ref whose `DESCRIPTION` you haven't changed,
+won't trigger it.
 
 ### Platform support
 

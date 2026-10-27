@@ -172,7 +172,7 @@ build_confirm_modal <- function(info, ns) {
       result@current
     )),
     shiny::tags$p(
-      "Updating will close the dashboard, restart R to install the new version, then restart R again. This typically takes a minutes or two. Once the update is complete, a message will appear in the console with instructions to relaunch the dashboard."
+      "Updating will close the dashboard, restart R to install the new version, then restart R again. This typically takes a minute or two. Once the update is complete, a message will appear in the console with instructions to relaunch the dashboard."
     ),
     if (!is.na(result@news_url)) {
       shiny::tags$p(
