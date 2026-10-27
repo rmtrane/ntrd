@@ -1,3 +1,13 @@
+# ntrd (development version)
+
+Bug fixes:
+
+* Fixed outdated documentation  
+
+* Fixed some grammar in UI update message 
+
+* Udpdated extension API vignette to match latest release
+
 # ntrd 0.1.2
 
 ## New features
